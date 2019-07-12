@@ -1,0 +1,9 @@
+node_modules/
+.vscode/
+.token.pickle
+credentials.json
+
+.*clasprc.json
+*/.clasp.json
+.*.swp
+
