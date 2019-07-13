@@ -1,65 +1,78 @@
-import { getIdsFromVals, select, selectMulti } from './tableOps';
+import { getIdsFromVals, selectAll } from './tableOps';
 import { ID as TABLES_ID } from './tables/id';
-import { BooleanData, IntData, QuarterData, StringData } from './types';
-import { ID as VIEWS_ID } from './views/id';
+import { BooleanData, IntData, QuarterData, StringData, IncomeEntry, DateData, MemberEntry, ExpenseEntry, PaymentTypeEntry, RecipientEntry, StatementEntry, AttendanceEntry, IntListData } from './types';
 
-export function getFromTables(sheetName: string, fields: string[]) {
-    return selectMulti(
-        SpreadsheetApp.openById(TABLES_ID).getSheetByName(sheetName),
-        fields
-    );
+export function getMembers() {
+    return selectAll(SpreadsheetApp.openById(TABLES_ID).getSheetByName('Member'))
+        .map(row => new MemberEntry(
+            IntData.create(row[0].toString()),
+            StringData.create(row[1].toString()),
+            DateData.create(row[2].toString()),
+            IntData.create(row[3].toString()),
+            StringData.create(row[4].toString()),
+            BooleanData.create(row[5].toString()),
+            BooleanData.create(row[6].toString()),
+            BooleanData.create(row[7].toString()),
+            BooleanData.create(row[8].toString()),
+            BooleanData.create(row[9].toString()),
+            BooleanData.create(row[10].toString())
+        ));
 }
-export function getFromViews(sheetName: string, fields: string[]) {
-    return selectMulti(
-        SpreadsheetApp.openById(VIEWS_ID).getSheetByName(sheetName),
-        fields
-    );
+export function getIncomes() {
+    return selectAll(SpreadsheetApp.openById(TABLES_ID).getSheetByName('Income'))
+        .map(row => new IncomeEntry(
+            IntData.create(row[0].toString()),
+            DateData.create(row[1].toString()),
+            IntData.create(row[2].toString()),
+            StringData.create(row[3].toString()),
+            IntData.create(row[4].toString()),
+            IntData.create(row[5].toString())
+        ));
+}
+export function getExpenses() {
+    return selectAll(SpreadsheetApp.openById(TABLES_ID).getSheetByName('Expense'))
+        .map(row => new ExpenseEntry(
+            IntData.create(row[0].toString()),
+            DateData.create(row[1].toString()),
+            IntData.create(row[2].toString()),
+            StringData.create(row[3].toString()),
+            IntData.create(row[4].toString()),
+            IntData.create(row[5].toString()),
+            IntData.create(row[6].toString())
+        ));
+}
+export function getRecipient() {
+    return selectAll(SpreadsheetApp.openById(TABLES_ID).getSheetByName('Recipient'))
+        .map(row => new RecipientEntry(
+            IntData.create(row[0].toString()),
+            StringData.create(row[1].toString())
+        ));
+}
+export function getPaymentTypes() {
+    return selectAll(SpreadsheetApp.openById(TABLES_ID).getSheetByName('PaymentType'))
+        .map(row => new PaymentTypeEntry(
+            IntData.create(row[0].toString()),
+            StringData.create(row[1].toString())
+        ));
+}
+export function getStatements() {
+    return selectAll(SpreadsheetApp.openById(TABLES_ID).getSheetByName('Statement'))
+        .map(row => new StatementEntry(
+            IntData.create(row[0].toString()),
+            DateData.create(row[1].toString()),
+            BooleanData.create(row[2].toString())
+        ));
+}
+export function getAttendances() {
+    return selectAll(SpreadsheetApp.openById(TABLES_ID).getSheetByName('Attendance'))
+        .map(row => new AttendanceEntry(
+            IntData.create(row[0].toString()),
+            DateData.create(row[1].toString()),
+            IntListData.create(row[2].toString()),
+            QuarterData.create(row[3].toString())
+        ));
 }
 
-export function getAmountOwed(memberNames: StringData[]) {
-    const tableVals = getFromTables('Member', ['name', 'amountOwed']);
-
-    const owed: IntData[] = [];
-    let startIndex = 0;
-    for (const name of memberNames) {
-        let i = startIndex;
-        do {
-            if (tableVals[i][0].toString() === name.toString()) {
-                owed.push(IntData.create(tableVals[i][1].toString()));
-                startIndex = i;
-                break;
-            }
-            i = (i + 1) % tableVals.length
-        } while (i !== startIndex);
-    }
-
-    return owed;
-}
-export function getDuesValues(memberNames: StringData[]) {
-    const clubInfo = getClubInfo();
-    const tableVals = getFromTables('Member', ['name', 'officer']);
-
-    const duesVals: IntData[] = [];
-    let startIndex = 0;
-    for (const name of memberNames) {
-        let i = startIndex;
-        do {
-            if (tableVals[i][0].toString() === name.toString()) {
-                let isOfficer = BooleanData.create(tableVals[i][1].toString());
-                duesVals.push(isOfficer.getValue() ? clubInfo.officerFee : clubInfo.memberFee);
-                startIndex = i;
-                break;
-            }
-            i = (i + 1) % tableVals.length
-        } while (i !== startIndex);
-    }
-
-    return duesVals;
-}
-export function getAllMemberIds() {
-    return select(SpreadsheetApp.openById(TABLES_ID).getSheetByName('Member'), 'id')
-        .map(row => IntData.create(row.toString()));
-}
 export function getMemberIds(member: StringData[]) {
     return getIdsFromVals(
         SpreadsheetApp.openById(TABLES_ID).getSheetByName('Member'),

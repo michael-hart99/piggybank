@@ -1,7 +1,7 @@
-import { getAmountOwed, getMemberIds } from '../../get';
+import { getMemberIds } from '../../get';
 import { updateMember } from '../../tables/update';
 import { IntData, StringData } from '../../types';
-import { getMostRecentResponse } from '../formOps';
+import { getMostRecentResponse, getAmountOwed } from '../formOps';
 
 /**
  * Executes upon submission of this form.
