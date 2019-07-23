@@ -1,5 +1,5 @@
 import { getIdsFromVals, remove } from '../tableOps';
-import { ErrorType, ExpenseEntry, IncomeEntry, IntData, MemberEntry, PaymentTypeEntry, RecipientEntry, StatementEntry } from '../types';
+import { ErrorType, ExpenseEntry, IncomeEntry, IntData, MemberEntry, PaymentTypeEntry, RecipientEntry, RefreshLogger, StatementEntry, Table } from '../types';
 import { ID } from './id';
 
 export function removeMember(id?: IntData[], name?: IntData[]) {
@@ -14,6 +14,9 @@ export function removeMember(id?: IntData[], name?: IntData[]) {
     }
 
     const entries = id.map(i => new MemberEntry(i));
+
+    RefreshLogger.include(Table.MEMBER);
+
     remove(sheet, entries);
 }
 export function removeIncome(
@@ -22,6 +25,9 @@ export function removeIncome(
     const sheet = SpreadsheetApp.openById(ID).getSheetByName('Income');
 
     const entries = id.map(i => new IncomeEntry(i));
+
+    RefreshLogger.include(Table.INCOME);
+
     remove(sheet, entries);
 }
 export function removeExpense(
@@ -30,6 +36,9 @@ export function removeExpense(
     const sheet = SpreadsheetApp.openById(ID).getSheetByName('Expense');
 
     const entries = id.map(i => new ExpenseEntry(i));
+
+    RefreshLogger.include(Table.EXPENSE);
+
     remove(sheet, entries);
 }
 export function removeRecipient(id?: IntData[], name?: IntData[]) {
@@ -44,6 +53,9 @@ export function removeRecipient(id?: IntData[], name?: IntData[]) {
     }
 
     const entries = id.map(i => new RecipientEntry(i));
+
+    RefreshLogger.include(Table.RECIPIENT);
+
     remove(sheet, entries);
 }
 export function removePaymentType(id?: IntData[], name?: IntData[]) {
@@ -58,6 +70,9 @@ export function removePaymentType(id?: IntData[], name?: IntData[]) {
     }
 
     const entries = id.map(i => new PaymentTypeEntry(i));
+
+    RefreshLogger.include(Table.PAYMENT_TYPE);
+
     remove(sheet, entries);
 }
 export function removeStatement(
@@ -66,6 +81,9 @@ export function removeStatement(
     const sheet = SpreadsheetApp.openById(ID).getSheetByName('Statement');
 
     const entries = id.map(i => new StatementEntry(i));
+
+    RefreshLogger.include(Table.STATEMENT);
+
     remove(sheet, entries);
 }
 export function removeAttendance(
@@ -74,5 +92,8 @@ export function removeAttendance(
     const sheet = SpreadsheetApp.openById(ID).getSheetByName('Attendance');
 
     const entries = id.map(i => new StatementEntry(i));
+
+    RefreshLogger.include(Table.ATTENDANCE);
+
     remove(sheet, entries);
 }

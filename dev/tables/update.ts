@@ -1,5 +1,5 @@
 import { GAS_OFFSET, getIndicesFromIds, HEADER_LEN, selectAll, update } from '../tableOps';
-import { AttendanceEntry, BooleanData, DateData, ErrorType, ExpenseEntry, IncomeEntry, IntData, IntListData, MemberEntry, PaymentTypeEntry, QuarterData, RecipientEntry, StatementEntry, StringData } from '../types';
+import { AttendanceEntry, BooleanData, DateData, ErrorType, ExpenseEntry, IncomeEntry, IntData, IntListData, MemberEntry, PaymentTypeEntry, QuarterData, RecipientEntry, RefreshLogger, StatementEntry, StringData, Table } from '../types';
 import { ID } from './id';
 
 export function updateMember(
@@ -71,6 +71,8 @@ export function updateMember(
         );
     }
 
+    RefreshLogger.include(Table.MEMBER);
+
     update(sheet, entries);
 }
 export function updateIncome(
@@ -120,6 +122,8 @@ export function updateIncome(
             )
         );
     }
+
+    RefreshLogger.include(Table.INCOME);
 
     update(sheet, entries);
 }
@@ -176,6 +180,8 @@ export function updateExpense(
         );
     }
 
+    RefreshLogger.include(Table.EXPENSE);
+
     update(sheet, entries);
 }
 export function updateRecipient(id: IntData[], name: StringData[]) {
@@ -192,6 +198,8 @@ export function updateRecipient(id: IntData[], name: StringData[]) {
         entries.push(new RecipientEntry(id[i], name[i]));
     }
 
+    RefreshLogger.include(Table.RECIPIENT);
+
     update(sheet, entries);
 }
 export function updatePaymentType(id: IntData[], name: StringData[]) {
@@ -207,6 +215,8 @@ export function updatePaymentType(id: IntData[], name: StringData[]) {
     for (let i = 0; i < numEntries; ++i) {
         entries.push(new PaymentTypeEntry(id[i], name[i]));
     }
+
+    RefreshLogger.include(Table.PAYMENT_TYPE);
 
     update(sheet, entries);
 }
@@ -244,6 +254,8 @@ export function updateStatement(
         );
     }
 
+    RefreshLogger.include(Table.STATEMENT);
+
     update(sheet, entries);
 }
 export function updateAttendance(
@@ -280,6 +292,8 @@ export function updateAttendance(
         );
     }
 
+    RefreshLogger.include(Table.ATTENDANCE);
+
     update(sheet, entries);
 }
 export function updateClubInfo(
@@ -306,4 +320,6 @@ export function updateClubInfo(
                 currentQuarterId.toString(),
             ],
         ]);
+
+    RefreshLogger.include(Table.CLUB_INFO);
 }

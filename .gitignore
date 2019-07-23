@@ -2,7 +2,10 @@ node_modules/
 .vscode/
 .token.pickle
 credentials.json
+
 */id.ts
+dev/forms/ids/*
+build/bundle.js
 
 .*clasprc.json
 */.clasp.json

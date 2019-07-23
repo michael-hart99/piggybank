@@ -1,15 +1,204 @@
-export enum ErrorType {
-    FieldNotFoundError,
-    IllegalArgumentError,
-    AssertionError,
-    NoMatchFoundError
-}
+import { refreshAddExpense, refreshAddIncome, refreshAddMemberIou, refreshCollectDues, refreshConfirmTransfer, refreshNextQuarter, refreshResolveMemberIou, refreshTakeAttendance, refreshTransferFunds, refreshUpdateContactSettings, refreshUpdateMemberStatus } from './forms/refresh';
+import { refreshAccountInfo, refreshAllTransactions, refreshExpenses, refreshIncomes, refreshMembers, refreshStatements } from './views/refresh';
 
+export abstract class ErrorType {
+    static FieldNotFoundError = 'FieldNotFoundError';
+    static IllegalArgumentError = 'IllegalArgumentError';
+    static AssertionError = 'AssertionError';
+    static NoMatchFoundError = 'NoMatchFoundError';
+}
 export enum Quarter {
     WINTER,
     SPRING,
     SUMMER,
     FALL,
+}
+
+export type Dictionary<K extends keyof any, V> = { [P in K]?: V }
+export class UniqueList<T> {
+    private vals: T[];
+
+    constructor(vals?: T[]) {
+        if (vals) this.vals = vals;
+        else this.vals = [];
+    }
+    add(x: T) {
+        if (this.vals.indexOf(x) === -1) {
+            this.vals.push(x);
+        }
+    }
+    size() {
+        return this.vals.length;
+    }
+    asArray() {
+        return this.vals.map(x => x);
+    }
+}
+
+export const CARRIERS: Dictionary<string, string> = {
+    'AT&T': '@txt.att.net',
+    'T-Mobile': '@tmomail.net',
+    'Verizon': '@vtext.com',
+    'Sprint': '@messaging.sprintpcs.com',
+    'XFinity Mobile': '@vtext.com',
+    'Virgin Mobile': '@vmobl.com',
+    'Metro PCS': '@mymetropcs.com',
+    'Boost Mobile': '@sms.myboostmobile.com',
+    'Cricket': '@sms.cricketwireless.net',
+    'Republic Wireless': '@text.republicwireless.com',
+    'Google Fi': '@msg.fi.google.com',
+    'U.S. Cellular': '@email.uscc.net',
+    'Ting': '@message.ting.com',
+    'Consumer Cellular': '@mailmymobile.net',
+    'C-Spire': '@cspire1.com',
+    'Page Plus': '@vtext.com'
+};
+
+export interface EditEvent {
+    range: GoogleAppsScript.Spreadsheet.Range;
+}
+export interface SortSpecObj {
+    column: number;
+    ascending: boolean;
+}
+
+export abstract class Color {
+    static WHITE = '#ffffff';
+    static BLACK = '#000000';
+    static LIGHT_GRAY = '#d5d5d5';
+    static LIGHT_RED = '#ffcbcb';
+    static PALE_RED = '#ffcbcb';
+    static PALE_GREEN = '#f2fff0';
+    static PALE_BLUE = '#ecf1f8';
+}
+export abstract class NumberFormat {
+    static TEXT = '';
+    static MONEY = '"$"#,##0.00';
+    static INTEGER = '#,##0';
+    static DATE = 'MMM dd, yyyy';
+}
+
+export enum Table {
+    MEMBER,
+    INCOME,
+    EXPENSE,
+    RECIPIENT,
+    PAYMENT_TYPE,
+    STATEMENT,
+    ATTENDANCE,
+    CLUB_INFO
+}
+export abstract class RefreshLogger {
+    static DEPENDENCIES: { table: Table, fns: Function[] }[] = [
+        {
+            table: Table.MEMBER,
+            fns: [
+                refreshMembers,
+
+                refreshAddMemberIou,
+                refreshCollectDues,
+                refreshResolveMemberIou,
+                refreshTakeAttendance,
+                refreshUpdateContactSettings,
+                refreshUpdateMemberStatus
+            ]
+        },
+        {
+            table: Table.INCOME,
+            fns: [
+                refreshAccountInfo,
+                refreshIncomes,
+                refreshAllTransactions,
+                refreshStatements,
+
+                refreshConfirmTransfer,
+                refreshTransferFunds
+            ]
+        },
+        {
+            table: Table.EXPENSE,
+            fns: [
+                refreshAccountInfo,
+                refreshExpenses,
+                refreshAllTransactions,
+                refreshStatements,
+
+                refreshConfirmTransfer,
+                refreshTransferFunds
+            ]
+        },
+        {
+            table: Table.RECIPIENT,
+            fns: [
+                refreshExpenses,
+                refreshAllTransactions
+            ]
+        },
+        {
+            table: Table.PAYMENT_TYPE,
+            fns: [
+                refreshAccountInfo,
+                refreshIncomes,
+                refreshExpenses,
+                refreshAllTransactions,
+                refreshStatements,
+
+                refreshAddExpense,
+                refreshAddIncome,
+                refreshCollectDues,
+                refreshConfirmTransfer,
+                refreshResolveMemberIou,
+                refreshTransferFunds
+            ]
+        },
+        {
+            table: Table.STATEMENT,
+            fns: [
+                refreshStatements,
+
+                refreshConfirmTransfer,
+                refreshTransferFunds
+            ]
+        },
+        {
+            table: Table.ATTENDANCE,
+            fns: [
+                refreshMembers
+            ]
+        },
+        {
+            table: Table.CLUB_INFO,
+            fns: [
+                refreshAccountInfo,
+                refreshMembers,
+
+                refreshCollectDues,
+                refreshNextQuarter
+            ]
+        }
+    ];
+    static tables = new UniqueList<Table>();
+
+    static include(table: Table) {
+        this.tables.add(table);
+    }
+    static run() {
+        function getDependencyFns(table: Table) {
+            for (const info of RefreshLogger.DEPENDENCIES) {
+                if (table === info.table) {
+                    return info.fns;
+                }
+            }
+            throw ErrorType.IllegalArgumentError;
+        }
+
+        const fns = new UniqueList<Function>();
+        this.tables.asArray().forEach(table => {
+            getDependencyFns(table).forEach(fn => fns.add(fn));
+        })
+
+        fns.asArray().forEach(fn => fn());
+    }
 }
 
 export abstract class Data {
@@ -73,6 +262,50 @@ export class DateData extends Data {
         let n = parseInt(s);
         if (n === NaN) throw ErrorType.IllegalArgumentError;
         return new DateData(new Date(n));
+    }
+    toDateString() {
+        let month: string;
+        switch (this.val.getMonth()) {
+            case 0:
+                month = 'Jan';
+                break;
+            case 1:
+                month = 'Feb';
+                break;
+            case 2:
+                month = 'Mar';
+                break;
+            case 3:
+                month = 'Apr';
+                break;
+            case 4:
+                month = 'May';
+                break;
+            case 5:
+                month = 'Jun';
+                break;
+            case 6:
+                month = 'Jul';
+                break;
+            case 7:
+                month = 'Aug';
+                break;
+            case 8:
+                month = 'Sep';
+                break;
+            case 9:
+                month = 'Oct';
+                break;
+            case 10:
+                month = 'Nov';
+                break;
+            case 11:
+                month = 'Dec';
+                break;
+            default:
+                throw ErrorType.AssertionError;
+        }
+        return month + ' ' + this.val.getDate() + ', ' + this.val.getFullYear();
     }
     toString() {
         return this.val.valueOf().toString();
@@ -148,37 +381,38 @@ export class QuarterData extends Data {
     static create(s: string) {
         let n = parseInt(s);
         if (n === NaN) throw ErrorType.IllegalArgumentError;
+        const year = new IntData(Math.floor(n / 4))
         switch (n % 4) {
             case 0:
                 return new QuarterData(
                     Quarter.WINTER,
-                    new IntData(Math.round(n / 4))
+                    year
                 );
             case 1:
                 return new QuarterData(
                     Quarter.SPRING,
-                    new IntData(Math.round(n / 4))
+                    year
                 );
             case 2:
                 return new QuarterData(
                     Quarter.SUMMER,
-                    new IntData(Math.round(n / 4))
+                    year
                 );
             case 3:
                 return new QuarterData(
                     Quarter.FALL,
-                    new IntData(Math.round(n / 4))
+                    year
                 );
             default:
                 // Impossible to reach
-                throw Error;
+                throw ErrorType.AssertionError;
         }
     }
     toString() {
         return this.val.toString();
     }
     getValue() {
-        return this.val;
+        return this.val.getValue();
     }
     toDateString() {
         return this.dateString;
@@ -420,6 +654,28 @@ export class AttendanceEntry extends Entry {
         return 4;
     }
 }
+export class ClubInfoEntry {
+    constructor(
+        public memberFee: IntData,
+        public officerFee: IntData,
+        public daysUntilFeeRequired: IntData,
+        public currentQuarterId: QuarterData
+    ) { }
+
+    toArray() {
+        const out: string[] = [];
+
+        if (this.memberFee) out.push(this.memberFee.toString());
+        if (this.officerFee) out.push(this.officerFee.toString());
+        if (this.daysUntilFeeRequired) out.push(this.daysUntilFeeRequired.toString());
+        if (this.currentQuarterId) out.push(this.currentQuarterId.toString());
+
+        return out;
+    }
+    length() {
+        return 4;
+    }
+}
 
 export function repeat<T>(val: T, length: number): T[] {
     const array: T[] = Array(length);
@@ -427,4 +683,35 @@ export function repeat<T>(val: T, length: number): T[] {
         array[i] = val;
     }
     return array;
+}
+export function capitalizeString(s: string) {
+    function capitalize(s: string) {
+        if (s.length <= 0) {
+            return s;
+        }
+        return s[0].toUpperCase() + s.substr(1);
+    }
+    const words = s.split(' ');
+    let output = '';
+    if (words.length > 0) {
+        output += capitalize(words[0]);
+        for (let i = 1; i < words.length; ++i) {
+            output += ' ' + capitalize(words[i]);
+        }
+    }
+    return output;
+}
+export function centsToString(n: IntData) {
+    if (n.getValue() < 0) {
+        return '-$'.concat((Math.abs(n.getValue()) / 100).toFixed(2));
+    } else {
+        return '$'.concat((n.getValue() / 100).toFixed(2));
+    }
+}
+export function compareByDateDesc(
+    a: IncomeEntry | ExpenseEntry | StatementEntry,
+    b: IncomeEntry | ExpenseEntry | StatementEntry
+) {
+    if (!a.date || !b.date) throw ErrorType.AssertionError;
+    return b.date.getValue().valueOf() - a.date.getValue().valueOf();
 }

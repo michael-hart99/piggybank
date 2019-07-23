@@ -7,7 +7,6 @@
   "dependencies": {
     "@google/clasp": "^2.1.0",
     "@types/google-apps-script": "0.0.53",
-    "glob": "^7.1.4",
     "set-value": "^3.0.1",
     "ts-loader": "^6.0.4",
     "typescript": "^3.5.2",

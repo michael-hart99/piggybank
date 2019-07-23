@@ -1,13 +1,21 @@
-import { Data, Entry, ErrorType, IntData } from './types';
+import { Color, Data, Entry, ErrorType, IntData, SortSpecObj } from './types';
 
 export const HEADER_LEN = 1;
 export const GAS_OFFSET = 1;
 
-interface SortSpecObj {
-    column: number;
-    ascending: boolean;
-}
+function getNextId(sheet: GoogleAppsScript.Spreadsheet.Sheet) {
+    const sheetLength = sheet.getLastRow() - HEADER_LEN;
+    if (sheetLength === 0) return 0;
 
+    const id = parseInt(
+        sheet.getRange(sheetLength + HEADER_LEN, 1).getValue().toString()
+    );
+    if (id === NaN) {
+        throw ErrorType.IllegalArgumentError;
+    }
+
+    return id + 1;
+}
 export function append(sheet: GoogleAppsScript.Spreadsheet.Sheet, entries: Entry[]) {
     if (entries.length === 0) {
         throw ErrorType.IllegalArgumentError;
@@ -15,16 +23,7 @@ export function append(sheet: GoogleAppsScript.Spreadsheet.Sheet, entries: Entry
 
     const sheetLength = sheet.getLastRow() - HEADER_LEN;
     const firstEntryLength = entries[0].length();
-    let curId = 0;
-    if (sheetLength > 0) {
-        curId = parseInt(
-            sheet.getRange(sheetLength + HEADER_LEN, 1).getValue().toString()
-        );
-        if (curId === NaN) {
-            throw ErrorType.IllegalArgumentError;
-        }
-        ++curId;
-    }
+    let curId = getNextId(sheet);
 
     const ids: IntData[] = [];
     const rows: string[][] = [];
@@ -50,6 +49,8 @@ export function append(sheet: GoogleAppsScript.Spreadsheet.Sheet, entries: Entry
             firstEntryLength
         )
         .setValues(rows);
+
+    orderBy(sheet, ['id'], true);
 
     return ids;
 }
@@ -90,9 +91,52 @@ export function remove(sheet: GoogleAppsScript.Spreadsheet.Sheet, entries: Entry
     });
     const indices = getIndicesFromIds(sheet, ids);
 
-    const numCols = sheet.getLastColumn();
     for (let i = 0; i < indices.length; ++i) {
         sheet.deleteRow(indices[i] + HEADER_LEN + GAS_OFFSET - i);
+    }
+}
+
+export function clearData(sheet: GoogleAppsScript.Spreadsheet.Sheet) {
+    const numRows = sheet.getLastRow() - 1;
+    const numCols = sheet.getLastColumn();
+
+    if (numRows > 0 && numCols > 0) {
+        sheet.getRange(HEADER_LEN + GAS_OFFSET, 0 + GAS_OFFSET, numRows, numCols)
+            .clear();
+    }
+}
+export function setData(
+    sheet: GoogleAppsScript.Spreadsheet.Sheet,
+    data: string[][],
+    numFormat?: string[][],
+    backColor?: string[][],
+    breakLineNums?: number[]
+) {
+    clearData(sheet);
+
+    if (data.length <= 0 || data[0].length <= 0) return;
+
+    const range = sheet.getRange(HEADER_LEN + GAS_OFFSET, 0 + GAS_OFFSET, data.length, data[0].length);
+
+    range.setValues(data);
+
+    if (numFormat) {
+        if (numFormat.length !== data.length || numFormat[0].length !== data[0].length) {
+            throw ErrorType.AssertionError;
+        }
+        range.setNumberFormats(numFormat);
+    }
+    if (backColor) {
+        if (backColor.length !== data.length || backColor[0].length !== data[0].length) {
+            throw ErrorType.AssertionError;
+        }
+        range.setBackgrounds(backColor);
+    }
+    if (breakLineNums) {
+        for (const lineNum of breakLineNums) {
+            sheet.getRange(lineNum + HEADER_LEN + GAS_OFFSET, 0 + GAS_OFFSET, 1, data[0].length)
+                .setBorder(true, false, false, false, false, false, Color.BLACK, SpreadsheetApp.BorderStyle.SOLID_THICK);
+        }
     }
 }
 
@@ -104,11 +148,13 @@ function getFieldIndices(sheetHeader: string[], fields: string[]): number[] {
     });
     return output;
 }
-
 export function getIndicesFromIds(
     sheet: GoogleAppsScript.Spreadsheet.Sheet,
     ids: IntData[]
 ) {
+    if (ids.length === 0) {
+        return [];
+    }
     const tableIds = select(sheet, 'id');
     if (tableIds.length === 0) throw ErrorType.NoMatchFoundError;
 
@@ -145,7 +191,10 @@ export function getIdsFromVals(
     valColumns: string[],
     vals: Data[][]
 ) {
-    if (valColumns.length === 0 || vals.length === 0 || valColumns.length !== vals[0].length) {
+    if (vals.length === 0) {
+        return [];
+    }
+    if (valColumns.length === 0 || valColumns.length !== vals[0].length) {
         throw ErrorType.IllegalArgumentError;
     }
 

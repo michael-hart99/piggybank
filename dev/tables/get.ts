@@ -1,6 +1,6 @@
-import { getIdsFromVals, selectAll } from './tableOps';
-import { ID as TABLES_ID } from './tables/id';
-import { BooleanData, IntData, QuarterData, StringData, IncomeEntry, DateData, MemberEntry, ExpenseEntry, PaymentTypeEntry, RecipientEntry, StatementEntry, AttendanceEntry, IntListData } from './types';
+import { getIdsFromVals, selectAll } from '../tableOps';
+import { AttendanceEntry, BooleanData, ClubInfoEntry, DateData, ExpenseEntry, IncomeEntry, IntData, IntListData, MemberEntry, PaymentTypeEntry, QuarterData, RecipientEntry, StatementEntry, StringData } from '../types';
+import { ID as TABLES_ID } from './id';
 
 export function getMembers() {
     return selectAll(SpreadsheetApp.openById(TABLES_ID).getSheetByName('Member'))
@@ -41,7 +41,7 @@ export function getExpenses() {
             IntData.create(row[6].toString())
         ));
 }
-export function getRecipient() {
+export function getRecipients() {
     return selectAll(SpreadsheetApp.openById(TABLES_ID).getSheetByName('Recipient'))
         .map(row => new RecipientEntry(
             IntData.create(row[0].toString()),
@@ -72,6 +72,16 @@ export function getAttendances() {
             QuarterData.create(row[3].toString())
         ));
 }
+export function getClubInfo() {
+    const tableVals = selectAll(SpreadsheetApp.openById(TABLES_ID).getSheetByName('ClubInfo'))[0];
+
+    return new ClubInfoEntry(
+        IntData.create(tableVals[0].toString()),
+        IntData.create(tableVals[1].toString()),
+        IntData.create(tableVals[2].toString()),
+        QuarterData.create(tableVals[3].toString()),
+    );
+}
 
 export function getMemberIds(member: StringData[]) {
     return getIdsFromVals(
@@ -93,19 +103,4 @@ export function getPaymentTypeIds(paymentType: StringData[]) {
         ['name'],
         [paymentType]
     );
-}
-export function getClubInfo() {
-    const tableVals = getFromTables('ClubInfo', [
-        'memberFee',
-        'officerFee',
-        'daysUntilFeeRequired',
-        'currentQuarterId',
-    ])[0];
-
-    return {
-        memberFee: IntData.create(tableVals[0].toString()),
-        officerFee: IntData.create(tableVals[1].toString()),
-        daysUntilFeeRequired: IntData.create(tableVals[2].toString()),
-        currentQuarterId: QuarterData.create(tableVals[3].toString()),
-    };
 }

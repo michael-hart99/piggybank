@@ -1,19 +1,13 @@
 var path = require('path');
-var glob = require('glob');
 
 module.exports = {
   mode: 'production',
-  entry: glob.sync('./dev/**/main*.ts')
-             .reduce((obj, el) => {
-               let pos = el.indexOf('/', 2);
-               obj['.' + el.substr(pos, el.length - pos - 3)] = el;
-               return obj
-             }, {}),
+  entry: './dev/main.ts',
   output: {
     path: path.join(__dirname, './build'),
-    filename: '[name].bundle.js',
+    filename: 'bundle.js',
     libraryTarget: 'var',
-    library: 'Main',
+    library: 'Bundle',
   },
   /* Disable 'uglification' */
   optimization: {
