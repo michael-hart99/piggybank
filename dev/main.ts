@@ -13,6 +13,7 @@ import { ID as TF_ID } from './ids/tf';
 import { ID as UCS_ID } from './ids/ucs';
 import { ID as UMS_ID } from './ids/ums';
 import { ID as VIEWS_ID } from './ids/viewsId';
+import { createBackup } from './tables/backup';
 import { EditEvent, RefreshLogger, Table } from './types';
 import { refreshAllViews } from './views/refresh';
 
@@ -123,7 +124,9 @@ export function setupTriggers() {
 }
 
 export function everyDay() { }
-export function everyWeek() { }
+export function everyWeek() {
+    createBackup();
+}
 
 export function tablesOnOpen() { }
 export function tablesOnEdit(e: EditEvent) {
@@ -167,7 +170,6 @@ export function viewsOnEdit() { }
 
 function getMostRecentResponse(form: GoogleAppsScript.Forms.Form) {
     const resList = form.getResponses();
-
     return resList[resList.length - 1].getItemResponses();
 }
 export function addExpenseOnFormSubmit() {
