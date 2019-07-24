@@ -18,6 +18,7 @@ DEV_DIR = 'dev'
 BASE_FOLDER_NAME = 'Piggybank'
 SHEET_FOLDER_NAME = 'Data & Reports'
 FORM_FOLDER_NAME = 'Forms'
+BACKUP_FOLDER_NAME = 'Backups'
 
 def auth():
     '''
@@ -98,27 +99,40 @@ def main():
                                      .execute().get('id')
 
     # Sheets
-    init_file(drive_service, 'tables/id.ts', 'Database', sheet_folder)
-    init_file(drive_service, 'views/id.ts', 'Generated Report', sheet_folder)
+    init_file(drive_service, 'ids/tablesId.ts', 'Database', sheet_folder)
+    init_file(drive_service, 'ids/viewsId.ts', 'Generated Report', sheet_folder)
 
     # Forms
-    init_file(drive_service, 'forms/ids/ae.ts', 'Add Expense', form_folder)
-    init_file(drive_service, 'forms/ids/ai.ts', 'Add Income', form_folder)
-    init_file(drive_service, 'forms/ids/ami.ts', 'Add Member IOU', form_folder)
-    init_file(drive_service, 'forms/ids/cd.ts', 'Collect Dues', form_folder)
-    init_file(drive_service, 'forms/ids/ct.ts', 'Confirm Transfer', form_folder)
-    init_file(drive_service, 'forms/ids/nq.ts', 'Next Quarter', form_folder)
-    init_file(drive_service, 'forms/ids/rmi.ts', 'Resolve Member IOU', form_folder)
-    init_file(drive_service, 'forms/ids/ta.ts', 'Take Attendance', form_folder)
-    init_file(drive_service, 'forms/ids/tf.ts', 'Transfer Funds', form_folder)
-    init_file(drive_service, 'forms/ids/ucs.ts', 'Update Contact Settings', form_folder)
-    init_file(drive_service, 'forms/ids/ums.ts', 'Update Member Status', form_folder)
+    init_file(drive_service, 'ids/ae.ts', 'Add Expense', form_folder)
+    init_file(drive_service, 'ids/ai.ts', 'Add Income', form_folder)
+    init_file(drive_service, 'ids/ami.ts', 'Add Member IOU', form_folder)
+    init_file(drive_service, 'ids/cd.ts', 'Collect Dues', form_folder)
+    init_file(drive_service, 'ids/ct.ts', 'Confirm Transfer', form_folder)
+    init_file(drive_service, 'ids/nq.ts', 'Next Quarter', form_folder)
+    init_file(drive_service, 'ids/rmi.ts', 'Resolve Member IOU', form_folder)
+    init_file(drive_service, 'ids/ta.ts', 'Take Attendance', form_folder)
+    init_file(drive_service, 'ids/tf.ts', 'Transfer Funds', form_folder)
+    init_file(drive_service, 'ids/ucs.ts', 'Update Contact Settings', form_folder)
+    init_file(drive_service, 'ids/ums.ts', 'Update Member Status', form_folder)
 
     base_dir = os.getcwd()
     os.chdir(base_dir + '/' + BUILD_DIR)
     subprocess.run('clasp create --title "Piggybank"',
                    shell=True, capture_output=True, text=True).stdout
     os.chdir(base_dir)
+
+    # Backup Folder
+    file_metadata = {'name': BACKUP_FOLDER_NAME,
+                     'mimeType': 'application/vnd.google-apps.folder',
+                     'parents': [base_folder_id]}
+    backup_folder_id = drive_service.files() \
+                                    .create(body=file_metadata, fields='id') \
+                                    .execute().get('id')
+
+    base_dir = os.getcwd()
+    id_file = open(base_dir + '/' + DEV_DIR + '/' + 'ids/backupFolderId.ts', "w")
+    id_file.write("export const ID = '" + backup_folder_id + "';")
+    id_file.close()
 
 if __name__ == '__main__':
     main()

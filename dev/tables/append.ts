@@ -1,6 +1,6 @@
+import { ID } from '../ids/tablesId';
 import { append } from '../tableOps';
 import { AttendanceEntry, BooleanData, DateData, ErrorType, ExpenseEntry, IncomeEntry, IntData, IntListData, MemberEntry, PaymentTypeEntry, QuarterData, RecipientEntry, RefreshLogger, StatementEntry, StringData, Table } from '../types';
-import { ID } from './id';
 
 export function appendMember(
     name: StringData[],

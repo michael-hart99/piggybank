@@ -1,6 +1,6 @@
+import { ID as TABLES_ID } from '../ids/tablesId';
 import { getIdsFromVals, selectAll } from '../tableOps';
 import { AttendanceEntry, BooleanData, ClubInfoEntry, DateData, ExpenseEntry, IncomeEntry, IntData, IntListData, MemberEntry, PaymentTypeEntry, QuarterData, RecipientEntry, StatementEntry, StringData } from '../types';
-import { ID as TABLES_ID } from './id';
 
 export function getMembers() {
     return selectAll(SpreadsheetApp.openById(TABLES_ID).getSheetByName('Member'))

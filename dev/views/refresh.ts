@@ -1,7 +1,7 @@
+import { ID } from '../ids/viewsId';
 import { setData } from '../tableOps';
 import { getAttendances, getClubInfo, getExpenses, getIncomes, getMembers, getPaymentTypeIds, getPaymentTypes, getRecipients, getStatements } from "../tables/get";
 import { capitalizeString, Color, compareByDateDesc, DateData, Dictionary, ErrorType, MemberEntry, NumberFormat, StringData, UniqueList } from '../types';
-import { ID } from './id';
 
 export function refreshAllViews() {
     refreshAccountInfo();

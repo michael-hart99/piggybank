@@ -1,19 +1,19 @@
 import { addExpense, addIncome, addMemberIOU, collectDues, confirmTransfer, nextQuarter, resolveMemberIOU, takeAttendance, transferFunds, updateContactSettings, updateMemberStatus } from './forms/actions';
-import { ID as AE_ID } from './forms/ids/ae';
-import { ID as AI_ID } from './forms/ids/ai';
-import { ID as AMI_ID } from './forms/ids/ami';
-import { ID as CD_ID } from './forms/ids/cd';
-import { ID as CT_ID } from './forms/ids/ct';
-import { ID as NQ_ID } from './forms/ids/nq';
-import { ID as RMI_ID } from './forms/ids/rmi';
-import { ID as TA_ID } from './forms/ids/ta';
-import { ID as TF_ID } from './forms/ids/tf';
-import { ID as UCS_ID } from './forms/ids/ucs';
-import { ID as UMS_ID } from './forms/ids/ums';
 import { refreshAllForms } from './forms/refresh';
-import { ID as TABLES_ID } from './tables/id';
+import { ID as AE_ID } from './ids/ae';
+import { ID as AI_ID } from './ids/ai';
+import { ID as AMI_ID } from './ids/ami';
+import { ID as CD_ID } from './ids/cd';
+import { ID as CT_ID } from './ids/ct';
+import { ID as NQ_ID } from './ids/nq';
+import { ID as RMI_ID } from './ids/rmi';
+import { ID as TA_ID } from './ids/ta';
+import { ID as TABLES_ID } from './ids/tablesId';
+import { ID as TF_ID } from './ids/tf';
+import { ID as UCS_ID } from './ids/ucs';
+import { ID as UMS_ID } from './ids/ums';
+import { ID as VIEWS_ID } from './ids/viewsId';
 import { EditEvent, RefreshLogger, Table } from './types';
-import { ID as VIEWS_ID } from './views/id';
 import { refreshAllViews } from './views/refresh';
 
 export function initializeAll() {
@@ -465,7 +465,8 @@ function initializeViews() {
             'Amount Owed',
             'Current Dues Paid?',
             '# Attendances This Quarter'
-        ]);
+        ])
+        .setFrozenRows(1);
     sheetapp.insertSheet('Incomes')
         .appendRow([
             'Date',
@@ -473,7 +474,8 @@ function initializeViews() {
             'Description',
             'Payment Type',
             'In Account?'
-        ]);
+        ])
+        .setFrozenRows(1);
     sheetapp.insertSheet('Expenses')
         .appendRow([
             'Date',
@@ -482,7 +484,8 @@ function initializeViews() {
             'Recipient',
             'Payment Type',
             'In Account?'
-        ]);
+        ])
+        .setFrozenRows(1);
     sheetapp.insertSheet('All Transactions')
         .appendRow([
             'Date',
@@ -491,14 +494,16 @@ function initializeViews() {
             'Recipient',
             'Payment Type',
             'In Account?'
-        ]);
+        ])
+        .setFrozenRows(1);
     sheetapp.insertSheet('Statements')
         .appendRow([
             'Date',
             'Amount',
             'Payment Type',
             'Confirmed?'
-        ]);
+        ])
+        .setFrozenRows(1);
 
     sheetapp.deleteSheet(sheetapp.getSheetByName('Sheet1'));
 }
