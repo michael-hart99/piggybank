@@ -1,3 +1,4 @@
+import { emailIOUNotification, emailReceipts } from '../email';
 import { appendAttendance, appendExpense, appendIncome, appendMember, appendPaymentType, appendRecipient, appendStatement } from '../tables/append';
 import { getClubInfo, getMemberIds, getMembers, getPaymentTypeIds, getRecipientIds } from "../tables/get";
 import { updateClubInfo, updateExpense, updateIncome, updateMember, updateStatement } from '../tables/update';
@@ -119,9 +120,9 @@ export function addIncome(
     appendIncome([today], [new IntData(amount)], [new StringData(desc)], [payTypeId], [new IntData(-1)]);
 }
 export function addMemberIOU(membersRes: string[], amount: string, description: string) {
-    // DESCRIPTION SHOULD BE INCLUDED IN EMAIL RECEIPT //
-    Logger.log(description);
     const memberNames = membersRes.map(member => new StringData(member.substr(0, member.indexOf(':')).toLowerCase()));
+    emailIOUNotification(memberNames.map(member => new StringData(capitalizeString(member.getValue()))), amount, description)
+
     const memberIds = getMemberIds(memberNames);
 
     const amountCents = Math.round(parseFloat(amount) * 100);
@@ -169,6 +170,15 @@ export function collectDues(memListRes: string[], paymentTypeRes: string) {
             throw e;
         }
     }
+
+    for (let i = 0; i < members.length; ++i) {
+        emailReceipts(
+            [new StringData(capitalizeString(members[i].getValue()))],
+            (duesAmounts[i].getValue() / 100).toString(),
+            descriptions[i].toString()
+        );
+    }
+
     appendIncome(
         repeat(today, members.length),
         duesAmounts,
@@ -198,6 +208,9 @@ export function nextQuarter() {
 }
 export function resolveMemberIOU(membersRes: string[], amount: string, description: string, paymentType: string) {
     const memberNames = membersRes.map(member => new StringData(member.substr(0, member.indexOf(':')).toLowerCase()));
+
+    emailReceipts(memberNames.map(member => new StringData(capitalizeString(member.getValue()))), amount, description)
+
     const memberIds = getMemberIds(memberNames);
 
     const amountCents = Math.round(parseFloat(amount) * 100);

@@ -569,6 +569,7 @@ function initializeAddExpense() {
         .setTitle('Amount')
         .setValidation(FormApp.createTextValidation()
             .requireNumber()
+            // @ts-ignore 'build' is not listed as a property
             .build())
         .setRequired(true);
     form.addParagraphTextItem()
@@ -591,6 +592,7 @@ function initializeAddIncome() {
         .setTitle('Amount')
         .setValidation(FormApp.createTextValidation()
             .requireNumber()
+            // @ts-ignore 'build' is not listed as a property
             .build())
         .setRequired(true);
     form.addParagraphTextItem()
@@ -613,6 +615,7 @@ function initializeAddMemberIou() {
         .setTitle('Amount')
         .setValidation(FormApp.createTextValidation()
             .requireNumber()
+            // @ts-ignore 'build' is not listed as a property
             .build())
         .setRequired(true);
     form.addParagraphTextItem()
@@ -662,6 +665,7 @@ function initializeResolveMemberIou() {
         .setTitle('Amount')
         .setValidation(FormApp.createTextValidation()
             .requireNumber()
+            // @ts-ignore 'build' is not listed as a property
             .build())
         .setRequired(true);
     form.addParagraphTextItem()
@@ -708,6 +712,7 @@ function initializeUpdateContactSettings() {
         .setHelpText('Using the form \'XXX-XXX-XXXX\'')
         .setValidation(FormApp.createTextValidation()
             .requireTextMatchesPattern('[0-9]{3}-[0-9]{3}-[0-9]{4}')
+            // @ts-ignore 'build' is not listed as a property
             .build());
     form.addMultipleChoiceItem()
         .setTitle('Phone Carrier')
