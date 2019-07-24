@@ -214,10 +214,14 @@ export function refreshTransferFunds() {
     formItems[1].asCheckboxItem().setChoiceValues(expenses);
 }
 export function refreshUpdateContactSettings() {
-    const memberNames = getMembers().map(entry => {
-        if (!entry.name) throw ErrorType.AssertionError;
-        return capitalizeString(entry.name.getValue());
-    }).sort();
+    const memberNames = [];
+    getMembers().forEach(entry => {
+        if (!entry.name || !entry.active) throw ErrorType.AssertionError;
+        if (entry.active.getValue()) {
+            memberNames.push(capitalizeString(entry.name.getValue()));
+        }
+    })
+    memberNames.sort();
     if (memberNames.length === 0) memberNames.push('');
 
     const carriers = Object.keys(CARRIERS);
