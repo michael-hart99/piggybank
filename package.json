@@ -15,7 +15,11 @@
   },
   "devDependencies": {},
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "setup": "./scripts/setup.sh",
+    "lint": "./scripts/lint.sh",
+    "build": "./scripts/build.sh",
+    "deploy": "./scripts/deploy.sh",
+    "clean": "./scripts/clean.sh"
   },
   "repository": {
     "type": "git",
@@ -26,5 +30,6 @@
   "bugs": {
     "url": "https://github.com/michael-hart99/piggybank/issues"
   },
-  "homepage": "https://github.com/michael-hart99/piggybank#readme"
+  "homepage": "https://github.com/michael-hart99/piggybank#readme",
+  "prettier": "config/prettierrc.js"
 }
