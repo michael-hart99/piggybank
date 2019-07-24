@@ -32,7 +32,6 @@ export function emailReceipts(memberNames: StringData[], amount: string, descrip
 
     sendEmails(emails, `Receipt from ${GROUP_NAME}`, `This is confirming your payment of $${amount} to ${GROUP_NAME} for '${description}'.`);
 }
-
 export function emailIOUNotification(memberNames: StringData[], amount: string, description: string) {
     const members = getMembers();
 
@@ -59,7 +58,6 @@ export function emailIOUNotification(memberNames: StringData[], amount: string, 
 
     sendEmails(emails, `IOU for ${GROUP_NAME}`, `This is confirming that you owe $${amount} to ${GROUP_NAME} for '${description}'.`);
 }
-
 export function emailPollNotification(pollName: string, deadline: Date, link: string) {
     const members = getMembers();
 
