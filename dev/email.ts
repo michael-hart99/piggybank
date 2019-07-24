@@ -65,8 +65,8 @@ export function emailPollNotification(pollName: string, deadline: Date, link: st
 
     const emails: string[] = [];
     for (const member of members) {
-        if (!member.email || !member.notifyPoll) throw ErrorType.AssertionError;
-        if (member.notifyPoll.getValue()) {
+        if (!member.email || member.active || member.performing || !member.notifyPoll) throw ErrorType.AssertionError;
+        if (member.active.getValue() && member.performing.getValue() && member.notifyPoll.getValue()) {
             emails.push(member.email.getValue());
         }
     }
