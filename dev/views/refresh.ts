@@ -70,7 +70,6 @@ export function refreshAccountInfo() {
     setData(sheet, tableVals, tableFormats);
 }
 export function refreshMembers() {
-    const attendances = getAttendances();
     const clubInfo = getClubInfo();
 
     const memAttendance: Dictionary<number, UniqueList<number>> = {};
@@ -107,7 +106,7 @@ export function refreshMembers() {
 
     // Unique numbers to represent each day of the year are made using upper
     // bounds for the number of days in a month(50 > 31) and in a year(1000 > 50 * 12).
-    attendances.forEach(entry => {
+    getAttendances().forEach(entry => {
         if (!entry.date || !entry.member_ids || !entry.quarter_id) throw ErrorType.AssertionError;
         const curDate = entry.date.getValue();
         const dateNum = curDate.getFullYear() * 1000 +

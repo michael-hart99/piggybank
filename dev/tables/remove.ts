@@ -1,6 +1,6 @@
+import { ID } from '../ids/tablesId';
 import { getIdsFromVals, remove } from '../tableOps';
 import { ErrorType, ExpenseEntry, IncomeEntry, IntData, MemberEntry, PaymentTypeEntry, RecipientEntry, RefreshLogger, StatementEntry, Table } from '../types';
-import { ID } from './id';
 
 export function removeMember(id?: IntData[], name?: IntData[]) {
     const sheet = SpreadsheetApp.openById(ID).getSheetByName('Member');

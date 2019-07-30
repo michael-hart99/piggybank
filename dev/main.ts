@@ -15,6 +15,8 @@ import { ID as UMS_ID } from './ids/ums';
 import { ID as VIEWS_ID } from './ids/viewsId';
 import { createBackup } from './tables/backup';
 import { EditEvent, RefreshLogger, Table } from './types';
+import { mergeMember, mergePaymentType, mergeRecipient, notifyMembers, pollNotification, renameMember, renamePaymentType, renameRecipient } from './views/handlers';
+import { attendanceRecordsHTML, attendanceSummaryHTML, fullFinanceHistoryHTML, memberDetailsHTML, mergeMemberHTML, mergePaymentTypeHTML, mergeRecipientHTML, notifyMembersHTML, pollNotificationHTML, renameMemberHTML, renamePaymentTypeHTML, renameRecipientHTML } from './views/html';
 import { refreshAllViews } from './views/refresh';
 
 export function initializeAll() {
@@ -48,16 +50,21 @@ export function setupTriggers() {
     // Run everyDay everyday at 1AM
     ScriptApp.newTrigger('everyDay')
         .timeBased()
-        .atHour(1)
         .everyDays(1)
+        .atHour(1)
         .create();
-
     // Run everyWeek every week's Sunday at 1AM
     ScriptApp.newTrigger('everyWeek')
         .timeBased()
-        .atHour(1)
         .onWeekDay(ScriptApp.WeekDay.SUNDAY)
+        .atHour(1)
         .create();
+    // Run everyMonth on the first of the month at 1AM
+    ScriptApp.newTrigger('everyMonth')
+        .timeBased()
+        .onMonthDay(1)
+        .atHour(1)
+        .create()
 
     ScriptApp.newTrigger('tablesOnOpen')
         .forSpreadsheet(TABLES_ID)
@@ -124,7 +131,8 @@ export function setupTriggers() {
 }
 
 export function everyDay() { }
-export function everyWeek() {
+export function everyWeek() { }
+export function everyMonth() {
     createBackup();
 }
 
@@ -165,7 +173,9 @@ export function tablesOnEdit(e: EditEvent) {
     RefreshLogger.run();
 }
 
-export function viewsOnOpen() { }
+export function viewsOnOpen() {
+    createViewsMenu();
+}
 export function viewsOnEdit() { }
 
 function getMostRecentResponse(form: GoogleAppsScript.Forms.Form) {
@@ -747,4 +757,103 @@ function initializeUpdateMemberStatus() {
     form.addMultipleChoiceItem()
         .setTitle('Officer?')
         .setChoiceValues(['Yes', 'No']);
+}
+
+function createViewsMenu() {
+    SpreadsheetApp.getUi()
+        .createMenu('Actions')
+        .addSubMenu(SpreadsheetApp.getUi()
+            .createMenu('Rename')
+            .addItem('Rename Member', 'renameMemberDialog')
+            .addItem('Rename Payment Method', 'renamePaymentTypeDialog')
+            .addItem('Rename Recipient', 'renameRecipientDialog'))
+        .addSeparator()
+        .addSubMenu(SpreadsheetApp.getUi()
+            .createMenu('Merge')
+            .addItem('Merge Members', 'mergeMemberDialog')
+            .addItem('Merge Payment Methods', 'mergePaymentTypeDialog')
+            .addItem('Merge Recipients', 'mergeRecipientDialog'))
+        .addSeparator()
+        .addItem('Poll Notification', 'pollNotificationDialog')
+        .addItem('Notify Members', 'notifyMembersDialog')
+        .addToUi();
+    SpreadsheetApp.getUi().createMenu('Reports')
+        .addItem('Member Details', 'memberDetailsDialog')
+        .addItem('Attendance Records', 'attendanceRecordsDialog')
+        .addItem('Attendance Summary', 'attendanceSummaryDialog')
+        .addItem('Full Finance History', 'fullFinanceHistoryDialog')
+        .addToUi();
+}
+function createDialog(title: string, html: string, height: number, width: number) {
+    SpreadsheetApp.getUi().showModalDialog(
+        HtmlService.createHtmlOutput(html).setHeight(height).setWidth(width),
+        title
+    );
+}
+export function memberDetailsDialog() {
+    //  provide attendance, debt, and booleans breakdown
+    createDialog('Member Details', memberDetailsHTML(), 300, 300);
+}
+export function attendanceRecordsDialog() {
+    // allow selecting a date and viewing who was there that day 
+    createDialog('Attendance Records', attendanceRecordsHTML(), 220, 450);
+}
+export function attendanceSummaryDialog() {
+    // show percent of practices each member attended between 2 dates
+    createDialog('Attendance Summary', attendanceSummaryHTML(), 220, 450);
+}
+export function fullFinanceHistoryDialog() {
+    // generate waterfall graph of account's contents
+    createDialog('Full Finance History', fullFinanceHistoryHTML(), 850, 450);
+}
+export function renameMemberDialog() {
+    createDialog('Rename Member', renameMemberHTML(), 300, 300);
+}
+export function renamePaymentTypeDialog() {
+    createDialog('Rename Payment Method', renamePaymentTypeHTML(), 300, 300);
+}
+export function renameRecipientDialog() {
+    createDialog('Rename Recipient', renameRecipientHTML(), 300, 300);
+}
+export function mergeMemberDialog() {
+    createDialog('Merge Member', mergeMemberHTML(), 300, 300);
+}
+export function mergePaymentTypeDialog() {
+    createDialog('Merge Payment Method', mergePaymentTypeHTML(), 300, 300);
+}
+export function mergeRecipientDialog() {
+    createDialog('Merge Recipient', mergeRecipientHTML(), 300, 300);
+}
+export function pollNotificationDialog() {
+    // send performers a (performance) notification
+    createDialog('Poll Notification', pollNotificationHTML(), 300, 300);
+}
+export function notifyMembersDialog() {
+    // send performers a custom notification
+    createDialog('Notify Performers', notifyMembersHTML(), 300, 300);
+}
+
+export function handleRenameMember(oldName: string, newName: string) {
+    renameMember(oldName, newName);
+}
+export function handleRenamePaymentType(oldName: string, newName: string) {
+    renamePaymentType(oldName, newName);
+}
+export function handleRenameRecipient(oldName: string, newName: string) {
+    renameRecipient(oldName, newName);
+}
+export function handleMergeMember(aliases: string, name: string) {
+    mergeMember(aliases, name);
+}
+export function handleMergePaymentType(aliases: string, name: string) {
+    mergePaymentType(aliases, name);
+}
+export function handleMergeRecipient(aliases: string, name: string) {
+    mergeRecipient(aliases, name);
+}
+export function handlePollNotification(title: string, deadline: string, link: string) {
+    pollNotification(title, deadline, link);
+}
+export function handleNotifyMembers(memberNames: string, subject: string, body: string) {
+    notifyMembers(memberNames, subject, body);
 }

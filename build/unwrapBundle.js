@@ -62,3 +62,65 @@ function updateContactSettingsOnFormSubmit() {
 function updateMemberStatusOnFormSubmit() {
     Bundle.updateMemberStatusOnFormSubmit();
 }
+
+function memberDetailsDialog() {
+    Bundle.memberDetailsDialog();
+}
+function attendanceRecordsDialog() {
+    Bundle.attendanceRecordsDialog();
+}
+function attendanceSummaryDialog() {
+    Bundle.attendanceSummaryDialog();
+}
+function fullFinanceHistoryDialog() {
+    Bundle.fullFinanceHistoryDialog();
+}
+function renameMemberDialog() {
+    Bundle.renameMemberDialog();
+}
+function renamePaymentTypeDialog() {
+    Bundle.renamePaymentTypeDialog();
+}
+function renameRecipientDialog() {
+    Bundle.renameRecipientDialog();
+}
+function mergeMemberDialog() {
+    Bundle.mergeMemberDialog();
+}
+function mergePaymentTypeDialog() {
+    Bundle.mergePaymentTypeDialog();
+}
+function mergeRecipientDialog() {
+    Bundle.mergeRecipientDialog();
+}
+function pollNotificationDialog() {
+    Bundle.pollNotificationDialog();
+}
+function notifyMembersDialog() {
+    Bundle.notifyMembersDialog();
+}
+
+function handleRenameMember(oldName, newName) {
+    Bundle.handleRenameMember(oldName, newName);
+}
+function handleRenamePaymentType(oldName, newName) {
+    Bundle.handleRenamePaymentType(oldName, newName);
+}
+function handleRenameRecipient(oldName, newName) {
+    Bundle.handleRenameRecipient(oldName, newName);
+}
+function handleMergeMember(aliases, name) {
+    Bundle.handleMergeMember(aliases, name);
+}
+function handleMergePaymentType(aliases, name) {
+    Bundle.handleMergePaymentType(aliases, name);
+}
+function handleMergeRecipient(aliases, name) {
+    Bundle.handleMergeRecipient(aliases, name);
+}
+function handlePollNotification(title, deadline, link) {
+    Bundle.handlePollNotification(title, deadline, link);
+}
+function handleNotifyMembers(memberNames, subject, body) {
+    Bundle.handleNotifyMembers(memberNames, subject, body);
+}

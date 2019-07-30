@@ -63,7 +63,7 @@ export function emailPollNotification(pollName: string, deadline: Date, link: st
 
     const emails: string[] = [];
     for (const member of members) {
-        if (!member.email || member.active || member.performing || !member.notifyPoll) throw ErrorType.AssertionError;
+        if (!member.email || !member.active || !member.performing || !member.notifyPoll) throw ErrorType.AssertionError;
         if (member.active.getValue() && member.performing.getValue() && member.notifyPoll.getValue()) {
             emails.push(member.email.getValue());
         }
@@ -92,6 +92,8 @@ export function emailPollNotification(pollName: string, deadline: Date, link: st
         case 6:
             weekday = 'Saturday';
             break;
+        default:
+            throw ErrorType.AssertionError;
     }
     let month: string;
     switch (deadline.getMonth()) {
@@ -131,6 +133,8 @@ export function emailPollNotification(pollName: string, deadline: Date, link: st
         case 11:
             month = 'December';
             break;
+        default:
+            throw ErrorType.AssertionError;
     }
     const date = deadline.getDate();
 

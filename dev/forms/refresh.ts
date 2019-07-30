@@ -214,7 +214,7 @@ export function refreshTransferFunds() {
     formItems[1].asCheckboxItem().setChoiceValues(expenses);
 }
 export function refreshUpdateContactSettings() {
-    const memberNames = [];
+    const memberNames: string[] = [];
     getMembers().forEach(entry => {
         if (!entry.name || !entry.active) throw ErrorType.AssertionError;
         if (entry.active.getValue()) {
