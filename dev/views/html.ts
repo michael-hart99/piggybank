@@ -84,6 +84,10 @@ export function memberDetailsHTML() {
     </style>
 
     <body>
+    <select id="member">
+      ${memberNames.join('\n')}
+    </select>
+    </br>
     <div id="display">
       <p>Name: </p><p id="name"></p></br>
       <p>Status: </p><p id="status"></p></br>
@@ -97,10 +101,6 @@ export function memberDetailsHTML() {
       <p>Notify of polls?: </p><p id="notifyPoll"></p></br>
       <p>Send receipts?: </p><p id="sendReceipt"></p></br>
     </div>
-    </br>
-    <select id="member">
-      ${memberNames.join('\n')}
-    </select>
     </body>
 
     <script>
@@ -168,7 +168,7 @@ export function attendanceRecordsHTML() {
   const attendances: string[] = [];
   Object.keys(dailyAttendance).forEach(date => {
     const dateNum = parseInt(date);
-    if (dateNum === NaN) throw ErrorType.AssertionError;
+    if (isNaN(dateNum)) throw ErrorType.AssertionError;
     const memberIds = dailyAttendance[dateNum];
     if (!memberIds) throw ErrorType.AssertionError;
     const memberNames = memberIds.asArray().map(id => {
@@ -283,9 +283,9 @@ export function attendanceRecordsHTML() {
 
     var selectedDate;
 
-    function dateStrToNum(d) {
+    function dateToNum(d) {
       const dateObj = new Date(d);
-      return dateObj.getUTCDate() + dateObj.getUTCMonth() * 50 + dateObj.getUTCFullYear() * 1000;
+      return dateObj.getDate() + dateObj.getMonth() * 50 + dateObj.getFullYear() * 1000;
     }
 
     $(function() {
@@ -305,7 +305,9 @@ export function attendanceRecordsHTML() {
         },
         
         onSelect: (d, x) => {
-          const dateNum = dateStrToNum(d);
+          const rawDate = new Date(d);
+          const date = new Date(rawDate.valueOf() + rawDate.getTimezoneOffset() * 60 * 1000);
+          const dateNum = dateToNum(date);
           const keys = Object.keys(attendances);
           const i = keys.indexOf(dateNum.toString());
           if (i !== -1) {
@@ -483,8 +485,8 @@ export function attendanceSummaryHTML() {
       const startDateNum = dateStrToNum(startDate.value);
       const endDateNum = dateStrToNum(endDate.value);
       if (startDateNum > endDateNum) {
-        numDaysElt.hidden = true;
-        numDaysElt.innerHTML = "";
+        numDaysElt.hidden = false;
+        numDaysElt.innerHTML = "Total Days: " + totalDays;
         memberList.innerHTML = "";
         return;
       }
@@ -531,17 +533,11 @@ export function attendanceSummaryHTML() {
           }
         }
       });
-      if (fillData.length === 0) {
-        numDaysElt.hidden = true;
-        numDaysElt.innerHTML = "";
-        memberList.innerHTML = "";
-      } else {
-        fillData.sort();
+      fillData.sort();
 
-        numDaysElt.hidden = false;
-        numDaysElt.innerHTML = "Total Days: " + totalDays;
-        memberList.innerHTML = fillData.join("<br/>");
-      }
+      numDaysElt.hidden = false;
+      numDaysElt.innerHTML = "Total Days: " + totalDays;
+      memberList.innerHTML = fillData.join("<br/>");
     }
     
     startDate.addEventListener("change", refreshStats);

@@ -66,9 +66,30 @@ def main():
     '''
     '''
     #pylint: disable=E1101
+    base_dir = os.getcwd()
+
+    group_name = input("Group Name: ")
+    cur_quarter = input("\n0 = Winter\n1 = Spring\n2 = Summer\n3 = Fall\nCurrent Quarter: ")
+    cur_year = input("\nCurrent Year: ")
+    mem_dues = input("\nMember Dues: ")
+    officer_dues = input("Officer Dues: ")
+    num_attns = input("\nNumber of attendances before members owe dues: ")
+    project_info_file = open(base_dir + '/' + DEV_DIR + '/' + 'projectInfo.ts', "w")
+    project_info_file.write("export const GROUP_NAME: string = '" + group_name + "';\n" +
+                            "export const START_QUARTER: string = '" + cur_quarter + "';\n" +
+                            "export const START_YEAR: string = '" + cur_year + "';\n" +
+                            "export const MEMBER_DUES: string = '" + mem_dues + "';\n" +
+                            "export const OFFICER_DUES: string = '" + officer_dues + "';\n" +
+                            "export const NUM_ATTNS: string = '" + num_attns + "';")
+    project_info_file.close()
+
+    print('\nTwo browser windows should now open. Please authorize this script to continue creating folders and files in your drive.')
+    subprocess.run('clasp login', shell=True)
+
     creds = auth()
     drive_service = build('drive', 'v3', credentials=creds)
 
+    print('\n Creating folders...')
     # Create base folder
     file_metadata = {'name': BASE_FOLDER_NAME,
                      'mimeType': 'application/vnd.google-apps.folder'}
@@ -99,10 +120,12 @@ def main():
                                      .execute().get('id')
 
     # Sheets
+    print('\n Creating sheets...')
     init_file(drive_service, 'ids/tablesId.ts', 'Database', sheet_folder)
     init_file(drive_service, 'ids/viewsId.ts', 'Generated Report', sheet_folder)
 
     # Forms
+    print('\n Creating forms...')
     init_file(drive_service, 'ids/ae.ts', 'Add Expense', form_folder)
     init_file(drive_service, 'ids/ai.ts', 'Add Income', form_folder)
     init_file(drive_service, 'ids/ami.ts', 'Add Member IOU', form_folder)
@@ -115,12 +138,6 @@ def main():
     init_file(drive_service, 'ids/ucs.ts', 'Update Contact Settings', form_folder)
     init_file(drive_service, 'ids/ums.ts', 'Update Member Status', form_folder)
 
-    base_dir = os.getcwd()
-    os.chdir(base_dir + '/' + BUILD_DIR)
-    subprocess.run('clasp create --title "Piggybank"',
-                   shell=True, capture_output=True, text=True).stdout
-    os.chdir(base_dir)
-
     # Backup Folder
     file_metadata = {'name': BACKUP_FOLDER_NAME,
                      'mimeType': 'application/vnd.google-apps.folder',
@@ -129,10 +146,21 @@ def main():
                                     .create(body=file_metadata, fields='id') \
                                     .execute().get('id')
 
-    base_dir = os.getcwd()
     id_file = open(base_dir + '/' + DEV_DIR + '/' + 'ids/backupFolderId.ts', "w")
     id_file.write("export const ID = '" + backup_folder_id + "';")
     id_file.close()
+
+    print('\n Initializing Google Apps Script...')
+    base_dir = os.getcwd()
+    os.chdir(base_dir + '/' + BUILD_DIR)
+    subprocess.run('clasp create --type standalone --title "Piggybank"', shell=True)
+    os.chdir(base_dir)
+
+    subprocess.run('npm run deploy', shell=True)
+
+    os.chdir(base_dir + '/' + BUILD_DIR)
+    subprocess.run('clasp open', shell=True)
+    os.chdir(base_dir)
 
 if __name__ == '__main__':
     main()

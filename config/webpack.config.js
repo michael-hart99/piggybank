@@ -18,7 +18,7 @@ module.exports = {
       {
         loader: 'ts-loader',
         options: {
-          configFile: 'tsconfig.json',
+          configFile: 'config/tsconfig.json',
           compilerOptions: {
             "noEmit": false
           }

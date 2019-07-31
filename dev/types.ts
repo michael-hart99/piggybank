@@ -228,7 +228,7 @@ export class IntData extends Data {
     }
     static create(s: string) {
         let n = parseInt(s);
-        if (n === NaN) throw ErrorType.IllegalArgumentError;
+        if (isNaN(n)) throw ErrorType.IllegalArgumentError;
         return new IntData(n);
     }
     toString() {
@@ -244,7 +244,7 @@ export class FloatData extends Data {
     }
     static create(s: string) {
         let n = parseFloat(s);
-        if (n === NaN) throw ErrorType.IllegalArgumentError;
+        if (isNaN(n)) throw ErrorType.IllegalArgumentError;
         return new FloatData(n);
     }
     toString() {
@@ -260,7 +260,7 @@ export class DateData extends Data {
     }
     static create(s: string) {
         let n = parseInt(s);
-        if (n === NaN) throw ErrorType.IllegalArgumentError;
+        if (isNaN(n)) throw ErrorType.IllegalArgumentError;
         return new DateData(new Date(n));
     }
     toDateString() {
@@ -380,7 +380,7 @@ export class QuarterData extends Data {
     }
     static create(s: string) {
         let n = parseInt(s);
-        if (n === NaN) throw ErrorType.IllegalArgumentError;
+        if (isNaN(n)) throw ErrorType.IllegalArgumentError;
         const year = new IntData(Math.floor(n / 4))
         switch (n % 4) {
             case 0:
@@ -452,7 +452,7 @@ export class IntListData extends Data {
         return new IntListData(
             vals.map(val => {
                 let n = parseInt(val);
-                if (n === NaN) throw ErrorType.IllegalArgumentError;
+                if (isNaN(n)) throw ErrorType.IllegalArgumentError;
                 return new IntData(n);
             })
         );

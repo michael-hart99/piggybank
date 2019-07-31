@@ -67,8 +67,10 @@ export function mergeMember(aliases: string, name: string) {
         const curIds = attendance.member_ids.getValue().map(n => n.getValue());
         const prunedIds = curIds.filter(id => aliasIds.indexOf(id) === -1);
         if (prunedIds.length < curIds.length) {
-            prunedIds.push(newId.getValue());
-            prunedIds.sort();
+            if (prunedIds.indexOf(newId.getValue()) === -1) {
+                prunedIds.push(newId.getValue());
+                prunedIds.sort();
+            }
             updateData.ids.push(attendance.id);
             updateData.memIds.push(new IntListData(prunedIds.map(id => new IntData(id))));
         }

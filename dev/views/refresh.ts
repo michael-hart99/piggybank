@@ -17,7 +17,16 @@ export function refreshAccountInfo() {
 
     const incomes = getIncomes();
     const expenses = getExpenses();
-    const venmoId = getPaymentTypeIds([new StringData('venmo')])[0];
+    let venmoId: number;
+    try {
+        venmoId = getPaymentTypeIds([new StringData('venmo')])[0].getValue();
+    } catch (e) {
+        if (e === ErrorType.NoMatchFoundError) {
+            venmoId = NaN;
+        } else {
+            throw e;
+        }
+    }
 
     let bank = 0;
     let venmo = 0;
@@ -27,7 +36,7 @@ export function refreshAccountInfo() {
         if (!income.amount || !income.paymentTypeId || !income.statementId) throw ErrorType.AssertionError;
 
         if (income.statementId.getValue() === -1) {
-            if (income.paymentTypeId.getValue() === venmoId.getValue()) {
+            if (income.paymentTypeId.getValue() === venmoId) {
                 venmo += income.amount.getValue();
             } else {
                 onHand += income.amount.getValue();
@@ -40,7 +49,7 @@ export function refreshAccountInfo() {
         if (!expense.amount || !expense.paymentTypeId || !expense.statementId) throw ErrorType.AssertionError;
 
         if (expense.statementId.getValue() === -1) {
-            if (expense.paymentTypeId.getValue() === venmoId.getValue()) {
+            if (expense.paymentTypeId.getValue() === venmoId) {
                 venmo -= expense.amount.getValue();
             } else {
                 onHand -= expense.amount.getValue();

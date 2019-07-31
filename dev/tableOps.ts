@@ -10,7 +10,7 @@ function getNextId(sheet: GoogleAppsScript.Spreadsheet.Sheet) {
     const id = parseInt(
         sheet.getRange(sheetLength + HEADER_LEN, 1).getValue().toString()
     );
-    if (id === NaN) {
+    if (isNaN(id)) {
         throw ErrorType.IllegalArgumentError;
     }
 

@@ -13,8 +13,9 @@ import { ID as TF_ID } from './ids/tf';
 import { ID as UCS_ID } from './ids/ucs';
 import { ID as UMS_ID } from './ids/ums';
 import { ID as VIEWS_ID } from './ids/viewsId';
+import { MEMBER_DUES, NUM_ATTNS, OFFICER_DUES, START_QUARTER, START_YEAR } from './projectInfo';
 import { createBackup } from './tables/backup';
-import { EditEvent, RefreshLogger, Table } from './types';
+import { EditEvent, ErrorType, IntData, Quarter, QuarterData, RefreshLogger, Table } from './types';
 import { mergeMember, mergePaymentType, mergeRecipient, notifyMembers, pollNotification, renameMember, renamePaymentType, renameRecipient } from './views/handlers';
 import { attendanceRecordsHTML, attendanceSummaryHTML, fullFinanceHistoryHTML, memberDetailsHTML, mergeMemberHTML, mergePaymentTypeHTML, mergeRecipientHTML, notifyMembersHTML, pollNotificationHTML, renameMemberHTML, renamePaymentTypeHTML, renameRecipientHTML } from './views/html';
 import { refreshAllViews } from './views/refresh';
@@ -37,8 +38,7 @@ export function initializeAll() {
 
     setupTriggers();
 
-    refreshAllViews();
-    refreshAllForms();
+    refreshAll();
 }
 
 export function refreshAll() {
@@ -522,6 +522,43 @@ function initializeViews() {
 function initializeTables() {
     const sheetapp = SpreadsheetApp.openById(TABLES_ID);
 
+    const quarterNum = parseInt(START_QUARTER);
+    const yearNum = parseInt(START_YEAR);
+    let curQuarter: QuarterData;
+    if (isNaN(yearNum)) {
+        curQuarter = new QuarterData(Quarter.WINTER, new IntData(0));
+    } else {
+        switch (quarterNum) {
+            case 0:
+                curQuarter = new QuarterData(Quarter.WINTER, new IntData(yearNum));
+                break;
+            case 1:
+                curQuarter = new QuarterData(Quarter.SPRING, new IntData(yearNum));
+                break;
+            case 2:
+                curQuarter = new QuarterData(Quarter.SUMMER, new IntData(yearNum));
+                break;
+            case 3:
+                curQuarter = new QuarterData(Quarter.FALL, new IntData(yearNum));
+                break;
+            default:
+                if (isNaN(quarterNum)) {
+                    curQuarter = new QuarterData(Quarter.WINTER, new IntData(yearNum));
+                } else {
+                    throw ErrorType.AssertionError;
+                }
+        }
+    }
+
+    let memDuesNum = parseFloat(MEMBER_DUES);
+    if (isNaN(memDuesNum)) memDuesNum = 0;
+
+    let officerDuesNum = parseFloat(OFFICER_DUES);
+    if (isNaN(officerDuesNum)) officerDuesNum = 0;
+
+    let numAttnsNum = parseInt(NUM_ATTNS);
+    if (isNaN(numAttnsNum)) numAttnsNum = 0;
+
     sheetapp
         .insertSheet('Member')
         .appendRow([
@@ -536,10 +573,12 @@ function initializeTables() {
             'currentDuesPaid',
             'notifyPoll',
             'sendReceipt'
-        ]);
+        ])
+        .setFrozenRows(1);
     sheetapp
         .insertSheet('Income')
-        .appendRow(['id', 'date', 'amount', 'description', 'paymentTypeId', 'statementId']);
+        .appendRow(['id', 'date', 'amount', 'description', 'paymentTypeId', 'statementId'])
+        .setFrozenRows(1);
     sheetapp
         .insertSheet('Expense')
         .appendRow([
@@ -550,15 +589,18 @@ function initializeTables() {
             'paymentTypeId',
             'recipientId',
             'statementId'
-        ]);
-    sheetapp.insertSheet('Recipient').appendRow(['id', 'name']);
-    sheetapp.insertSheet('PaymentType').appendRow(['id', 'name']);
+        ])
+        .setFrozenRows(1);
+    sheetapp.insertSheet('Recipient').appendRow(['id', 'name']).setFrozenRows(1);
+    sheetapp.insertSheet('PaymentType').appendRow(['id', 'name']).setFrozenRows(1);
     sheetapp
         .insertSheet('Statement')
-        .appendRow(['id', 'date', 'confirmed']);
+        .appendRow(['id', 'date', 'confirmed'])
+        .setFrozenRows(1);
     sheetapp
         .insertSheet('Attendance')
-        .appendRow(['id', 'date', 'memberIds', 'quarterId']);
+        .appendRow(['id', 'date', 'memberIds', 'quarterId'])
+        .setFrozenRows(1);
     sheetapp
         .insertSheet('ClubInfo')
         .appendRow([
@@ -566,12 +608,11 @@ function initializeTables() {
             'officerFee',
             'daysUntilFeeRequired',
             'currentQuarterId'
-        ])
-        .appendRow([
-            '3000',
-            '1500',
-            '5',
-            '5'
+        ]).appendRow([
+            new IntData(Math.round(memDuesNum * 100)).toString(),
+            new IntData(Math.round(officerDuesNum * 100)).toString(),
+            new IntData(numAttnsNum).toString(),
+            curQuarter.toString()
         ]);
 
     sheetapp.deleteSheet(sheetapp.getSheetByName('Sheet1'));
@@ -792,7 +833,7 @@ function createDialog(title: string, html: string, height: number, width: number
 }
 export function memberDetailsDialog() {
     //  provide attendance, debt, and booleans breakdown
-    createDialog('Member Details', memberDetailsHTML(), 300, 300);
+    createDialog('Member Details', memberDetailsHTML(), 260, 300);
 }
 export function attendanceRecordsDialog() {
     // allow selecting a date and viewing who was there that day 
@@ -804,33 +845,34 @@ export function attendanceSummaryDialog() {
 }
 export function fullFinanceHistoryDialog() {
     // generate waterfall graph of account's contents
-    createDialog('Full Finance History', fullFinanceHistoryHTML(), 850, 450);
+    createDialog('Full Finance History', fullFinanceHistoryHTML(), 450, 850);
 }
+
 export function renameMemberDialog() {
-    createDialog('Rename Member', renameMemberHTML(), 300, 300);
+    createDialog('Rename Member', renameMemberHTML(), 130, 300);
 }
 export function renamePaymentTypeDialog() {
-    createDialog('Rename Payment Method', renamePaymentTypeHTML(), 300, 300);
+    createDialog('Rename Payment Method', renamePaymentTypeHTML(), 130, 300);
 }
 export function renameRecipientDialog() {
-    createDialog('Rename Recipient', renameRecipientHTML(), 300, 300);
+    createDialog('Rename Recipient', renameRecipientHTML(), 130, 300);
 }
 export function mergeMemberDialog() {
-    createDialog('Merge Member', mergeMemberHTML(), 300, 300);
+    createDialog('Merge Member', mergeMemberHTML(), 230, 300);
 }
 export function mergePaymentTypeDialog() {
-    createDialog('Merge Payment Method', mergePaymentTypeHTML(), 300, 300);
+    createDialog('Merge Payment Method', mergePaymentTypeHTML(), 230, 300);
 }
 export function mergeRecipientDialog() {
-    createDialog('Merge Recipient', mergeRecipientHTML(), 300, 300);
+    createDialog('Merge Recipient', mergeRecipientHTML(), 230, 300);
 }
 export function pollNotificationDialog() {
     // send performers a (performance) notification
-    createDialog('Poll Notification', pollNotificationHTML(), 300, 300);
+    createDialog('Poll Notification', pollNotificationHTML(), 170, 300);
 }
 export function notifyMembersDialog() {
     // send performers a custom notification
-    createDialog('Notify Performers', notifyMembersHTML(), 300, 300);
+    createDialog('Notify Performers', notifyMembersHTML(), 330, 300);
 }
 
 export function handleRenameMember(oldName: string, newName: string) {
