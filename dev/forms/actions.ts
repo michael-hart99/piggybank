@@ -252,7 +252,7 @@ export function takeAttendance(memListRes: string[], newMemberRes?: string) {
 
     let newMembersData: StringData[] = [];
     let newIds: IntData[];
-    if (!newMemberRes) {
+    if (newMemberRes === undefined) {
         newIds = [];
     } else {
         newMemberRes = newMemberRes.toLowerCase();
@@ -330,7 +330,7 @@ export function updateContactSettings(name: string, email?: string, phone?: stri
         // remove the two dashes
         phone = phone.replace('-', '').replace('-', '');
         const carrierSuffix = CARRIERS[carrier];
-        if (!carrierSuffix) throw ErrorType.AssertionError;
+        if (carrierSuffix === undefined) throw ErrorType.AssertionError;
         emailData = new StringData(phone.concat(carrierSuffix));
     }
 

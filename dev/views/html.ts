@@ -173,7 +173,7 @@ export function attendanceRecordsHTML() {
     if (!memberIds) throw ErrorType.AssertionError;
     const memberNames = memberIds.asArray().map(id => {
       const name = idToMember[id];
-      if (!name) throw ErrorType.AssertionError;
+      if (name === undefined) throw ErrorType.AssertionError;
       return name;
     });
     attendances.push(`${dateNum}: ["${memberNames.join('", "')}"]`);
@@ -357,7 +357,7 @@ export function attendanceSummaryHTML() {
 
     curAttendances.asArray().forEach(memId => {
       const curTotal = curMemTotals[memId];
-      if (!curTotal) {
+      if (curTotal === undefined) {
         curMems.push(memId);
         curMemTotals[memId] = 1;
       } else {
@@ -368,7 +368,7 @@ export function attendanceSummaryHTML() {
     const dayTotals: string[] = [];
     curMems.forEach(memId => {
       const memTotal = curMemTotals[memId];
-      if (!memTotal) throw ErrorType.AssertionError;
+      if (memTotal === undefined) throw ErrorType.AssertionError;
       dayTotals.push(`${memId}: ${memTotal}`);
     });
     totalMemberAttendance.push(`${day}: {${dayTotals.join(',\n')}}`);

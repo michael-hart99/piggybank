@@ -260,7 +260,7 @@ export function refreshIncomes() {
         ) throw ErrorType.AssertionError;
 
         const payType = idToPayType[curPayId.getValue()];
-        if (!payType) throw ErrorType.AssertionError;
+        if (payType === undefined) throw ErrorType.AssertionError;
         const inAccount = curStateId.getValue() !== -1;
 
         tableVals.push([
@@ -330,7 +330,7 @@ export function refreshExpenses() {
 
         const payType = idToPayType[curPayId.getValue()];
         const recipient = idToRecipient[curRecip.getValue()];
-        if (!payType || !recipient) throw ErrorType.AssertionError;
+        if (payType === undefined || recipient === undefined) throw ErrorType.AssertionError;
         const inAccount = curStateId.getValue() !== -1;
 
         tableVals.push([
@@ -413,7 +413,7 @@ export function refreshAllTransactions() {
                 ) throw ErrorType.AssertionError;
 
                 const payType = idToPayType[curPayId.getValue()];
-                if (!payType) throw ErrorType.AssertionError;
+                if (payType === undefined) throw ErrorType.AssertionError;
                 inAccount = curStateId.getValue() !== -1;
 
                 tableVals.push([
@@ -444,7 +444,7 @@ export function refreshAllTransactions() {
 
                 const payType = idToPayType[curPayId.getValue()];
                 const recipient = idToRecipient[curRecip.getValue()];
-                if (!payType || !recipient) throw ErrorType.AssertionError;
+                if (payType === undefined || recipient === undefined) throw ErrorType.AssertionError;
                 inAccount = curStateId.getValue() !== -1;
 
                 tableVals.push([
@@ -473,7 +473,7 @@ export function refreshAllTransactions() {
             ) throw ErrorType.AssertionError;
 
             const payType = idToPayType[curPayId.getValue()];
-            if (!payType) throw ErrorType.AssertionError;
+            if (payType === undefined) throw ErrorType.AssertionError;
             inAccount = curStateId.getValue() !== -1;
 
             tableVals.push([
@@ -503,9 +503,8 @@ export function refreshAllTransactions() {
             ) throw ErrorType.AssertionError;
 
             const payType = idToPayType[curPayId.getValue()];
-            if (!payType) throw ErrorType.AssertionError;
             const recipient = idToRecipient[curRecip.getValue()];
-            if (!recipient) throw ErrorType.AssertionError;
+            if (payType === undefined || recipient === undefined) throw ErrorType.AssertionError;
             inAccount = curStateId.getValue() !== -1;
 
             tableVals.push([
@@ -602,7 +601,7 @@ export function refreshStatements() {
         if (!curDetails) throw ErrorType.AssertionError;
 
         const payType = idToPayType[curDetails.payType];
-        if (!payType) throw ErrorType.AssertionError;
+        if (payType === undefined) throw ErrorType.AssertionError;
 
         tableVals.push([
             curDate.toDateString(),

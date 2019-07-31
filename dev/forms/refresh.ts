@@ -124,7 +124,7 @@ export function refreshConfirmTransfer() {
             if (!curDetails) throw ErrorType.AssertionError;
 
             const payType = idToPayType[curDetails.payType];
-            if (!payType) throw ErrorType.AssertionError
+            if (payType === undefined) throw ErrorType.AssertionError
 
             transfers.push(centsToString(new IntData(curDetails.amount)) +
                 ' ' + capitalizeString(payType) +
@@ -184,7 +184,7 @@ export function refreshTransferFunds() {
 
         if (entry.statementId.getValue() === -1) {
             const payType = idToPayType[entry.paymentTypeId.getValue()];
-            if (!payType) throw ErrorType.AssertionError
+            if (payType === undefined) throw ErrorType.AssertionError
 
             incomes.push(centsToString(entry.amount) +
                 ' ' + capitalizeString(payType) +
@@ -200,7 +200,7 @@ export function refreshTransferFunds() {
 
         if (entry.statementId.getValue() === -1) {
             const payType = idToPayType[entry.paymentTypeId.getValue()];
-            if (!payType) throw ErrorType.AssertionError
+            if (payType === undefined) throw ErrorType.AssertionError
 
             expenses.push(centsToString(entry.amount) +
                 ' ' + capitalizeString(payType) +
