@@ -8,7 +8,7 @@ function getNextId(sheet: GoogleAppsScript.Spreadsheet.Sheet) {
     if (sheetLength === 0) return 0;
 
     const id = parseInt(
-        sheet.getRange(sheetLength + HEADER_LEN, 1).getValue().toString()
+        sheet.getRange(sheetLength + HEADER_LEN, 1).getValue().toString(), 10
     );
     if (isNaN(id)) {
         throw ErrorType.IllegalArgumentError;
@@ -300,7 +300,9 @@ export function orderBy(
         });
     }
 
-    sheet
-        .getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn())
-        .sort(sortSpec);
+    if (sheet.getLastRow() > 1) {
+        sheet
+            .getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn())
+            .sort(sortSpec);
+    }
 }

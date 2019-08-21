@@ -1,8 +1,11 @@
 function initialize() {
     Bundle.initializeAll();
 }
-function refresh() {
+function refreshAll() {
     Bundle.refreshAll();
+}
+function backupTables() {
+    Bundle.backupTables();
 }
 function setupTriggers() {
     Bundle.setupTriggers();
@@ -13,6 +16,9 @@ function everyDay() {
 }
 function everyWeek() {
     Bundle.everyWeek();
+}
+function everyMonth() {
+    Bundle.everyMonth();
 }
 
 function tablesOnOpen() {
@@ -75,6 +81,27 @@ function attendanceSummaryDialog() {
 function fullFinanceHistoryDialog() {
     Bundle.fullFinanceHistoryDialog();
 }
+function addMemberDialog() {
+    Bundle.addMemberDialog();
+}
+function addAttendanceDialog() {
+    Bundle.addAttendanceDialog();
+}
+function addIncomeDialog() {
+    Bundle.addIncomeDialog();
+}
+function addExpenseDialog() {
+    Bundle.addExpenseDialog();
+}
+function addStatementDialog() {
+    Bundle.addStatementDialog();
+}
+function addRecipientDialog() {
+    Bundle.addRecipientDialog();
+}
+function addPaymentTypeDialog() {
+    Bundle.addPaymentTypeDialog();
+}
 function renameMemberDialog() {
     Bundle.renameMemberDialog();
 }
@@ -100,6 +127,27 @@ function notifyMembersDialog() {
     Bundle.notifyMembersDialog();
 }
 
+function handleAddMember(name, dateJoined) {
+    Bundle.handleAddMember(name, dateJoined);
+}
+function handleAddAttendance(date, members, quarter, year) {
+    Bundle.handleAddAttendance(date, members, quarter, year);
+}
+function handleAddIncome(date, amount, description, payType) {
+    Bundle.handleAddIncome(date, amount, description, payType);
+}
+function handleAddExpense(date, amount, description, recipient, payType) {
+    Bundle.handleAddExpense(date, amount, description, recipient, payType);
+}
+function handleAddStatement(date, incomes, expenses) {
+    Bundle.handleAddStatement(date, incomes, expenses);
+}
+function handleAddRecipient(name) {
+    Bundle.handleAddRecipient(name);
+}
+function handleAddPayType(name) {
+    Bundle.handleAddPayType(name);
+}
 function handleRenameMember(oldName, newName) {
     Bundle.handleRenameMember(oldName, newName);
 }

@@ -64,7 +64,7 @@ export function emailPollNotification(pollName: string, deadline: Date, link: st
     const emails: string[] = [];
     for (const member of members) {
         if (!member.email || !member.active || !member.performing || !member.notifyPoll) throw ErrorType.AssertionError;
-        if (member.active.getValue() && member.performing.getValue() && member.notifyPoll.getValue()) {
+        if (member.active.getValue() && member.notifyPoll.getValue()) {
             emails.push(member.email.getValue());
         }
     }
@@ -138,5 +138,9 @@ export function emailPollNotification(pollName: string, deadline: Date, link: st
     }
     const date = deadline.getDate();
 
-    sendEmails(emails, `${GROUP_NAME} Performance Poll`, `Please respond to the ${pollName} poll before ${weekday}, ${month} ${date}.\nLink: ${link}`);
+    const hours = (((deadline.getHours() - 1) + 12) % 12 + 1).toString();
+    const mins = deadline.getMinutes() < 10 ? `0${deadline.getMinutes()}` : deadline.getMinutes().toString();
+    const ampm = deadline.getHours() < 12 ? 'AM' : 'PM';
+
+    sendEmails(emails, `${GROUP_NAME} Performance Poll`, `Please respond to the ${pollName} poll before ${weekday}, ${month} ${date} at ${hours}:${mins} ${ampm}.\nLink: ${link}`);
 }

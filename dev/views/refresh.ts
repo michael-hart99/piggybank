@@ -1,7 +1,7 @@
 import { ID } from '../ids/viewsId';
 import { setData } from '../tableOps';
 import { getAttendances, getClubInfo, getExpenses, getIncomes, getMembers, getPaymentTypeIds, getPaymentTypes, getRecipients, getStatements } from "../tables/get";
-import { capitalizeString, Color, compareByDateDesc, DateData, Dictionary, ErrorType, MemberEntry, NumberFormat, StringData, UniqueList } from '../types';
+import { capitalizeString, Color, compareByDateDesc, Dictionary, ErrorType, NumberFormat, StringData, UniqueList } from '../types';
 
 export function refreshAllViews() {
     refreshAccountInfo();
@@ -15,8 +15,12 @@ export function refreshAllViews() {
 export function refreshAccountInfo() {
     const curQuarter = getClubInfo().currentQuarterId;
 
-    const incomes = getIncomes();
-    const expenses = getExpenses();
+    const unconfirmedList: number[] = [];
+    getStatements().forEach(entry => {
+        if (!entry.id || !entry.confirmed) throw ErrorType.AssertionError;
+        if (!entry.confirmed.getValue()) unconfirmedList.push(entry.id.getValue());
+    });
+
     let venmoId: number;
     try {
         venmoId = getPaymentTypeIds([new StringData('venmo')])[0].getValue();
@@ -28,13 +32,15 @@ export function refreshAccountInfo() {
         }
     }
 
+    let total = 0;
     let bank = 0;
     let venmo = 0;
     let onHand = 0;
 
-    for (const income of incomes) {
+    getIncomes().forEach(income => {
         if (!income.amount || !income.paymentTypeId || !income.statementId) throw ErrorType.AssertionError;
 
+        total += income.amount.getValue();
         if (income.statementId.getValue() === -1) {
             if (income.paymentTypeId.getValue() === venmoId) {
                 venmo += income.amount.getValue();
@@ -42,12 +48,15 @@ export function refreshAccountInfo() {
                 onHand += income.amount.getValue();
             }
         } else {
-            bank += income.amount.getValue();
+            if (unconfirmedList.indexOf(income.statementId.getValue()) === -1) {
+                bank += income.amount.getValue();
+            }
         }
-    }
-    for (const expense of expenses) {
+    });
+    getExpenses().forEach(expense => {
         if (!expense.amount || !expense.paymentTypeId || !expense.statementId) throw ErrorType.AssertionError;
 
+        total -= expense.amount.getValue();
         if (expense.statementId.getValue() === -1) {
             if (expense.paymentTypeId.getValue() === venmoId) {
                 venmo -= expense.amount.getValue();
@@ -55,13 +64,15 @@ export function refreshAccountInfo() {
                 onHand -= expense.amount.getValue();
             }
         } else {
-            bank -= expense.amount.getValue();
+            if (unconfirmedList.indexOf(expense.statementId.getValue()) === -1) {
+                bank -= expense.amount.getValue();
+            }
         }
-    }
+    });
 
     const tableVals = [[
         curQuarter.toDateString(),
-        ((bank + venmo + onHand) / 100).toString(),
+        (total / 100).toString(),
         (bank / 100).toString(),
         (venmo / 100).toString(),
         (onHand / 100).toString()
@@ -82,35 +93,33 @@ export function refreshMembers() {
     const clubInfo = getClubInfo();
 
     const memAttendance: Dictionary<number, UniqueList<number>> = {};
-    const activeMems: MemberEntry[] = [];
-    const inactiveMems: MemberEntry[] = [];
-    getMembers().forEach(entry => {
-        if (!entry.id || !entry.active) throw ErrorType.AssertionError;
-        if (entry.active.getValue()) {
-            activeMems.push(entry);
-        } else {
-            inactiveMems.push(entry);
-        }
-        memAttendance[entry.id.getValue()] = new UniqueList<number>();
-    });
-    activeMems.sort((a, b) => {
+    const abcMembers = getMembers().sort((a, b) => {
         if (
-            !a.dateJoined || !a.name ||
-            !b.dateJoined || !b.name
+            !a.dateJoined || !a.name || !a.active ||
+            !b.dateJoined || !b.name || !b.active
         ) {
             throw ErrorType.AssertionError;
         }
-        const aYear = a.dateJoined.getValue().getFullYear();
-        const bYear = b.dateJoined.getValue().getFullYear();
-        if (aYear !== bYear) {
-            return aYear - bYear;
+
+        if (a.active.getValue() !== b.active.getValue()) {
+            if (a.active.getValue()) {
+                return -1;
+            } else {
+                return 1;
+            }
         } else {
-            return a.name.getValue().localeCompare(b.name.getValue());
+            if (a.active.getValue()) {
+                const aYear = a.dateJoined.getValue().getFullYear();
+                const bYear = b.dateJoined.getValue().getFullYear();
+                if (aYear !== bYear) {
+                    return aYear - bYear;
+                } else {
+                    return a.name.getValue().localeCompare(b.name.getValue());
+                }
+            } else {
+                return a.name.getValue().localeCompare(b.name.getValue());
+            }
         }
-    });
-    inactiveMems.sort((a, b) => {
-        if (!a.name || !b.name) throw ErrorType.AssertionError;
-        return a.name.getValue().localeCompare(b.name.getValue());
     });
 
     // Unique numbers to represent each day of the year are made using upper
@@ -124,7 +133,10 @@ export function refreshMembers() {
         if (entry.quarter_id.getValue() === clubInfo.currentQuarterId.getValue()) {
             entry.member_ids.getValue().forEach(memberId => {
                 let curSet = memAttendance[memberId.getValue()];
-                if (!curSet) throw ErrorType.AssertionError;
+                if (!curSet) {
+                    curSet = new UniqueList<number>();
+                    memAttendance[memberId.getValue()] = curSet;
+                }
                 curSet.add(dateNum);
             });
         }
@@ -134,79 +146,25 @@ export function refreshMembers() {
     const tableFormats: string[][] = [];
     const tableColors: string[][] = [];
     const breakLineNums: number[] = [];
-    let prevYear = activeMems.length === 0 ? undefined : (activeMems[0].dateJoined as DateData).getValue().getFullYear();
-    for (let i = 0; i < activeMems.length; ++i) {
-        const curId = activeMems[i].id;
-        const curName = activeMems[i].name;
-        const curDate = activeMems[i].dateJoined;
-        const curAmount = activeMems[i].amountOwed;
-        const curDuesPaid = activeMems[i].currentDuesPaid;
+    let prevYear = NaN;
+    abcMembers.forEach((member, i) => {
         if (
-            !curId ||
-            !curName ||
-            !curDate ||
-            !curAmount ||
-            !curDuesPaid
+            !member.id ||
+            !member.name ||
+            !member.dateJoined ||
+            !member.amountOwed ||
+            !member.currentDuesPaid ||
+            !member.active
         ) throw ErrorType.AssertionError;
 
-        const attnsSet = memAttendance[curId.getValue()];
-        if (!attnsSet) throw ErrorType.AssertionError;
-        const numAttns = attnsSet.size();
-
-        tableVals.push([
-            capitalizeString(curName.toString()),
-            curDate.toDateString(),
-            (curAmount.getValue() / 100).toString(),
-            curDuesPaid.getValue() ? 'Yes' : 'No',
-            numAttns.toString()
-        ]);
-
-        tableFormats.push([
-            NumberFormat.TEXT,
-            NumberFormat.DATE,
-            NumberFormat.MONEY,
-            NumberFormat.TEXT,
-            NumberFormat.INTEGER
-        ]);
-
-        const duesOwed = !curDuesPaid.getValue() && numAttns >= clubInfo.daysUntilFeeRequired.getValue();
-        tableColors.push([
-            Color.WHITE,
-            Color.WHITE,
-            curAmount.getValue() === 0 ? Color.WHITE : Color.LIGHT_RED,
-            duesOwed ? Color.PALE_RED : Color.WHITE,
-            duesOwed ? Color.PALE_RED : Color.WHITE
-        ]);
-
-        const curYear = curDate.getValue().getFullYear();
-        if (curYear !== prevYear) {
-            breakLineNums.push(i);
-            prevYear = curYear;
-        }
-    }
-    if (activeMems.length > 0) breakLineNums.push(activeMems.length);
-    for (let i = 0; i < inactiveMems.length; ++i) {
-        const curId = inactiveMems[i].id;
-        const curName = inactiveMems[i].name;
-        const curDate = inactiveMems[i].dateJoined;
-        const curAmount = inactiveMems[i].amountOwed;
-        const curDuesPaid = inactiveMems[i].currentDuesPaid;
-        if (
-            !curId ||
-            !curName ||
-            !curDate ||
-            !curAmount ||
-            !curDuesPaid
-        ) throw ErrorType.AssertionError;
-
-        const attnsSet = memAttendance[curId.getValue()];
+        const attnsSet = memAttendance[member.id.getValue()];
         const numAttns = attnsSet ? attnsSet.size() : 0;
 
         tableVals.push([
-            capitalizeString(curName.toString()),
-            curDate.toDateString(),
-            (curAmount.getValue() / 100).toString(),
-            curDuesPaid.getValue() ? 'Yes' : 'No',
+            capitalizeString(member.name.toString()),
+            member.dateJoined.toDateString(),
+            (member.amountOwed.getValue() / 100).toString(),
+            member.currentDuesPaid.getValue() ? 'Yes' : 'No',
             numAttns.toString()
         ]);
 
@@ -218,15 +176,31 @@ export function refreshMembers() {
             NumberFormat.INTEGER
         ]);
 
-        const duesOwed = !curDuesPaid.getValue() && numAttns >= clubInfo.daysUntilFeeRequired.getValue();
+        const defaultColor = member.active.getValue() ? Color.WHITE : Color.LIGHT_GRAY;
+        const duesOwed = !member.currentDuesPaid.getValue() && numAttns >= clubInfo.daysUntilFeeRequired.getValue();
         tableColors.push([
-            Color.LIGHT_GRAY,
-            Color.LIGHT_GRAY,
-            curAmount.getValue() === 0 ? Color.LIGHT_GRAY : Color.LIGHT_RED,
-            duesOwed ? Color.PALE_RED : Color.LIGHT_GRAY,
-            duesOwed ? Color.PALE_RED : Color.LIGHT_GRAY
+            defaultColor,
+            defaultColor,
+            member.amountOwed.getValue() !== 0 ? Color.LIGHT_RED : defaultColor,
+            duesOwed ? Color.PALE_RED : defaultColor,
+            duesOwed ? Color.PALE_RED : defaultColor
         ]);
-    }
+
+        if (member.active.getValue()) {
+            const curYear = member.dateJoined.getValue().getFullYear();
+            if (curYear !== prevYear) {
+                if (!isNaN(prevYear)) {
+                    breakLineNums.push(i);
+                }
+                prevYear = curYear;
+            }
+        } else {
+            if (!isNaN(prevYear)) {
+                breakLineNums.push(i);
+                prevYear = NaN;
+            }
+        }
+    });
 
     const sheet = SpreadsheetApp.openById(ID).getSheetByName('Members');
     setData(sheet, tableVals, tableFormats, tableColors, breakLineNums);
@@ -242,31 +216,26 @@ export function refreshIncomes() {
 
     const backColors = [Color.PALE_BLUE, Color.PALE_GREEN];
 
-    const tableVals = [];
-    const tableFormats = [];
-    const tableColors = [];
-    for (let i = 0; i < incomes.length; ++i) {
-        const curDate = incomes[i].date;
-        const curAmount = incomes[i].amount;
-        const curDesc = incomes[i].description;
-        const curPayId = incomes[i].paymentTypeId;
-        const curStateId = incomes[i].statementId;
+    const tableVals: string[][] = [];
+    const tableFormats: string[][] = [];
+    const tableColors: string[][] = [];
+    incomes.forEach((income, i) => {
         if (
-            !curDate ||
-            !curAmount ||
-            !curDesc ||
-            !curPayId ||
-            !curStateId
+            !income.date ||
+            !income.amount ||
+            !income.description ||
+            !income.paymentTypeId ||
+            !income.statementId
         ) throw ErrorType.AssertionError;
 
-        const payType = idToPayType[curPayId.getValue()];
+        const payType = idToPayType[income.paymentTypeId.getValue()];
         if (payType === undefined) throw ErrorType.AssertionError;
-        const inAccount = curStateId.getValue() !== -1;
+        const inAccount = income.statementId.getValue() !== -1;
 
         tableVals.push([
-            curDate.toDateString(),
-            (curAmount.getValue() / 100).toString(),
-            curDesc.getValue(),
+            income.date.toDateString(),
+            (income.amount.getValue() / 100).toString(),
+            income.description.getValue(),
             payType,
             inAccount ? 'Yes' : 'No'
         ]);
@@ -287,7 +256,7 @@ export function refreshIncomes() {
             curColor,
             inAccount ? curColor : Color.LIGHT_RED
         ]);
-    }
+    });
 
     const sheet = SpreadsheetApp.openById(ID).getSheetByName('Incomes');
     setData(sheet, tableVals, tableFormats, tableColors);
@@ -309,34 +278,28 @@ export function refreshExpenses() {
 
     const backColors = [Color.PALE_BLUE, Color.PALE_GREEN];
 
-    const tableVals = [];
-    const tableFormats = [];
-    const tableColors = [];
-    for (let i = 0; i < expenses.length; ++i) {
-        const curDate = expenses[i].date;
-        const curAmount = expenses[i].amount;
-        const curDesc = expenses[i].description;
-        const curPayId = expenses[i].paymentTypeId;
-        const curRecip = expenses[i].recipientId;
-        const curStateId = expenses[i].statementId;
+    const tableVals: string[][] = [];
+    const tableFormats: string[][] = [];
+    const tableColors: string[][] = [];
+    expenses.forEach((expense, i) => {
         if (
-            !curDate ||
-            !curAmount ||
-            !curDesc ||
-            !curPayId ||
-            !curRecip ||
-            !curStateId
+            !expense.date ||
+            !expense.amount ||
+            !expense.description ||
+            !expense.paymentTypeId ||
+            !expense.recipientId ||
+            !expense.statementId
         ) throw ErrorType.AssertionError;
 
-        const payType = idToPayType[curPayId.getValue()];
-        const recipient = idToRecipient[curRecip.getValue()];
+        const payType = idToPayType[expense.paymentTypeId.getValue()];
+        const recipient = idToRecipient[expense.recipientId.getValue()];
         if (payType === undefined || recipient === undefined) throw ErrorType.AssertionError;
-        const inAccount = curStateId.getValue() !== -1;
+        const inAccount = expense.statementId.getValue() !== -1;
 
         tableVals.push([
-            curDate.toDateString(),
-            (curAmount.getValue() / 100).toString(),
-            curDesc.getValue(),
+            expense.date.toDateString(),
+            (expense.amount.getValue() / -100).toString(),
+            expense.description.getValue(),
             recipient,
             payType,
             inAccount ? 'Yes' : 'No'
@@ -360,7 +323,7 @@ export function refreshExpenses() {
             curColor,
             inAccount ? curColor : Color.LIGHT_RED
         ]);
-    }
+    });
 
     const sheet = SpreadsheetApp.openById(ID).getSheetByName('Expenses');
     setData(sheet, tableVals, tableFormats, tableColors);
@@ -383,9 +346,9 @@ export function refreshAllTransactions() {
 
     const backColors = [Color.PALE_BLUE, Color.PALE_GREEN];
 
-    const tableVals = [];
-    const tableFormats = [];
-    const tableColors = [];
+    const tableVals: string[][] = [];
+    const tableFormats: string[][] = [];
+    const tableColors: string[][] = [];
     let inc_i = 0;
     let exp_i = 0;
     while (inc_i < incomes.length || exp_i < expenses.length) {
@@ -541,38 +504,35 @@ export function refreshAllTransactions() {
     setData(sheet, tableVals, tableFormats, tableColors);
 }
 export function refreshStatements() {
-    const incomes = getIncomes();
-    const expenses = getExpenses();
     const statements = getStatements().sort(compareByDateDesc);
 
     const statementDetails: Dictionary<number, { amount: number, payType: number }> = {};
-    statements.forEach(entry => {
-        if (!entry.id) throw ErrorType.AssertionError;
-        statementDetails[entry.id.getValue()] = {
-            amount: 0,
-            payType: -1
-        };
-    });
-    incomes.forEach(entry => {
-        if (!entry.amount || !entry.paymentTypeId || !entry.statementId) throw ErrorType.AssertionError;
-        if (entry.statementId.getValue() !== -1) {
-            let curDetails = statementDetails[entry.statementId.getValue()];
-            if (!curDetails) throw ErrorType.AssertionError;
-            curDetails.amount += entry.amount.getValue();
-            if (curDetails.payType === -1) {
-                curDetails.payType = entry.paymentTypeId.getValue();
+    getIncomes().forEach(income => {
+        if (!income.amount || !income.paymentTypeId || !income.statementId) throw ErrorType.AssertionError;
+        if (income.statementId.getValue() !== -1) {
+            let curDetails = statementDetails[income.statementId.getValue()];
+            if (!curDetails) {
+                curDetails = {
+                    amount: 0,
+                    payType: income.paymentTypeId.getValue()
+                }
+                statementDetails[income.statementId.getValue()] = curDetails;
             }
+            curDetails.amount += income.amount.getValue();
         }
     });
-    expenses.forEach(entry => {
-        if (!entry.amount || !entry.paymentTypeId || !entry.statementId) throw ErrorType.AssertionError;
-        if (entry.statementId.getValue() !== -1) {
-            let curDetails = statementDetails[entry.statementId.getValue()];
-            if (!curDetails) throw ErrorType.AssertionError;
-            curDetails.amount -= entry.amount.getValue();
-            if (curDetails.payType === -1) {
-                curDetails.payType = entry.paymentTypeId.getValue();
+    getExpenses().forEach(expense => {
+        if (!expense.amount || !expense.paymentTypeId || !expense.statementId) throw ErrorType.AssertionError;
+        if (expense.statementId.getValue() !== -1) {
+            let curDetails = statementDetails[expense.statementId.getValue()];
+            if (!curDetails) {
+                curDetails = {
+                    amount: 0,
+                    payType: expense.paymentTypeId.getValue()
+                }
+                statementDetails[expense.statementId.getValue()] = curDetails;
             }
+            curDetails.amount -= expense.amount.getValue();
         }
     });
 
@@ -584,30 +544,32 @@ export function refreshStatements() {
 
     const backColors = [Color.PALE_BLUE, Color.PALE_GREEN];
 
-    const tableVals = [];
-    const tableFormats = [];
-    const tableColors = [];
-    for (let i = 0; i < statements.length; ++i) {
-        const curId = statements[i].id;
-        const curDate = statements[i].date;
-        const curConfirmed = statements[i].confirmed;
+    const tableVals: string[][] = [];
+    const tableFormats: string[][] = [];
+    const tableColors: string[][] = [];
+    statements.forEach((statement, i) => {
         if (
-            !curId ||
-            !curDate ||
-            !curConfirmed
+            !statement.id ||
+            !statement.date ||
+            !statement.confirmed
         ) throw ErrorType.AssertionError;
 
-        const curDetails = statementDetails[curId.getValue()];
-        if (!curDetails) throw ErrorType.AssertionError;
+        let curDetails = statementDetails[statement.id.getValue()];
+        if (!curDetails) {
+            curDetails = {
+                amount: 0,
+                payType: NaN
+            }
+        }
 
-        const payType = idToPayType[curDetails.payType];
-        if (payType === undefined) throw ErrorType.AssertionError;
+        let payType = idToPayType[curDetails.payType];
+        if (payType === undefined) payType = '';
 
         tableVals.push([
-            curDate.toDateString(),
+            statement.date.toDateString(),
             (curDetails.amount / 100).toString(),
             payType,
-            curConfirmed.getValue() ? 'Yes' : 'No'
+            statement.confirmed.getValue() ? 'Yes' : 'No'
         ]);
 
         tableFormats.push([
@@ -622,9 +584,9 @@ export function refreshStatements() {
             curColor,
             curColor,
             curColor,
-            curConfirmed.getValue() ? curColor : Color.LIGHT_RED
+            statement.confirmed.getValue() ? curColor : Color.LIGHT_RED
         ]);
-    }
+    });
 
     const sheet = SpreadsheetApp.openById(ID).getSheetByName('Statements');
     setData(sheet, tableVals, tableFormats, tableColors);

@@ -1,6 +1,6 @@
 import { ID } from '../ids/tablesId';
 import { append } from '../tableOps';
-import { AttendanceEntry, BooleanData, DateData, ErrorType, ExpenseEntry, IncomeEntry, IntData, IntListData, MemberEntry, PaymentTypeEntry, QuarterData, RecipientEntry, RefreshLogger, StatementEntry, StringData, Table } from '../types';
+import { AttendanceEntry, BooleanData, DataTable, DateData, ErrorType, ExpenseEntry, IncomeEntry, IntData, IntListData, MemberEntry, PaymentTypeEntry, QuarterData, RecipientEntry, RefreshLogger, StatementEntry, StringData } from '../types';
 
 export function appendMember(
     name: StringData[],
@@ -51,7 +51,7 @@ export function appendMember(
 
     const sheet = SpreadsheetApp.openById(ID).getSheetByName('Member');
 
-    RefreshLogger.include(Table.MEMBER);
+    RefreshLogger.markAsUpdated(DataTable.MEMBER);
 
     return append(sheet, entries);
 }
@@ -89,7 +89,7 @@ export function appendIncome(
 
     const sheet = SpreadsheetApp.openById(ID).getSheetByName('Income');
 
-    RefreshLogger.include(Table.INCOME);
+    RefreshLogger.markAsUpdated(DataTable.INCOME);
 
     return append(sheet, entries);
 }
@@ -130,7 +130,7 @@ export function appendExpense(
 
     const sheet = SpreadsheetApp.openById(ID).getSheetByName('Expense');
 
-    RefreshLogger.include(Table.EXPENSE);
+    RefreshLogger.markAsUpdated(DataTable.EXPENSE);
 
     return append(sheet, entries);
 }
@@ -144,7 +144,7 @@ export function appendRecipient(name: StringData[]) {
 
     const sheet = SpreadsheetApp.openById(ID).getSheetByName('Recipient');
 
-    RefreshLogger.include(Table.RECIPIENT);
+    RefreshLogger.markAsUpdated(DataTable.RECIPIENT);
 
     return append(sheet, entries);
 }
@@ -158,7 +158,7 @@ export function appendPaymentType(name: StringData[]) {
 
     const sheet = SpreadsheetApp.openById(ID).getSheetByName('PaymentType');
 
-    RefreshLogger.include(Table.PAYMENT_TYPE);
+    RefreshLogger.markAsUpdated(DataTable.PAYMENT_TYPE);
 
     return append(sheet, entries);
 }
@@ -187,7 +187,7 @@ export function appendStatement(
 
     const sheet = SpreadsheetApp.openById(ID).getSheetByName('Statement');
 
-    RefreshLogger.include(Table.STATEMENT);
+    RefreshLogger.markAsUpdated(DataTable.STATEMENT);
 
     return append(sheet, entries);
 }
@@ -211,7 +211,7 @@ export function appendAttendance(
 
     const sheet = SpreadsheetApp.openById(ID).getSheetByName('Attendance');
 
-    RefreshLogger.include(Table.ATTENDANCE);
+    RefreshLogger.markAsUpdated(DataTable.ATTENDANCE);
 
     return append(sheet, entries);
 }

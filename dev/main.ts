@@ -14,27 +14,16 @@ import { ID as UCS_ID } from './ids/ucs';
 import { ID as UMS_ID } from './ids/ums';
 import { ID as VIEWS_ID } from './ids/viewsId';
 import { MEMBER_DUES, NUM_ATTNS, OFFICER_DUES, START_QUARTER, START_YEAR } from './projectInfo';
+import { orderBy } from './tableOps';
 import { createBackup } from './tables/backup';
-import { EditEvent, ErrorType, IntData, Quarter, QuarterData, RefreshLogger, Table } from './types';
-import { mergeMember, mergePaymentType, mergeRecipient, notifyMembers, pollNotification, renameMember, renamePaymentType, renameRecipient } from './views/handlers';
-import { attendanceRecordsHTML, attendanceSummaryHTML, fullFinanceHistoryHTML, memberDetailsHTML, mergeMemberHTML, mergePaymentTypeHTML, mergeRecipientHTML, notifyMembersHTML, pollNotificationHTML, renameMemberHTML, renamePaymentTypeHTML, renameRecipientHTML } from './views/html';
+import { DataTable, EditEvent, ErrorType, IntData, Quarter, QuarterData, RefreshLogger } from './types';
+import { menuAddAttendance, menuAddExpense, menuAddIncome, menuAddMember, menuAddPayType, menuAddRecipient, menuAddStatement, mergeMember, mergePaymentType, mergeRecipient, notifyMembers, pollNotification, renameMember, renamePaymentType, renameRecipient } from './views/handlers';
+import { addAttendanceHTML, addExpenseHTML, addIncomeHTML, addMemberHTML, addPayTypeHTML, addRecipientHTML, addStatementHTML, attendanceRecordsHTML, attendanceSummaryHTML, fullFinanceHistoryHTML, memberDetailsHTML, mergeMemberHTML, mergePaymentTypeHTML, mergeRecipientHTML, notifyMembersHTML, pollNotificationHTML, renameMemberHTML, renamePaymentTypeHTML, renameRecipientHTML } from './views/html';
 import { refreshAllViews } from './views/refresh';
 
 export function initializeAll() {
     initializeTables();
     initializeViews();
-
-    initializeAddExpense();
-    initializeAddIncome();
-    initializeAddMemberIou();
-    initializeCollectDues();
-    initializeConfirmTransfer();
-    initializeNextQuarter();
-    initializeResolveMemberIou();
-    initializeTakeAttendance();
-    initializeTransferFunds();
-    initializeUpdateContactSettings();
-    initializeUpdateMemberStatus();
 
     setupTriggers();
 
@@ -44,6 +33,10 @@ export function initializeAll() {
 export function refreshAll() {
     refreshAllViews();
     refreshAllForms();
+}
+
+export function backupTables() {
+    createBackup();
 }
 
 export function setupTriggers() {
@@ -138,36 +131,38 @@ export function everyMonth() {
 
 export function tablesOnOpen() { }
 export function tablesOnEdit(e: EditEvent) {
-    const sheetName = e.range.getSheet().getName();
+    const sheet = e.range.getSheet();
 
-    let fns: Function[];
-    switch (sheetName) {
+    if (sheet.getName() !== 'ClubInfo') {
+        orderBy(sheet, ['id']);
+    }
+
+    switch (sheet.getName()) {
         case 'Member':
-            RefreshLogger.include(Table.MEMBER);
+            sheet
+            RefreshLogger.markAsUpdated(DataTable.MEMBER);
             break;
         case 'Income':
-            RefreshLogger.include(Table.INCOME);
+            RefreshLogger.markAsUpdated(DataTable.INCOME);
             break;
         case 'Expense':
-            RefreshLogger.include(Table.EXPENSE);
+            RefreshLogger.markAsUpdated(DataTable.EXPENSE);
             break;
         case 'Recipient':
-            RefreshLogger.include(Table.RECIPIENT);
+            RefreshLogger.markAsUpdated(DataTable.RECIPIENT);
             break;
         case 'PaymentType':
-            RefreshLogger.include(Table.PAYMENT_TYPE);
+            RefreshLogger.markAsUpdated(DataTable.PAYMENT_TYPE);
             break;
         case 'Statement':
-            RefreshLogger.include(Table.STATEMENT);
+            RefreshLogger.markAsUpdated(DataTable.STATEMENT);
             break;
         case 'Attendance':
-            RefreshLogger.include(Table.ATTENDANCE);
+            RefreshLogger.markAsUpdated(DataTable.ATTENDANCE);
             break;
         case 'ClubInfo':
-            RefreshLogger.include(Table.CLUB_INFO);
+            RefreshLogger.markAsUpdated(DataTable.CLUB_INFO);
             break;
-        default:
-            fns = [];
     }
 
     RefreshLogger.run();
@@ -176,7 +171,11 @@ export function tablesOnEdit(e: EditEvent) {
 export function viewsOnOpen() {
     createViewsMenu();
 }
-export function viewsOnEdit() { }
+export function viewsOnEdit(e: EditEvent) {
+    e.source.getActiveRangeList()
+        .setFontColor('#ff0000')
+        .setFontWeight('bold');
+}
 
 function getMostRecentResponse(form: GoogleAppsScript.Forms.Form) {
     const resList = form.getResponses();
@@ -522,8 +521,8 @@ function initializeViews() {
 function initializeTables() {
     const sheetapp = SpreadsheetApp.openById(TABLES_ID);
 
-    const quarterNum = parseInt(START_QUARTER);
-    const yearNum = parseInt(START_YEAR);
+    const quarterNum = parseInt(START_QUARTER, 10);
+    const yearNum = parseInt(START_YEAR, 10);
     let curQuarter: QuarterData;
     if (isNaN(yearNum)) {
         curQuarter = new QuarterData(Quarter.WINTER, new IntData(0));
@@ -556,7 +555,7 @@ function initializeTables() {
     let officerDuesNum = parseFloat(OFFICER_DUES);
     if (isNaN(officerDuesNum)) officerDuesNum = 0;
 
-    let numAttnsNum = parseInt(NUM_ATTNS);
+    let numAttnsNum = parseInt(NUM_ATTNS, 10);
     if (isNaN(numAttnsNum)) numAttnsNum = 0;
 
     sheetapp
@@ -618,205 +617,35 @@ function initializeTables() {
     sheetapp.deleteSheet(sheetapp.getSheetByName('Sheet1'));
 }
 
-function initializeAddExpense() {
-    const form = FormApp.openById(AE_ID);
-
-    form.deleteItem(0);
-
-    form.addTextItem()
-        .setTitle('Amount')
-        .setValidation(FormApp.createTextValidation()
-            .requireNumber()
-            // @ts-ignore 'build' is not listed as a property
-            .build())
-        .setRequired(true);
-    form.addParagraphTextItem()
-        .setTitle('Description')
-        .setRequired(true);
-    form.addTextItem()
-        .setTitle('Recipient')
-        .setRequired(true);
-    form.addMultipleChoiceItem()
-        .setTitle('Payment Type')
-        .showOtherOption(true)
-        .setRequired(true);
-}
-function initializeAddIncome() {
-    const form = FormApp.openById(AI_ID);
-
-    form.deleteItem(0);
-
-    form.addTextItem()
-        .setTitle('Amount')
-        .setValidation(FormApp.createTextValidation()
-            .requireNumber()
-            // @ts-ignore 'build' is not listed as a property
-            .build())
-        .setRequired(true);
-    form.addParagraphTextItem()
-        .setTitle('Description')
-        .setRequired(true);
-    form.addMultipleChoiceItem()
-        .setTitle('Payment Type')
-        .showOtherOption(true)
-        .setRequired(true);
-}
-function initializeAddMemberIou() {
-    const form = FormApp.openById(AMI_ID);
-
-    form.deleteItem(0);
-
-    form.addCheckboxItem()
-        .setTitle('Member')
-        .setRequired(true);
-    form.addTextItem()
-        .setTitle('Amount')
-        .setValidation(FormApp.createTextValidation()
-            .requireNumber()
-            // @ts-ignore 'build' is not listed as a property
-            .build())
-        .setRequired(true);
-    form.addParagraphTextItem()
-        .setTitle('Description')
-        .setRequired(true);
-}
-function initializeCollectDues() {
-    const form = FormApp.openById(CD_ID);
-
-    form.deleteItem(0);
-
-    form.addCheckboxItem()
-        .setTitle('Member')
-        .setRequired(true);
-    form.addMultipleChoiceItem()
-        .setTitle('Payment Type')
-        .showOtherOption(true)
-        .setRequired(true);
-}
-function initializeConfirmTransfer() {
-    const form = FormApp.openById(CT_ID);
-
-    form.deleteItem(0);
-
-    form.addCheckboxItem()
-        .setTitle('Transfer')
-        .setRequired(true);
-}
-function initializeNextQuarter() {
-    const form = FormApp.openById(NQ_ID);
-
-    form.deleteItem(0);
-
-    form.addCheckboxItem()
-        .setTitle('Confirmation')
-        .setRequired(true);
-}
-function initializeResolveMemberIou() {
-    const form = FormApp.openById(RMI_ID);
-
-    form.deleteItem(0);
-
-    form.addCheckboxItem()
-        .setTitle('Member')
-        .setRequired(true);
-    form.addTextItem()
-        .setTitle('Amount')
-        .setValidation(FormApp.createTextValidation()
-            .requireNumber()
-            // @ts-ignore 'build' is not listed as a property
-            .build())
-        .setRequired(true);
-    form.addParagraphTextItem()
-        .setTitle('Description')
-        .setRequired(true);
-    form.addMultipleChoiceItem()
-        .setTitle('Payment Type')
-        .showOtherOption(true)
-        .setRequired(true);
-}
-function initializeTakeAttendance() {
-    const form = FormApp.openById(TA_ID);
-
-    form.deleteItem(0);
-
-    form.addCheckboxItem()
-        .setTitle('Member')
-    form.addParagraphTextItem()
-        .setTitle('New Members')
-        .setHelpText('Separate each name with a new line')
-}
-function initializeTransferFunds() {
-    const form = FormApp.openById(TF_ID);
-
-    form.deleteItem(0);
-
-    form.addCheckboxItem()
-        .setTitle('Income');
-    form.addCheckboxItem()
-        .setTitle('Expense');
-}
-function initializeUpdateContactSettings() {
-    const form = FormApp.openById(UCS_ID);
-
-    form.deleteItem(0);
-
-    form.addMultipleChoiceItem()
-        .setTitle('Name')
-        .setRequired(true);
-    form.addTextItem()
-        .setTitle('Email');
-    form.addTextItem()
-        .setTitle('Phone Number')
-        .setHelpText('Using the form \'XXX-XXX-XXXX\'')
-        .setValidation(FormApp.createTextValidation()
-            .requireTextMatchesPattern('[0-9]{3}-[0-9]{3}-[0-9]{4}')
-            // @ts-ignore 'build' is not listed as a property
-            .build());
-    form.addMultipleChoiceItem()
-        .setTitle('Phone Carrier')
-    form.addMultipleChoiceItem()
-        .setTitle('Recieve notification when new poll is created?')
-        .setChoiceValues(['Yes', 'No']);
-    form.addMultipleChoiceItem()
-        .setTitle('Recieve receipts after paying dues?')
-        .setChoiceValues(['Yes', 'No']);
-}
-function initializeUpdateMemberStatus() {
-    const form = FormApp.openById(UMS_ID);
-
-    form.deleteItem(0);
-
-    form.addCheckboxItem()
-        .setTitle('Member')
-        .setRequired(true);
-    form.addMultipleChoiceItem()
-        .setTitle('Performing?')
-        .setChoiceValues(['Yes', 'No']);
-    form.addMultipleChoiceItem()
-        .setTitle('Active?')
-        .setChoiceValues(['Yes', 'No']);
-    form.addMultipleChoiceItem()
-        .setTitle('Officer?')
-        .setChoiceValues(['Yes', 'No']);
-}
-
 function createViewsMenu() {
     SpreadsheetApp.getUi()
         .createMenu('Actions')
+        .addSubMenu(SpreadsheetApp.getUi()
+            .createMenu('Add')
+            .addItem('Add Member', 'addMemberDialog')
+            .addItem('Add Attendance', 'addAttendanceDialog')
+            .addItem('Add Income', 'addIncomeDialog')
+            .addItem('Add Expense', 'addExpenseDialog')
+            .addItem('Add Statement', 'addStatementDialog')
+            .addItem('Add Payment Method', 'addPaymentTypeDialog')
+            .addItem('Add Recipient', 'addRecipientDialog'))
         .addSubMenu(SpreadsheetApp.getUi()
             .createMenu('Rename')
             .addItem('Rename Member', 'renameMemberDialog')
             .addItem('Rename Payment Method', 'renamePaymentTypeDialog')
             .addItem('Rename Recipient', 'renameRecipientDialog'))
-        .addSeparator()
         .addSubMenu(SpreadsheetApp.getUi()
             .createMenu('Merge')
             .addItem('Merge Members', 'mergeMemberDialog')
             .addItem('Merge Payment Methods', 'mergePaymentTypeDialog')
             .addItem('Merge Recipients', 'mergeRecipientDialog'))
         .addSeparator()
-        .addItem('Poll Notification', 'pollNotificationDialog')
-        .addItem('Notify Members', 'notifyMembersDialog')
+        .addSubMenu(SpreadsheetApp.getUi()
+            .createMenu('Email')
+            .addItem('Poll Notification', 'pollNotificationDialog')
+            .addItem('Notify Members', 'notifyMembersDialog'))
+        .addItem('Create Backup', 'backupTables')
+        .addItem('Refresh', 'refreshAll')
         .addToUi();
     SpreadsheetApp.getUi().createMenu('Reports')
         .addItem('Member Details', 'memberDetailsDialog')
@@ -837,22 +666,43 @@ export function memberDetailsDialog() {
 }
 export function attendanceRecordsDialog() {
     // allow selecting a date and viewing who was there that day 
-    createDialog('Attendance Records', attendanceRecordsHTML(), 220, 450);
+    createDialog('Attendance Records', attendanceRecordsHTML(), 450, 450);
 }
 export function attendanceSummaryDialog() {
     // show percent of practices each member attended between 2 dates
-    createDialog('Attendance Summary', attendanceSummaryHTML(), 220, 450);
+    createDialog('Attendance Summary', attendanceSummaryHTML(), 450, 450);
 }
 export function fullFinanceHistoryDialog() {
     // generate waterfall graph of account's contents
     createDialog('Full Finance History', fullFinanceHistoryHTML(), 450, 850);
 }
 
+export function addMemberDialog() {
+    createDialog('Add Member', addMemberHTML(), 130, 300);
+}
+export function addAttendanceDialog() {
+    createDialog('Add Attendance', addAttendanceHTML(), 300, 300);
+}
+export function addIncomeDialog() {
+    createDialog('Add Income', addIncomeHTML(), 200, 300);
+}
+export function addExpenseDialog() {
+    createDialog('Add Expense', addExpenseHTML(), 240, 300);
+}
+export function addStatementDialog() {
+    createDialog('Add Statement', addStatementHTML(), 360, 500);
+}
+export function addPaymentTypeDialog() {
+    createDialog('Add Payment Type', addPayTypeHTML(), 130, 300);
+}
+export function addRecipientDialog() {
+    createDialog('Add Recipient', addRecipientHTML(), 130, 300);
+}
 export function renameMemberDialog() {
     createDialog('Rename Member', renameMemberHTML(), 130, 300);
 }
 export function renamePaymentTypeDialog() {
-    createDialog('Rename Payment Method', renamePaymentTypeHTML(), 130, 300);
+    createDialog('Rename Payment Type', renamePaymentTypeHTML(), 130, 300);
 }
 export function renameRecipientDialog() {
     createDialog('Rename Recipient', renameRecipientHTML(), 130, 300);
@@ -861,20 +711,41 @@ export function mergeMemberDialog() {
     createDialog('Merge Member', mergeMemberHTML(), 230, 300);
 }
 export function mergePaymentTypeDialog() {
-    createDialog('Merge Payment Method', mergePaymentTypeHTML(), 230, 300);
+    createDialog('Merge Payment Type', mergePaymentTypeHTML(), 230, 300);
 }
 export function mergeRecipientDialog() {
     createDialog('Merge Recipient', mergeRecipientHTML(), 230, 300);
 }
 export function pollNotificationDialog() {
     // send performers a (performance) notification
-    createDialog('Poll Notification', pollNotificationHTML(), 170, 300);
+    createDialog('Poll Notification', pollNotificationHTML(), 180, 300);
 }
 export function notifyMembersDialog() {
     // send performers a custom notification
     createDialog('Notify Performers', notifyMembersHTML(), 330, 300);
 }
 
+export function handleAddMember(name: string, dateJoined: string) {
+    menuAddMember(name, dateJoined);
+}
+export function handleAddAttendance(date: string, members: string, quarter: string, year: string) {
+    menuAddAttendance(date, members, quarter, year);
+}
+export function handleAddIncome(date: string, amount: string, description: string, payType: string) {
+    menuAddIncome(date, amount, description, payType);
+}
+export function handleAddExpense(date: string, amount: string, description: string, recipient: string, payType: string) {
+    menuAddExpense(date, amount, description, recipient, payType);
+}
+export function handleAddStatement(date: string, incomes: string, expenses: string) {
+    menuAddStatement(date, incomes, expenses);
+}
+export function handleAddRecipient(name: string) {
+    menuAddRecipient(name);
+}
+export function handleAddPayType(name: string) {
+    menuAddPayType(name);
+}
 export function handleRenameMember(oldName: string, newName: string) {
     renameMember(oldName, newName);
 }

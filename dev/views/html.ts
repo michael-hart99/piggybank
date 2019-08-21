@@ -1,5 +1,5 @@
 import { getAttendances, getClubInfo, getExpenses, getIncomes, getMembers, getPaymentTypes, getRecipients } from '../tables/get';
-import { capitalizeString, centsToString, Dictionary, ErrorType, IntData, UniqueList } from '../types';
+import { capitalizeString, centsToString, compareByDateDesc, Dictionary, ErrorType, IntData, Quarter, UniqueList } from '../types';
 
 // Reports
 export function memberDetailsHTML() {
@@ -167,7 +167,7 @@ export function attendanceRecordsHTML() {
 
   const attendances: string[] = [];
   Object.keys(dailyAttendance).forEach(date => {
-    const dateNum = parseInt(date);
+    const dateNum = parseInt(date, 10);
     if (isNaN(dateNum)) throw ErrorType.AssertionError;
     const memberIds = dailyAttendance[dateNum];
     if (!memberIds) throw ErrorType.AssertionError;
@@ -205,6 +205,7 @@ export function attendanceRecordsHTML() {
 
       .ui-datepicker-inline {
         padding: 0;
+        margin: 0 auto;
       }
 
       .ui-widget-header {
@@ -247,10 +248,11 @@ export function attendanceRecordsHTML() {
 
       #parent {
         display: flex;
-        height: 210px;
+        flex-direction: column;
+        height: 430px;
       }
       #textBox {
-        height: 100%;
+        height: 50%;
         display: flex;
         flex-direction: column;
         padding-left: 4px;
@@ -305,8 +307,8 @@ export function attendanceRecordsHTML() {
         },
         
         onSelect: (d, x) => {
-          const rawDate = new Date(d);
-          const date = new Date(rawDate.valueOf() + rawDate.getTimezoneOffset() * 60 * 1000);
+          const dateVals = d.split('/');
+          const date = new Date(parseInt(dateVals[2], 10), parseInt(dateVals[0], 10) - 1, parseInt(dateVals[1], 10));
           const dateNum = dateToNum(date);
           const keys = Object.keys(attendances);
           const i = keys.indexOf(dateNum.toString());
@@ -381,7 +383,7 @@ export function attendanceSummaryHTML() {
         display: flex;
         flex-flow: column;
         padding-left: 4px;
-        height: 70%;
+        height: 80%;
       }
       #memberList {
         overflow-y: auto;
@@ -394,7 +396,7 @@ export function attendanceSummaryHTML() {
       }
     </style>
 
-    <body style="height: 200px">
+    <body style="height: 430px">
     <div style="height:100%">
       <div style="display: flex; align-items: center; justify-content: center;">
         <div>
@@ -484,23 +486,25 @@ export function attendanceSummaryHTML() {
       
       const startDateNum = dateStrToNum(startDate.value);
       const endDateNum = dateStrToNum(endDate.value);
+      
+      const start = getDateBefore(startDateNum - 1);
+      const end = getDateBefore(endDateNum);
+
+      let totalDays;
+      if (end === null) {
+        totalDays = 0;
+      } else if (start === null) {
+        totalDays = days.indexOf(end) + 1;
+      } else {
+        totalDays = days.indexOf(end) - days.indexOf(start);
+      }
+
       if (startDateNum > endDateNum) {
         numDaysElt.hidden = false;
         numDaysElt.innerHTML = "Total Days: " + totalDays;
         memberList.innerHTML = "";
         return;
       }
-      
-      const start = getDateBefore(startDateNum - 1);
-      const end = getDateBefore(endDateNum);
-
-      let totalDays;
-      if (end === null)
-        totalDays = 0;
-      else if (start === null)
-        totalDays = days.indexOf(end) + 1;
-      else
-        totalDays = days.indexOf(end) - days.indexOf(start);
 
       let startSummary;
       if (start === null) {
@@ -742,6 +746,489 @@ export function fullFinanceHistoryHTML() {
 }
 
 // Actions
+//   Add
+export function addMemberHTML() {
+  return `
+    <!DOCTYPE html>
+    <style>
+    </style>
+    
+    <body>
+    <p>
+      Name:
+      <input type="text" id="name">
+    </p>
+    <p>
+      Date Joined:
+      <input type="date" id="dateJoined">
+    </p>
+    
+    <button onclick="go()">
+      Go!
+    </button>
+    </body>
+
+    <script>
+      const today = new Date();
+      let month;
+      if (today.getMonth() + 1 < 10) {
+        month = '0' + (today.getMonth() + 1);
+      } else {
+        month = (today.getMonth() + 1).toString();
+      }
+      let date;
+      if (today.getDate() < 10) {
+        date = '0' + today.getDate();
+      } else {
+        date = today.getDate().toString();
+      }
+      document.getElementById('dateJoined').value = today.getFullYear() + '-' + month + '-' + date;
+
+      function datestrToDate(date) {
+          const vals = date.split('-');
+          const year = parseInt(vals[0], 10);
+          const month = parseInt(vals[1], 10);
+          const day = parseInt(vals[2], 10);
+          return new Date(year, month - 1, day);
+      }
+
+      function go() {
+        const name = document.getElementById('name').value;
+        const dateJoined = datestrToDate(document.getElementById('dateJoined').value).valueOf();
+        google.script.run.handleAddMember(name, dateJoined);
+        google.script.host.close();
+      }
+    </script>
+    `;
+}
+export function addAttendanceHTML() {
+  const nameCheckbox: string[] = [];
+  getMembers().sort((a, b) => {
+    if (!a.name || !b.name) throw ErrorType.AssertionError;
+    return a.name.getValue().localeCompare(b.name.getValue());
+  }).forEach(member => {
+    if (!member.id || !member.name) throw ErrorType.AssertionError;
+    nameCheckbox.push(`<input type="checkbox" class="name" value="${member.id.toString()}"/> ${capitalizeString(member.name.toString())}\n`);
+  });
+
+  const clubInfo = getClubInfo();
+  let selected = {
+    winter: false,
+    spring: false,
+    summer: false,
+    fall: false,
+  }
+  switch (clubInfo.currentQuarterId.getQuarter()) {
+    case Quarter.WINTER:
+      selected.winter = true;
+      break;
+    case Quarter.SPRING:
+      selected.spring = true;
+      break;
+    case Quarter.SUMMER:
+      selected.summer = true;
+      break;
+    case Quarter.FALL:
+      selected.fall = true;
+      break;
+  }
+
+  const year = clubInfo.currentQuarterId.getYear();
+
+  return `
+    <!DOCTYPE html>
+    <style>
+    #wrapper {
+      border-style: solid;
+      border-color: #FFFFFF;
+      width: 250px;
+      height: 80px;
+      overflow-y: scroll;
+    }
+    </style>
+    
+    <body>
+    <p>
+      Date:
+      <input type="date" id="date">
+    </p>
+    <p>
+      Members Present: 
+      <div id="wrapper">
+        ${nameCheckbox.join('</br>')}
+      </div>
+    </p>
+    <p>
+      Quarter:
+      <select id="quarter">
+        <option selected=${selected.winter}>Winter</option>
+        <option selected=${selected.spring}>Spring</option>
+        <option selected=${selected.summer}>Summer</option>
+        <option selected=${selected.fall}>Fall</option>
+      </select>
+    </p>
+    <p>
+      Year:
+      <input type="text" id="year" value="${year}">
+    </p>
+    
+    <button onclick="go()">
+      Go!
+    </button>
+    </body>
+
+    <script>
+      const today = new Date();
+      let month;
+      if (today.getMonth() + 1 < 10) {
+        month = '0' + (today.getMonth() + 1);
+      } else {
+        month = (today.getMonth() + 1).toString();
+      }
+      let date;
+      if (today.getDate() < 10) {
+        date = '0' + today.getDate();
+      } else {
+        date = today.getDate().toString();
+      }
+      document.getElementById('date').value = today.getFullYear() + '-' + month + '-' + date;
+
+      function datestrToDate(date) {
+          const vals = date.split('-');
+          const year = parseInt(vals[0], 10);
+          const month = parseInt(vals[1], 10);
+          const day = parseInt(vals[2], 10);
+          return new Date(year, month - 1, day);
+      }
+
+      function go() {
+        const date = datestrToDate(document.getElementById('date').value).valueOf();
+        const nameList = [];
+        for (const box of document.getElementsByClassName('name')) {
+          if (box.checked) {
+            nameList.push(box.value);
+          }
+        }
+        const members = nameList.join(',');
+        const quarter = document.getElementById('quarter').value;
+        const year = document.getElementById('year').value;
+
+        google.script.run.handleAddAttendance(date, members, quarter, year);
+        google.script.host.close();
+      }
+    </script>
+    `;
+}
+export function addIncomeHTML() {
+  const payTypes = getPaymentTypes().sort((a, b) => {
+    if (!a.name || !b.name) throw ErrorType.AssertionError;
+    return a.name.getValue().localeCompare(b.name.getValue());
+  }).map(payType => {
+    if (!payType.name) throw ErrorType.AssertionError;
+    return `<option>${capitalizeString(payType.name.getValue())}</option>`;
+  });
+
+  return `
+    <!DOCTYPE html>
+    <style>
+    </style>
+    
+    <body>
+    <p>
+      Date: 
+      <input type="date" id="date">
+    </p>
+    <p>
+      Amount:
+      <input type="text" id="amount" value="0.00">
+    </p>
+    <p>
+      Description:
+      <input type="text" id="description">
+    </p>
+    <p>
+      Payment Type: 
+      <select id="payType">\n ${payTypes}</select>
+    </p>
+    
+    <button onclick="go()">
+      Go!
+    </button>
+    </body>
+
+    <script>
+      const today = new Date();
+      let month;
+      if (today.getMonth() + 1 < 10) {
+        month = '0' + (today.getMonth() + 1);
+      } else {
+        month = (today.getMonth() + 1).toString();
+      }
+      let date;
+      if (today.getDate() < 10) {
+        date = '0' + today.getDate();
+      } else {
+        date = today.getDate().toString();
+      }
+      document.getElementById('date').value = today.getFullYear() + '-' + month + '-' + date;
+
+      function datestrToDate(date) {
+          const vals = date.split('-');
+          const year = parseInt(vals[0], 10);
+          const month = parseInt(vals[1], 10);
+          const day = parseInt(vals[2], 10);
+          return new Date(year, month - 1, day);
+      }
+
+      function go() {
+        const date = datestrToDate(document.getElementById('date').value).valueOf();
+        const amount = document.getElementById('amount').value;
+        const description = document.getElementById('description').value;
+        const payType = document.getElementById('payType').value;
+
+        google.script.run.handleAddIncome(date, amount, description, payType);
+        google.script.host.close();
+      }
+    </script>
+    `;
+}
+export function addExpenseHTML() {
+  const payTypes = getPaymentTypes().sort((a, b) => {
+    if (!a.name || !b.name) throw ErrorType.AssertionError;
+    return a.name.getValue().localeCompare(b.name.getValue());
+  }).map(payType => {
+    if (!payType.name) throw ErrorType.AssertionError;
+    return `<option>${capitalizeString(payType.name.getValue())}</option>`;
+  });
+
+  return `
+    <!DOCTYPE html>
+    <style>
+    </style>
+    
+    <body>
+    <p>
+      Date: 
+      <input type="date" id="date">
+    </p>
+    <p>
+      Amount:
+      <input type="text" id="amount" value="0.00">
+    </p>
+    <p>
+      Description:
+      <input type="text" id="description">
+    </p>
+    <p>
+      Recipient:
+      <input type="text" id="recipient">
+    </p>
+    <p>
+      Payment Type: 
+      <select id="payType">\n ${payTypes}</select>
+    </p>
+    
+    <button onclick="go()">
+      Go!
+    </button>
+    </body>
+
+    <script>
+      const today = new Date();
+      let month;
+      if (today.getMonth() + 1 < 10) {
+        month = '0' + (today.getMonth() + 1);
+      } else {
+        month = (today.getMonth() + 1).toString();
+      }
+      let date;
+      if (today.getDate() < 10) {
+        date = '0' + today.getDate();
+      } else {
+        date = today.getDate().toString();
+      }
+      document.getElementById('date').value = today.getFullYear() + '-' + month + '-' + date;
+
+      function datestrToDate(date) {
+          const vals = date.split('-');
+          const year = parseInt(vals[0], 10);
+          const month = parseInt(vals[1], 10);
+          const day = parseInt(vals[2], 10);
+          return new Date(year, month - 1, day);
+      }
+
+      function go() {
+        const date = datestrToDate(document.getElementById('date').value).valueOf();
+        const amount = document.getElementById('amount').value;
+        const description = document.getElementById('description').value;
+        const recipient = document.getElementById('recipient').value;
+        const payType = document.getElementById('payType').value;
+
+        google.script.run.handleAddExpense(date, amount, description, recipient, payType);
+        google.script.host.close();
+      }
+    </script>
+    `;
+}
+export function addStatementHTML() {
+  const idToPayType: Dictionary<number, string> = {};
+  getPaymentTypes().forEach(entry => {
+    if (!entry.id || !entry.name) throw ErrorType.AssertionError;
+    idToPayType[entry.id.getValue()] = capitalizeString(entry.name.getValue());
+  });
+
+  const incomes: string[] = [];
+  getIncomes().sort(compareByDateDesc).forEach(entry => {
+    if (!entry.id || !entry.date || !entry.amount || !entry.description || !entry.paymentTypeId || !entry.statementId) throw ErrorType.AssertionError;
+    if (entry.statementId.getValue() === -1) {
+      incomes.push(`<input type="checkbox" class="income" value="${entry.id.toString()}"/>${entry.date.toDateString()}, ${centsToString(entry.amount)} (${idToPayType[entry.paymentTypeId.getValue()]}) - ${entry.description.toString()}\n`);
+    }
+  });
+
+  const expenses: string[] = [];
+  getExpenses().sort(compareByDateDesc).forEach(entry => {
+    if (!entry.id || !entry.date || !entry.amount || !entry.description || !entry.paymentTypeId || !entry.statementId) throw ErrorType.AssertionError;
+    if (entry.statementId.getValue() === -1) {
+      expenses.push(`<input type="checkbox" class="expense" value="${entry.id.toString()}"/>${entry.date.toDateString()}, -${centsToString(entry.amount)} (${idToPayType[entry.paymentTypeId.getValue()]}) - ${entry.description.toString()}\n`);
+    }
+  });
+  return `
+    <!DOCTYPE html>
+    <style>
+    .wrapper {
+      border-style: solid;
+      border-color: #FFFFFF;
+      height: 80px;
+      overflow-y: scroll;
+    }
+    </style>
+    
+    <body>
+    <p>
+      Date:
+      <input type="date" id="date">
+    </p>
+
+    <p>
+      Incomes:
+      <div class="wrapper">
+        ${incomes.join('</br>')}
+      </div>
+    </p>
+    <p>
+      Expenses:
+      <div class="wrapper">
+        ${expenses.join('</br>')}
+      </div>
+    </p>
+
+    <button onclick="go()">
+      Go!
+    </button>
+    </body>
+
+    <script>
+      const today = new Date();
+      let month;
+      if (today.getMonth() + 1 < 10) {
+        month = '0' + (today.getMonth() + 1);
+      } else {
+        month = (today.getMonth() + 1).toString();
+      }
+      let date;
+      if (today.getDate() < 10) {
+        date = '0' + today.getDate();
+      } else {
+        date = today.getDate().toString();
+      }
+      document.getElementById('date').value = today.getFullYear() + '-' + month + '-' + date;
+
+      function datestrToDate(date) {
+          const vals = date.split('-');
+          const year = parseInt(vals[0], 10);
+          const month = parseInt(vals[1], 10);
+          const day = parseInt(vals[2], 10);
+          return new Date(year, month - 1, day);
+      }
+
+      function go() {
+        const date = datestrToDate(document.getElementById('date').value).valueOf();
+        
+        const incomeList = [];
+        for (const box of document.getElementsByClassName('income')) {
+          if (box.checked) {
+            incomeList.push(box.value);
+          }
+        }
+        const incomes = incomeList.join('\\n');
+
+        const expenseList = [];
+        for (const box of document.getElementsByClassName('expense')) {
+          if (box.checked) {
+            expenseList.push(box.value);
+          }
+        }
+        const expenses = expenseList.join('\\n');
+
+        google.script.run.handleAddStatement(date, incomes, expenses);
+        google.script.host.close();
+      }
+    </script>
+    `;
+}
+export function addRecipientHTML() {
+  return `
+    <!DOCTYPE html>
+    <style>
+    </style>
+    
+    <body>
+    <p>
+      Name:
+      <input type="text" id="name">
+    </p>
+    
+    <button onclick="go()">
+      Go!
+    </button>
+    </body>
+
+    <script>
+      function go() {
+        const name = document.getElementById('name').value;
+        google.script.run.handleAddRecipient(name);
+        google.script.host.close();
+      }
+    </script>
+    `;
+}
+export function addPayTypeHTML() {
+  return `
+    <!DOCTYPE html>
+    <style>
+    </style>
+    
+    <body>
+    <p>
+      Name:
+      <input type="text" id="name">
+    </p>
+    
+    <button onclick="go()">
+      Go!
+    </button>
+    </body>
+
+    <script>
+      function go() {
+        const name = document.getElementById('name').value;
+        google.script.run.handleAddPayType(name);
+        google.script.host.close();
+      }
+    </script>
+    `;
+}
+//   Rename
 export function renameMemberHTML() {
   const memberNames = getMembers().sort((a, b) => {
     if (!a.name || !b.name) throw ErrorType.AssertionError;
@@ -859,6 +1346,7 @@ export function renameRecipientHTML() {
     </script>
     `;
 }
+//   Merge
 export function mergeMemberHTML() {
   const nameSelect: string[] = [];
   const nameCheckbox: string[] = [];
@@ -1047,7 +1535,7 @@ export function pollNotificationHTML() {
 
     <p>
       Deadline:
-      <input type="date" id="deadline"/>
+      <input type="datetime-local" id="deadline"/>
     </p>
 
     <p>
@@ -1061,6 +1549,8 @@ export function pollNotificationHTML() {
     </body>
 
     <script>
+      document.getElementById('deadline').value = new Date().toISOString().substring(0, 11) + '23:59';
+
       function go() {
         const title = document.getElementById('title').value;
         const deadline = document.getElementById('deadline').value;

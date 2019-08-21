@@ -1,6 +1,6 @@
 import { ID } from '../ids/tablesId';
 import { GAS_OFFSET, getIndicesFromIds, HEADER_LEN, selectAll, update } from '../tableOps';
-import { AttendanceEntry, BooleanData, DateData, ErrorType, ExpenseEntry, IncomeEntry, IntData, IntListData, MemberEntry, PaymentTypeEntry, QuarterData, RecipientEntry, RefreshLogger, StatementEntry, StringData, Table } from '../types';
+import { AttendanceEntry, BooleanData, DataTable, DateData, ErrorType, ExpenseEntry, IncomeEntry, IntData, IntListData, MemberEntry, PaymentTypeEntry, QuarterData, RecipientEntry, RefreshLogger, StatementEntry, StringData } from '../types';
 
 export function updateMember(
     id: IntData[],
@@ -71,7 +71,7 @@ export function updateMember(
         );
     }
 
-    RefreshLogger.include(Table.MEMBER);
+    RefreshLogger.markAsUpdated(DataTable.MEMBER);
 
     update(sheet, entries);
 }
@@ -123,7 +123,7 @@ export function updateIncome(
         );
     }
 
-    RefreshLogger.include(Table.INCOME);
+    RefreshLogger.markAsUpdated(DataTable.INCOME);
 
     update(sheet, entries);
 }
@@ -180,7 +180,7 @@ export function updateExpense(
         );
     }
 
-    RefreshLogger.include(Table.EXPENSE);
+    RefreshLogger.markAsUpdated(DataTable.EXPENSE);
 
     update(sheet, entries);
 }
@@ -198,7 +198,7 @@ export function updateRecipient(id: IntData[], name: StringData[]) {
         entries.push(new RecipientEntry(id[i], name[i]));
     }
 
-    RefreshLogger.include(Table.RECIPIENT);
+    RefreshLogger.markAsUpdated(DataTable.RECIPIENT);
 
     update(sheet, entries);
 }
@@ -216,7 +216,7 @@ export function updatePaymentType(id: IntData[], name: StringData[]) {
         entries.push(new PaymentTypeEntry(id[i], name[i]));
     }
 
-    RefreshLogger.include(Table.PAYMENT_TYPE);
+    RefreshLogger.markAsUpdated(DataTable.PAYMENT_TYPE);
 
     update(sheet, entries);
 }
@@ -254,7 +254,7 @@ export function updateStatement(
         );
     }
 
-    RefreshLogger.include(Table.STATEMENT);
+    RefreshLogger.markAsUpdated(DataTable.STATEMENT);
 
     update(sheet, entries);
 }
@@ -292,7 +292,7 @@ export function updateAttendance(
         );
     }
 
-    RefreshLogger.include(Table.ATTENDANCE);
+    RefreshLogger.markAsUpdated(DataTable.ATTENDANCE);
 
     update(sheet, entries);
 }
@@ -321,5 +321,5 @@ export function updateClubInfo(
             ],
         ]);
 
-    RefreshLogger.include(Table.CLUB_INFO);
+    RefreshLogger.markAsUpdated(DataTable.CLUB_INFO);
 }

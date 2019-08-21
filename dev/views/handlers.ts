@@ -1,9 +1,207 @@
 import { emailPollNotification } from '../email';
 import { ID as VIEWS_ID } from '../ids/viewsId';
+import { appendAttendance, appendExpense, appendIncome, appendMember, appendPaymentType, appendRecipient, appendStatement } from '../tables/append';
 import { getAttendances, getExpenses, getIncomes, getMemberIds, getMembers, getPaymentTypeIds, getRecipientIds } from '../tables/get';
 import { removeMember, removePaymentType, removeRecipient } from '../tables/remove';
 import { updateAttendance, updateExpense, updateIncome, updateMember, updatePaymentType, updateRecipient } from '../tables/update';
-import { ErrorType, IntData, IntListData, RefreshLogger, repeat, StringData } from '../types';
+import { BooleanData, DateData, ErrorType, IntData, IntListData, Quarter, QuarterData, RefreshLogger, repeat, StringData } from '../types';
+
+export function menuAddMember(name: string, dateJoined: string) {
+    const nameData = new StringData(name.toLowerCase());
+    const date = DateData.create(dateJoined);
+    try {
+        getMemberIds([nameData]);
+        SpreadsheetApp.openById(VIEWS_ID).toast('Name is already in use', 'Adding Failed', 5);
+    } catch (e) {
+        if (e === ErrorType.NoMatchFoundError) {
+            appendMember(
+                [nameData],
+                [date],
+                [new IntData(0)],
+                [new StringData('')],
+                [BooleanData.FALSE],
+                [BooleanData.FALSE],
+                [BooleanData.FALSE],
+                [BooleanData.FALSE],
+                [BooleanData.FALSE],
+                [BooleanData.FALSE]
+            );
+            SpreadsheetApp.openById(VIEWS_ID).toast(`Added Member`, 'Success', 5);
+
+            RefreshLogger.run();
+        } else {
+            SpreadsheetApp.openById(VIEWS_ID).toast('Check error log for details', 'Adding Failed', 5);
+            throw e;
+        }
+    }
+}
+export function menuAddAttendance(date: string, members: string, quarter: string, year: string) {
+    try {
+        const dateAsData = DateData.create(date);
+        const memberIds = new IntListData(members
+            .split(',')
+            .map(s => new IntData(parseInt(s)))
+            .sort((a, b) => a.getValue() - b.getValue())
+        );
+        let quarterVal: Quarter;
+        switch (quarter) {
+            case 'Winter':
+                quarterVal = Quarter.WINTER;
+                break;
+            case 'Spring':
+                quarterVal = Quarter.SPRING;
+                break;
+            case 'Summer':
+                quarterVal = Quarter.SUMMER;
+                break;
+            case 'Fall':
+                quarterVal = Quarter.FALL;
+                break;
+            default:
+                throw ErrorType.IllegalArgumentError;
+        }
+        const quarterId = new QuarterData(quarterVal, IntData.create(year));
+
+        appendAttendance([dateAsData], [memberIds], [quarterId]);
+    } catch (e) {
+        SpreadsheetApp.openById(VIEWS_ID).toast(`Check logs for details`, 'Failed', 5);
+        throw e;
+    }
+
+    SpreadsheetApp.openById(VIEWS_ID).toast(`Added new attendance record`, 'Success', 5);
+
+    RefreshLogger.run();
+}
+export function menuAddIncome(date: string, amount: string, description: string, payType: string) {
+    try {
+        const payId = getPaymentTypeIds([new StringData(payType.toLowerCase())])[0];
+
+        const amountVal = parseFloat(amount);
+        if (isNaN(amountVal)) throw ErrorType.IllegalArgumentError;
+
+        appendIncome(
+            [DateData.create(date)],
+            [new IntData(Math.round(amountVal * 100))],
+            [StringData.create(description)],
+            [payId],
+            [new IntData(-1)]
+        );
+    } catch (e) {
+        SpreadsheetApp.openById(VIEWS_ID).toast(`Check logs for details`, 'Failed', 5);
+        throw e;
+    }
+
+    SpreadsheetApp.openById(VIEWS_ID).toast(`Added new income`, 'Success', 5);
+
+    RefreshLogger.run();
+}
+export function menuAddExpense(date: string, amount: string, description: string, recipient: string, payType: string) {
+    try {
+        const payId = getPaymentTypeIds([new StringData(payType.toLowerCase())])[0];
+
+        const amountVal = parseFloat(amount);
+        if (isNaN(amountVal)) throw ErrorType.IllegalArgumentError;
+
+        const recipientData = new StringData(recipient.toLowerCase())
+        let recipientId: IntData;
+        try {
+            recipientId = getRecipientIds([recipientData])[0];
+        } catch (e) {
+            if (e === ErrorType.NoMatchFoundError) {
+                recipientId = appendRecipient([recipientData])[0];
+            } else {
+                throw e;
+            }
+        }
+
+        appendExpense(
+            [DateData.create(date)],
+            [new IntData(Math.round(amountVal * 100))],
+            [StringData.create(description)],
+            [payId],
+            [recipientId],
+            [new IntData(-1)]
+        );
+    } catch (e) {
+        SpreadsheetApp.openById(VIEWS_ID).toast(`Check logs for details`, 'Failed', 5);
+        throw e;
+    }
+
+    SpreadsheetApp.openById(VIEWS_ID).toast(`Added new expense`, 'Success', 5);
+
+    RefreshLogger.run();
+}
+export function menuAddStatement(date: string, incomes: string, expenses: string) {
+    try {
+        if (incomes.length === 0 && expenses.length === 0) {
+            SpreadsheetApp.openById(VIEWS_ID).toast(`No incomes or expenses were provided`, 'No Change', 5);
+            return;
+        }
+        const statementId = appendStatement([DateData.create(date)], [BooleanData.FALSE])[0];
+
+        if (incomes.length > 0) {
+            const incomeIds = incomes.split('\n').map(IntData.create);
+            updateIncome(incomeIds, undefined, undefined, undefined, undefined, repeat(statementId, incomeIds.length))
+        }
+        if (expenses.length > 0) {
+            const expenseIds = expenses.split('\n').map(IntData.create);
+            updateExpense(expenseIds, undefined, undefined, undefined, undefined, undefined, repeat(statementId, expenseIds.length))
+        }
+    } catch (e) {
+        SpreadsheetApp.openById(VIEWS_ID).toast(`Check logs for details`, 'Failed', 5);
+        throw e;
+    }
+
+    SpreadsheetApp.openById(VIEWS_ID).toast(`Added new statement`, 'Success', 5);
+
+    RefreshLogger.run();
+}
+export function menuAddPayType(name: string) {
+    try {
+        const nameData = StringData.create(name.toLowerCase());
+        try {
+            getPaymentTypeIds([nameData]);
+            SpreadsheetApp.openById(VIEWS_ID).toast(`Payment type already exists`, 'Failed', 5);
+            return;
+        } catch (e) {
+            if (e === ErrorType.NoMatchFoundError) {
+                appendPaymentType([nameData]);
+            } else {
+                throw e;
+            }
+        }
+    } catch (e) {
+        SpreadsheetApp.openById(VIEWS_ID).toast(`Check logs for details`, 'Failed', 5);
+        throw e;
+    }
+
+    SpreadsheetApp.openById(VIEWS_ID).toast(`Added new payment type`, 'Success', 5);
+
+    RefreshLogger.run();
+}
+export function menuAddRecipient(name: string) {
+    try {
+        const nameData = StringData.create(name.toLowerCase());
+        try {
+            getRecipientIds([nameData]);
+            SpreadsheetApp.openById(VIEWS_ID).toast(`Recipient already exists`, 'Failed', 5);
+            return;
+        } catch (e) {
+            if (e === ErrorType.NoMatchFoundError) {
+                appendRecipient([nameData]);
+            } else {
+                throw e;
+            }
+        }
+    } catch (e) {
+        SpreadsheetApp.openById(VIEWS_ID).toast(`Check logs for details`, 'Failed', 5);
+        throw e;
+    }
+
+    SpreadsheetApp.openById(VIEWS_ID).toast(`Added new recipient`, 'Success', 5);
+
+    RefreshLogger.run();
+}
 
 function rename(oldName: string, newName: string, idFromNameFn: (name: StringData[]) => IntData[], updateFn: (ids: IntData[], names: StringData[]) => void) {
     const oldNameData = new StringData(oldName.toLowerCase());
@@ -169,8 +367,7 @@ export function mergeRecipient(aliases: string, name: string) {
 }
 
 export function pollNotification(title: string, deadline: string, link: string) {
-    const deadlineAsUTC = new Date(deadline);
-    emailPollNotification(title, new Date(deadlineAsUTC.valueOf() + deadlineAsUTC.getTimezoneOffset() * 60 * 1000), link);
+    emailPollNotification(title, new Date(deadline), link);
     SpreadsheetApp.openById(VIEWS_ID).toast('Emails sent', 'Success', 5);
 }
 export function notifyMembers(memberNames: string, subject: string, body: string) {

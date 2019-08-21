@@ -1,3 +1,4 @@
+import { disableForm, enableForm } from './forms/disable';
 import { refreshAddExpense, refreshAddIncome, refreshAddMemberIou, refreshCollectDues, refreshConfirmTransfer, refreshNextQuarter, refreshResolveMemberIou, refreshTakeAttendance, refreshTransferFunds, refreshUpdateContactSettings, refreshUpdateMemberStatus } from './forms/refresh';
 import { refreshAccountInfo, refreshAllTransactions, refreshExpenses, refreshIncomes, refreshMembers, refreshStatements } from './views/refresh';
 
@@ -25,7 +26,9 @@ export class UniqueList<T> {
     add(x: T) {
         if (this.vals.indexOf(x) === -1) {
             this.vals.push(x);
+            return true;
         }
+        return false;
     }
     size() {
         return this.vals.length;
@@ -56,6 +59,7 @@ export const CARRIERS: Dictionary<string, string> = {
 
 export interface EditEvent {
     range: GoogleAppsScript.Spreadsheet.Range;
+    source: GoogleAppsScript.Spreadsheet.Spreadsheet;
 }
 export interface SortSpecObj {
     column: number;
@@ -78,126 +82,143 @@ export abstract class NumberFormat {
     static DATE = 'MMM dd, yyyy';
 }
 
-export enum Table {
-    MEMBER,
-    INCOME,
-    EXPENSE,
-    RECIPIENT,
-    PAYMENT_TYPE,
-    STATEMENT,
-    ATTENDANCE,
-    CLUB_INFO
+export abstract class Generated {
+    constructor(private name: string, private refreshFn: Function) { }
+
+    public getName() { return this.name; }
+    public getRefreshFn() { return this.refreshFn; }
 }
+export class GeneratedTable extends Generated {
+    static ACCOUNT_INFO = new GeneratedTable('Account Info', refreshAccountInfo);
+    static MEMBERS = new GeneratedTable('Members', refreshMembers);
+    static INCOMES = new GeneratedTable('Incomes', refreshIncomes);
+    static EXPENSES = new GeneratedTable('Expenses', refreshExpenses);
+    static ALL_TRANSACTIONS = new GeneratedTable('All Transactions', refreshAllTransactions);
+    static STATEMENTS = new GeneratedTable('Statements', refreshStatements);
+
+    private constructor(name: string, refreshFn: Function) {
+        super(name, refreshFn);
+    }
+}
+export class GeneratedForm extends Generated {
+    static ADD_EXPENSE = new GeneratedForm('Add Expense', refreshAddExpense);
+    static ADD_INCOME = new GeneratedForm('Add Income', refreshAddIncome);
+    static ADD_MEMBER_IOU = new GeneratedForm('Add Member IOU', refreshAddMemberIou);
+    static COLLECT_DUES = new GeneratedForm('Collect Dues', refreshCollectDues);
+    static CONFIRM_TRANSFER = new GeneratedForm('Confirm Transfer', refreshConfirmTransfer);
+    static NEXT_QUARTER = new GeneratedForm('Next Quarter', refreshNextQuarter);
+    static RESOLVE_MEMBER_IOU = new GeneratedForm('Resolve Member IOU', refreshResolveMemberIou);
+    static TAKE_ATTENDANCE = new GeneratedForm('Take Attendance', refreshTakeAttendance);
+    static TRANSFER_FUNDS = new GeneratedForm('Transfer Funds', refreshTransferFunds);
+    static UPDATE_CONTACT_SETTINGS = new GeneratedForm('Update Contact Settings', refreshUpdateContactSettings);
+    static UPDATE_MEMBER_STATUS = new GeneratedForm('Update Member Status', refreshUpdateMemberStatus);
+
+    private constructor(name: string, refreshFn: Function) {
+        super(name, refreshFn);
+    }
+}
+export class DataTable {
+    static MEMBER = new DataTable('Member', [
+        GeneratedTable.MEMBERS,
+    ], [
+            GeneratedForm.ADD_MEMBER_IOU,
+            GeneratedForm.COLLECT_DUES,
+            GeneratedForm.RESOLVE_MEMBER_IOU,
+            GeneratedForm.TAKE_ATTENDANCE,
+            GeneratedForm.UPDATE_CONTACT_SETTINGS,
+            GeneratedForm.UPDATE_MEMBER_STATUS
+        ]);
+    static INCOME = new DataTable('Income', [
+        GeneratedTable.ACCOUNT_INFO,
+        GeneratedTable.INCOMES,
+        GeneratedTable.ALL_TRANSACTIONS,
+        GeneratedTable.STATEMENTS
+    ], [
+            GeneratedForm.CONFIRM_TRANSFER,
+            GeneratedForm.TRANSFER_FUNDS
+        ]);
+    static EXPENSE = new DataTable('Expense', [
+        GeneratedTable.ACCOUNT_INFO,
+        GeneratedTable.EXPENSES,
+        GeneratedTable.ALL_TRANSACTIONS,
+        GeneratedTable.STATEMENTS
+    ], [
+            GeneratedForm.CONFIRM_TRANSFER,
+            GeneratedForm.TRANSFER_FUNDS
+        ]);
+    static RECIPIENT = new DataTable('Recipient', [
+        GeneratedTable.EXPENSES,
+        GeneratedTable.ALL_TRANSACTIONS
+    ], []);
+    static PAYMENT_TYPE = new DataTable('Payment Type', [
+        GeneratedTable.ACCOUNT_INFO,
+        GeneratedTable.INCOMES,
+        GeneratedTable.EXPENSES,
+        GeneratedTable.ALL_TRANSACTIONS,
+        GeneratedTable.STATEMENTS
+    ], [
+            GeneratedForm.ADD_EXPENSE,
+            GeneratedForm.ADD_INCOME,
+            GeneratedForm.COLLECT_DUES,
+            GeneratedForm.CONFIRM_TRANSFER,
+            GeneratedForm.RESOLVE_MEMBER_IOU,
+            GeneratedForm.TRANSFER_FUNDS
+        ]);
+    static STATEMENT = new DataTable('Statement', [
+        GeneratedTable.STATEMENTS
+    ], [
+            GeneratedForm.CONFIRM_TRANSFER,
+            GeneratedForm.TRANSFER_FUNDS
+        ]);
+    static ATTENDANCE = new DataTable('Attendance', [
+        GeneratedTable.MEMBERS
+    ], []);
+    static CLUB_INFO = new DataTable('Club Info', [
+        GeneratedTable.ACCOUNT_INFO,
+        GeneratedTable.MEMBERS
+    ], [
+            GeneratedForm.COLLECT_DUES,
+            GeneratedForm.NEXT_QUARTER
+        ]);
+
+    private constructor(private name: string, private dependentTables: GeneratedTable[], private dependentForms: GeneratedForm[]) { }
+
+    public getName() { return this.name; }
+    public getDependentTables() { return this.dependentTables; }
+    public getDependentForms() { return this.dependentForms; }
+}
+
 export abstract class RefreshLogger {
-    static DEPENDENCIES: { table: Table, fns: Function[] }[] = [
-        {
-            table: Table.MEMBER,
-            fns: [
-                refreshMembers,
+    static tables: UniqueList<DataTable> = new UniqueList<DataTable>();
 
-                refreshAddMemberIou,
-                refreshCollectDues,
-                refreshResolveMemberIou,
-                refreshTakeAttendance,
-                refreshUpdateContactSettings,
-                refreshUpdateMemberStatus
-            ]
-        },
-        {
-            table: Table.INCOME,
-            fns: [
-                refreshAccountInfo,
-                refreshIncomes,
-                refreshAllTransactions,
-                refreshStatements,
-
-                refreshConfirmTransfer,
-                refreshTransferFunds
-            ]
-        },
-        {
-            table: Table.EXPENSE,
-            fns: [
-                refreshAccountInfo,
-                refreshExpenses,
-                refreshAllTransactions,
-                refreshStatements,
-
-                refreshConfirmTransfer,
-                refreshTransferFunds
-            ]
-        },
-        {
-            table: Table.RECIPIENT,
-            fns: [
-                refreshExpenses,
-                refreshAllTransactions
-            ]
-        },
-        {
-            table: Table.PAYMENT_TYPE,
-            fns: [
-                refreshAccountInfo,
-                refreshIncomes,
-                refreshExpenses,
-                refreshAllTransactions,
-                refreshStatements,
-
-                refreshAddExpense,
-                refreshAddIncome,
-                refreshCollectDues,
-                refreshConfirmTransfer,
-                refreshResolveMemberIou,
-                refreshTransferFunds
-            ]
-        },
-        {
-            table: Table.STATEMENT,
-            fns: [
-                refreshStatements,
-
-                refreshConfirmTransfer,
-                refreshTransferFunds
-            ]
-        },
-        {
-            table: Table.ATTENDANCE,
-            fns: [
-                refreshMembers
-            ]
-        },
-        {
-            table: Table.CLUB_INFO,
-            fns: [
-                refreshAccountInfo,
-                refreshMembers,
-
-                refreshCollectDues,
-                refreshNextQuarter
-            ]
-        }
-    ];
-    static tables = new UniqueList<Table>();
-
-    static include(table: Table) {
+    static markAsUpdated(table: DataTable) {
         this.tables.add(table);
     }
     static run() {
-        function getDependencyFns(table: Table) {
-            for (const info of RefreshLogger.DEPENDENCIES) {
-                if (table === info.table) {
-                    return info.fns;
-                }
-            }
-            throw ErrorType.IllegalArgumentError;
+        const forms = new UniqueList<GeneratedForm>();
+
+        this.tables.asArray().forEach(table => {
+            table.getDependentForms().forEach(form => forms.add(form));
+        });
+
+        const lock = LockService.getScriptLock();
+        lock.waitLock(5 * 60 * 1000) // five minutes
+
+        forms.asArray().forEach(form => disableForm(form));
+
+        try {
+            this.tables.asArray().forEach(table => {
+                table.getDependentTables().forEach(x => x.getRefreshFn()());
+            });
+            this.tables.asArray().forEach(table => {
+                table.getDependentForms().forEach(x => x.getRefreshFn()());
+            });
+        } catch (e) {
+            forms.asArray().forEach(form => enableForm(form));
+            throw e;
         }
 
-        const fns = new UniqueList<Function>();
-        this.tables.asArray().forEach(table => {
-            getDependencyFns(table).forEach(fn => fns.add(fn));
-        })
-
-        fns.asArray().forEach(fn => fn());
+        lock.releaseLock();
     }
 }
 
@@ -227,7 +248,7 @@ export class IntData extends Data {
         }
     }
     static create(s: string) {
-        let n = parseInt(s);
+        let n = parseInt(s, 10);
         if (isNaN(n)) throw ErrorType.IllegalArgumentError;
         return new IntData(n);
     }
@@ -259,7 +280,7 @@ export class DateData extends Data {
         super();
     }
     static create(s: string) {
-        let n = parseInt(s);
+        let n = parseInt(s, 10);
         if (isNaN(n)) throw ErrorType.IllegalArgumentError;
         return new DateData(new Date(n));
     }
@@ -379,7 +400,7 @@ export class QuarterData extends Data {
         }
     }
     static create(s: string) {
-        let n = parseInt(s);
+        let n = parseInt(s, 10);
         if (isNaN(n)) throw ErrorType.IllegalArgumentError;
         const year = new IntData(Math.floor(n / 4))
         switch (n % 4) {
@@ -451,7 +472,7 @@ export class IntListData extends Data {
         const vals = s.split(',');
         return new IntListData(
             vals.map(val => {
-                let n = parseInt(val);
+                let n = parseInt(val, 10);
                 if (isNaN(n)) throw ErrorType.IllegalArgumentError;
                 return new IntData(n);
             })
@@ -714,4 +735,14 @@ export function compareByDateDesc(
 ) {
     if (!a.date || !b.date) throw ErrorType.AssertionError;
     return b.date.getValue().valueOf() - a.date.getValue().valueOf();
+}
+// 'yyyy-mm-dd' -> obj
+export function datestrToDate(date: string) {
+    const vals = date.split('-');
+    if (vals.length < 3) throw ErrorType.IllegalArgumentError;
+    const year = parseInt(vals[0], 10);
+    const month = parseInt(vals[1], 10);
+    const day = parseInt(vals[2], 10);
+    if (isNaN(year) || isNaN(month) || isNaN(day)) throw ErrorType.IllegalArgumentError;
+    return new Date(year, month - 1, day);
 }

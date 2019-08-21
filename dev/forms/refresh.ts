@@ -10,7 +10,8 @@ import { ID as TF_ID } from '../ids/tf';
 import { ID as UCS_ID } from '../ids/ucs';
 import { ID as UMS_ID } from '../ids/ums';
 import { getClubInfo, getExpenses, getIncomes, getMembers, getPaymentTypes, getStatements } from '../tables/get';
-import { capitalizeString, CARRIERS, centsToString, compareByDateDesc, Dictionary, ErrorType, IntData } from '../types';
+import { capitalizeString, CARRIERS, centsToString, compareByDateDesc, Dictionary, ErrorType, GeneratedForm, IntData } from '../types';
+import { disableForm, enableForm } from './disable';
 
 export function refreshAllForms() {
     refreshAddExpense();
@@ -31,20 +32,71 @@ export function refreshAddExpense() {
         if (!entry.name) throw ErrorType.AssertionError;
         return capitalizeString(entry.name.getValue());
     });
-    if (payTypes.length === 0) payTypes.push('');
 
-    const formItems = FormApp.openById(AE_ID).getItems();
-    formItems[3].asMultipleChoiceItem().setChoiceValues(payTypes);
+    const form = FormApp.openById(AE_ID);
+    disableForm(GeneratedForm.ADD_EXPENSE);
+
+    form.addTextItem()
+        .setTitle('Amount')
+        .setValidation(FormApp.createTextValidation()
+            .requireNumber()
+            // @ts-ignore 'build' is not listed as a property
+            .build())
+        .setRequired(true);
+    form.addParagraphTextItem()
+        .setTitle('Description')
+        .setRequired(true);
+    form.addTextItem()
+        .setTitle('Recipient')
+        .setRequired(true);
+
+    if (payTypes.length === 0) {
+        form.addTextItem()
+            .setTitle('Payment Type')
+            .setRequired(true);
+    } else {
+        form.addMultipleChoiceItem()
+            .setTitle('Payment Type')
+            .showOtherOption(true)
+            .setRequired(true)
+            .setChoiceValues(payTypes);
+    }
+
+    enableForm(GeneratedForm.ADD_EXPENSE);
 }
 export function refreshAddIncome() {
     const payTypes = getPaymentTypes().map(entry => {
         if (!entry.name) throw ErrorType.AssertionError;
         return capitalizeString(entry.name.getValue());
     });
-    if (payTypes.length === 0) payTypes.push('');
 
-    const formItems = FormApp.openById(AI_ID).getItems();
-    formItems[2].asMultipleChoiceItem().setChoiceValues(payTypes);
+    const form = FormApp.openById(AI_ID);
+    disableForm(GeneratedForm.ADD_INCOME);
+
+    form.addTextItem()
+        .setTitle('Amount')
+        .setValidation(FormApp.createTextValidation()
+            .requireNumber()
+            // @ts-ignore 'build' is not listed as a property
+            .build())
+        .setRequired(true);
+    form.addParagraphTextItem()
+        .setTitle('Description')
+        .setRequired(true);
+
+    if (payTypes.length === 0) {
+        form.addTextItem()
+            .setTitle('Payment Type')
+            .setRequired(true);
+    } else {
+        form.addMultipleChoiceItem()
+            .setTitle('Payment Type')
+            .showOtherOption(true)
+            .setRequired(true)
+            .setChoiceValues(payTypes);
+    }
+
+    enableForm(GeneratedForm.ADD_INCOME);
 }
 export function refreshAddMemberIou() {
     const memberNames = getMembers().map(entry => {
@@ -52,10 +104,37 @@ export function refreshAddMemberIou() {
         const amount = centsToString(entry.amountOwed);
         return capitalizeString(entry.name.getValue()) + ': ' + amount;
     }).sort();
-    if (memberNames.length === 0) memberNames.push('');
 
-    const formItems = FormApp.openById(AMI_ID).getItems();
-    formItems[0].asCheckboxItem().setChoiceValues(memberNames);
+    const form = FormApp.openById(AMI_ID);
+    disableForm(GeneratedForm.ADD_MEMBER_IOU);
+
+    if (memberNames.length === 0) {
+        form.addCheckboxItem()
+            .setTitle('No members found')
+            .setValidation(FormApp.createCheckboxValidation()
+                .requireSelectAtMost(0)
+                // @ts-ignore 'build' is not listed as a property
+                .build())
+            .setChoiceValues(['-'])
+            .setRequired(true)
+    } else {
+        form.addCheckboxItem()
+            .setTitle('Member')
+            .setRequired(true)
+            .setChoiceValues(memberNames);
+    }
+    form.addTextItem()
+        .setTitle('Amount')
+        .setValidation(FormApp.createTextValidation()
+            .requireNumber()
+            // @ts-ignore 'build' is not listed as a property
+            .build())
+        .setRequired(true);
+    form.addParagraphTextItem()
+        .setTitle('Description')
+        .setRequired(true);
+
+    enableForm(GeneratedForm.ADD_MEMBER_IOU);
 }
 export function refreshCollectDues() {
     const clubInfo = getClubInfo();
@@ -71,17 +150,44 @@ export function refreshCollectDues() {
         }
     });
     memberNames.sort();
-    if (memberNames.length === 0) memberNames.push('');
 
     const payTypes = getPaymentTypes().map(entry => {
         if (!entry.name) throw ErrorType.AssertionError;
         return capitalizeString(entry.name.getValue());
     });
-    if (payTypes.length === 0) payTypes.push('');
 
-    const formItems = FormApp.openById(CD_ID).getItems();
-    formItems[0].asCheckboxItem().setChoiceValues(memberNames);
-    formItems[1].asMultipleChoiceItem().setChoiceValues(payTypes);
+    const form = FormApp.openById(CD_ID);
+    disableForm(GeneratedForm.COLLECT_DUES);
+
+    if (memberNames.length === 0) {
+        form.addCheckboxItem()
+            .setTitle('No active members found that haven\'t paid dues')
+            .setValidation(FormApp.createCheckboxValidation()
+                .requireSelectAtMost(0)
+                // @ts-ignore 'build' is not listed as a property
+                .build())
+            .setChoiceValues(['-'])
+            .setRequired(true)
+    } else {
+        form.addCheckboxItem()
+            .setTitle('Member')
+            .setRequired(true)
+            .setChoiceValues(memberNames);
+    }
+
+    if (payTypes.length === 0) {
+        form.addTextItem()
+            .setTitle('Payment Type')
+            .setRequired(true);
+    } else {
+        form.addMultipleChoiceItem()
+            .setTitle('Payment Type')
+            .showOtherOption(true)
+            .setRequired(true)
+            .setChoiceValues(payTypes);
+    }
+
+    enableForm(GeneratedForm.COLLECT_DUES);
 }
 export function refreshConfirmTransfer() {
     const statementDetails: Dictionary<number, { payType: number, amount: number }> = {};
@@ -115,10 +221,9 @@ export function refreshConfirmTransfer() {
         idToPayType[entry.id.getValue()] = capitalizeString(entry.name.getValue());
     });
 
-    const statements = getStatements().sort(compareByDateDesc);
     const transfers: string[] = [];
-    statements.forEach(entry => {
-        if (!entry.id || !entry.confirmed) throw ErrorType.AssertionError;
+    getStatements().sort(compareByDateDesc).forEach(entry => {
+        if (!entry.id || !entry.date || !entry.confirmed) throw ErrorType.AssertionError;
         if (!entry.confirmed.getValue()) {
             const curDetails = statementDetails[entry.id.getValue()];
             if (!curDetails) throw ErrorType.AssertionError;
@@ -126,21 +231,46 @@ export function refreshConfirmTransfer() {
             const payType = idToPayType[curDetails.payType];
             if (payType === undefined) throw ErrorType.AssertionError
 
-            transfers.push(centsToString(new IntData(curDetails.amount)) +
+            transfers.push(entry.date.toDateString() +
+                ', ' + centsToString(new IntData(curDetails.amount)) +
                 ' ' + capitalizeString(payType) +
                 ' [' + entry.id.toString() + ']');
         }
     });
-    if (transfers.length === 0) transfers.push('');
 
-    const formItems = FormApp.openById(CT_ID).getItems();
-    formItems[0].asCheckboxItem().setChoiceValues(transfers);
+    const form = FormApp.openById(CT_ID);
+    disableForm(GeneratedForm.CONFIRM_TRANSFER);
+
+    if (transfers.length === 0) {
+        form.addCheckboxItem()
+            .setTitle('No unconfirmed statements found')
+            .setValidation(FormApp.createCheckboxValidation()
+                .requireSelectAtMost(0)
+                // @ts-ignore 'build' is not listed as a property
+                .build())
+            .setChoiceValues(['-'])
+            .setRequired(true)
+    } else {
+        form.addCheckboxItem()
+            .setTitle('Transfer')
+            .setRequired(true)
+            .setChoiceValues(transfers);
+    }
+
+    enableForm(GeneratedForm.CONFIRM_TRANSFER);
 }
 export function refreshNextQuarter() {
     const clubInfo = getClubInfo();
 
-    const formItems = FormApp.openById(NQ_ID).getItems();
-    formItems[0].asCheckboxItem().setChoiceValues(['Is it ' + clubInfo.currentQuarterId.next().toDateString() + '?']);
+    const form = FormApp.openById(NQ_ID);
+    disableForm(GeneratedForm.NEXT_QUARTER);
+
+    form.addCheckboxItem()
+        .setTitle('Confirmation')
+        .setRequired(true)
+        .setChoiceValues(['Is it ' + clubInfo.currentQuarterId.next().toDateString() + '?']);
+
+    enableForm(GeneratedForm.NEXT_QUARTER);
 }
 export function refreshResolveMemberIou() {
     const memberNames = getMembers().map(entry => {
@@ -148,27 +278,82 @@ export function refreshResolveMemberIou() {
         const amount = centsToString(entry.amountOwed);
         return capitalizeString(entry.name.getValue()) + ': ' + amount;
     }).sort();
-    if (memberNames.length === 0) memberNames.push('');
 
     const payTypes = getPaymentTypes().map(entry => {
         if (!entry.name) throw ErrorType.AssertionError;
         return capitalizeString(entry.name.getValue());
     });
-    if (payTypes.length === 0) payTypes.push('');
 
-    const formItems = FormApp.openById(RMI_ID).getItems();
-    formItems[0].asCheckboxItem().setChoiceValues(memberNames);
-    formItems[3].asMultipleChoiceItem().setChoiceValues(payTypes);
+    const form = FormApp.openById(RMI_ID);
+    disableForm(GeneratedForm.RESOLVE_MEMBER_IOU);
+
+    if (memberNames.length === 0) {
+        form.addCheckboxItem()
+            .setTitle('No members found')
+            .setValidation(FormApp.createCheckboxValidation()
+                .requireSelectAtMost(0)
+                // @ts-ignore 'build' is not listed as a property
+                .build())
+            .setChoiceValues(['-'])
+            .setRequired(true)
+    } else {
+        form.addCheckboxItem()
+            .setTitle('Member')
+            .setRequired(true)
+            .setChoiceValues(memberNames);
+    }
+    form.addTextItem()
+        .setTitle('Amount')
+        .setValidation(FormApp.createTextValidation()
+            .requireNumber()
+            // @ts-ignore 'build' is not listed as a property
+            .build())
+        .setRequired(true);
+    form.addParagraphTextItem()
+        .setTitle('Description')
+        .setRequired(true);
+
+    if (payTypes.length === 0) {
+        form.addTextItem()
+            .setTitle('Payment Type')
+            .setRequired(true);
+    } else {
+        form.addMultipleChoiceItem()
+            .setTitle('Payment Type')
+            .showOtherOption(true)
+            .setRequired(true)
+            .setChoiceValues(payTypes);
+    }
+
+    enableForm(GeneratedForm.RESOLVE_MEMBER_IOU);
 }
 export function refreshTakeAttendance() {
     const memberNames = getMembers().map(entry => {
         if (!entry.name) throw ErrorType.AssertionError;
         return capitalizeString(entry.name.getValue());
     }).sort();
-    if (memberNames.length === 0) memberNames.push('');
 
-    const formItems = FormApp.openById(TA_ID).getItems();
-    formItems[0].asCheckboxItem().setChoiceValues(memberNames);
+    const form = FormApp.openById(TA_ID);
+    disableForm(GeneratedForm.TAKE_ATTENDANCE);
+
+    if (memberNames.length === 0) {
+        form.addCheckboxItem()
+            .setTitle('No members found')
+            .setValidation(FormApp.createCheckboxValidation()
+                .requireSelectAtMost(0)
+                // @ts-ignore 'build' is not listed as a property
+                .build())
+            .setChoiceValues(['-'])
+    } else {
+        form.addCheckboxItem()
+            .setTitle('Member')
+            .setChoiceValues(memberNames);
+    }
+    form.addParagraphTextItem()
+        .setTitle('New Members')
+        .setHelpText('Separate each name with a new line');
+
+    enableForm(GeneratedForm.TAKE_ATTENDANCE);
 }
 export function refreshTransferFunds() {
     const idToPayType: Dictionary<number, string> = {};
@@ -177,9 +362,8 @@ export function refreshTransferFunds() {
         idToPayType[entry.id.getValue()] = capitalizeString(entry.name.getValue());
     });
 
-    const incomeVals = getIncomes().sort(compareByDateDesc);
     const incomes: string[] = [];
-    incomeVals.forEach(entry => {
+    getIncomes().sort(compareByDateDesc).forEach(entry => {
         if (!entry.id || !entry.amount || !entry.paymentTypeId || !entry.statementId) throw ErrorType.AssertionError;
 
         if (entry.statementId.getValue() === -1) {
@@ -191,11 +375,9 @@ export function refreshTransferFunds() {
                 ' [' + entry.id.toString() + ']');
         }
     });
-    if (incomes.length === 0) incomes.push('');
 
-    const expenseVals = getExpenses().sort(compareByDateDesc);
     const expenses: string[] = [];
-    expenseVals.forEach(entry => {
+    getExpenses().sort(compareByDateDesc).forEach(entry => {
         if (!entry.id || !entry.amount || !entry.paymentTypeId || !entry.statementId) throw ErrorType.AssertionError;
 
         if (entry.statementId.getValue() === -1) {
@@ -207,11 +389,38 @@ export function refreshTransferFunds() {
                 ' [' + entry.id.toString() + ']');
         }
     });
-    if (expenses.length === 0) expenses.push('');
 
-    const formItems = FormApp.openById(TF_ID).getItems();
-    formItems[0].asCheckboxItem().setChoiceValues(incomes);
-    formItems[1].asCheckboxItem().setChoiceValues(expenses);
+    const form = FormApp.openById(TF_ID);
+    disableForm(GeneratedForm.TRANSFER_FUNDS);
+
+    if (incomes.length === 0) {
+        form.addCheckboxItem()
+            .setTitle('No incomes left to transfer')
+            .setValidation(FormApp.createCheckboxValidation()
+                .requireSelectAtMost(0)
+                // @ts-ignore 'build' is not listed as a property
+                .build())
+            .setChoiceValues(['-'])
+    } else {
+        form.addCheckboxItem()
+            .setTitle('Income')
+            .setChoiceValues(incomes);
+    }
+    if (expenses.length === 0) {
+        form.addCheckboxItem()
+            .setTitle('No expenses left to transfer')
+            .setValidation(FormApp.createCheckboxValidation()
+                .requireSelectAtMost(0)
+                // @ts-ignore 'build' is not listed as a property
+                .build())
+            .setChoiceValues(['-'])
+    } else {
+        form.addCheckboxItem()
+            .setTitle('Expense')
+            .setChoiceValues(expenses);
+    }
+
+    enableForm(GeneratedForm.TRANSFER_FUNDS);
 }
 export function refreshUpdateContactSettings() {
     const memberNames: string[] = [];
@@ -222,22 +431,83 @@ export function refreshUpdateContactSettings() {
         }
     })
     memberNames.sort();
-    if (memberNames.length === 0) memberNames.push('');
 
     const carriers = Object.keys(CARRIERS);
-    if (carriers.length === 0) carriers.push('');
 
-    const formItems = FormApp.openById(UCS_ID).getItems();
-    formItems[0].asMultipleChoiceItem().setChoiceValues(memberNames);
-    formItems[3].asMultipleChoiceItem().setChoiceValues(carriers);
+    const form = FormApp.openById(UCS_ID);
+    disableForm(GeneratedForm.UPDATE_CONTACT_SETTINGS);
+
+    if (memberNames.length === 0) {
+        form.addCheckboxItem()
+            .setTitle('No active members found')
+            .setValidation(FormApp.createCheckboxValidation()
+                .requireSelectAtMost(0)
+                // @ts-ignore 'build' is not listed as a property
+                .build())
+            .setChoiceValues(['-'])
+            .setRequired(true)
+    } else {
+        form.addMultipleChoiceItem()
+            .setTitle('Name')
+            .setRequired(true)
+            .setChoiceValues(memberNames);
+    }
+    form.addTextItem()
+        .setTitle('Email');
+    if (carriers.length > 0) {
+        form.addTextItem()
+            .setTitle('Phone Number')
+            .setHelpText('Using the form \'XXX-XXX-XXXX\'')
+            .setValidation(FormApp.createTextValidation()
+                .requireTextMatchesPattern('[0-9]{3}-[0-9]{3}-[0-9]{4}')
+                // @ts-ignore 'build' is not listed as a property
+                .build());
+        form.addMultipleChoiceItem()
+            .setTitle('Phone Carrier')
+            .setChoiceValues(carriers);
+    }
+    form.addMultipleChoiceItem()
+        .setTitle('Recieve notification when new poll is created?')
+        .setChoiceValues(['Yes', 'No']);
+    form.addMultipleChoiceItem()
+        .setTitle('Recieve receipts after paying dues?')
+        .setChoiceValues(['Yes', 'No']);
+
+    enableForm(GeneratedForm.UPDATE_CONTACT_SETTINGS);
 }
 export function refreshUpdateMemberStatus() {
     const memberNames = getMembers().map(entry => {
         if (!entry.name) throw ErrorType.AssertionError;
         return capitalizeString(entry.name.getValue());
     }).sort();
-    if (memberNames.length === 0) memberNames.push('');
 
-    const formItems = FormApp.openById(UMS_ID).getItems();
-    formItems[0].asCheckboxItem().setChoiceValues(memberNames);
+    const form = FormApp.openById(UMS_ID);
+    disableForm(GeneratedForm.UPDATE_MEMBER_STATUS);
+
+    if (memberNames.length === 0) {
+        form.addCheckboxItem()
+            .setTitle('No members found')
+            .setValidation(FormApp.createCheckboxValidation()
+                .requireSelectAtMost(0)
+                // @ts-ignore 'build' is not listed as a property
+                .build())
+            .setChoiceValues(['-'])
+            .setRequired(true)
+    } else {
+        form.addCheckboxItem()
+            .setTitle('Member')
+            .setRequired(true)
+            .setChoiceValues(memberNames);
+    }
+    form.addMultipleChoiceItem()
+        .setTitle('Performing?')
+        .setChoiceValues(['Yes', 'No']);
+    form.addMultipleChoiceItem()
+        .setTitle('Active?')
+        .setChoiceValues(['Yes', 'No']);
+    form.addMultipleChoiceItem()
+        .setTitle('Officer?')
+        .setChoiceValues(['Yes', 'No']);
+
+    enableForm(GeneratedForm.UPDATE_MEMBER_STATUS);
 }
