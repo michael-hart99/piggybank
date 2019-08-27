@@ -2,6 +2,9 @@ import { ID as BACKUP_FOLDER_ID } from '../ids/backupFolderId';
 import { ID as TABLES_ID } from '../ids/tablesId';
 import { GAS_OFFSET } from '../tableOps';
 
+/**
+ * Creates an identical copy of the database tables in the Backup folder.
+ */
 export function createBackup() {
     const datestring = new Date().toJSON().replace('T', ', ');
     const backupSS = SpreadsheetApp.create(datestring);

@@ -2,6 +2,22 @@ import { ID } from '../ids/tablesId';
 import { append } from '../tableOps';
 import { AttendanceEntry, BooleanData, DataTable, DateData, ErrorType, ExpenseEntry, IncomeEntry, IntData, IntListData, MemberEntry, PaymentTypeEntry, QuarterData, RecipientEntry, RefreshLogger, StatementEntry, StringData } from '../types';
 
+/**
+ * Appends the given values to the Member sheet.
+ * 
+ * @param name The name values to append
+ * @param dateJoined The dateJoined values to append
+ * @param amountOwed The amountOwed values to append
+ * @param email The email values to append
+ * @param performing The performing values to append
+ * @param active The active values to append
+ * @param officer The officer values to append
+ * @param currentDuesPaid The currentDuesPaid values to append
+ * @param notifyPoll The notifyPoll values to append
+ * @param sendReceipt The sendReceipt values to append
+ * 
+ * @throws IllegalArgumentError if not all parameters are the same length
+ */
 export function appendMember(
     name: StringData[],
     dateJoined: DateData[],
@@ -55,6 +71,17 @@ export function appendMember(
 
     return append(sheet, entries);
 }
+/**
+ * Appends the given values to the Income sheet.
+ * 
+ * @param date The date values to append
+ * @param amount The amount values to append
+ * @param description The description values to append
+ * @param paymentTypeId The paymentTypeId values to append
+ * @param statementId The statementId values to append
+ * 
+ * @throws IllegalArgumentError if not all parameters are the same length
+ */
 export function appendIncome(
     date: DateData[],
     amount: IntData[],
@@ -93,6 +120,18 @@ export function appendIncome(
 
     return append(sheet, entries);
 }
+/**
+ * Appends the given values to the Expense sheet.
+ * 
+ * @param date The date values to append
+ * @param amount The amount values to append
+ * @param description The description values to append
+ * @param paymentTypeId The paymentTypeId values to append
+ * @param recipientId The recipientId values to append
+ * @param statementId The statementId values to append
+ * 
+ * @throws IllegalArgumentError if not all parameters are the same length
+ */
 export function appendExpense(
     date: DateData[],
     amount: IntData[],
@@ -134,6 +173,13 @@ export function appendExpense(
 
     return append(sheet, entries);
 }
+/**
+ * Appends the given values to the Income sheet.
+ * 
+ * @param name The name values to append
+ * 
+ * @throws IllegalArgumentError if not all parameters are the same length
+ */
 export function appendRecipient(name: StringData[]) {
     let numEntries = name.length;
 
@@ -148,6 +194,13 @@ export function appendRecipient(name: StringData[]) {
 
     return append(sheet, entries);
 }
+/**
+ * Appends the given values to the Income sheet.
+ * 
+ * @param name The name values to append
+ * 
+ * @throws IllegalArgumentError if not all parameters are the same length
+ */
 export function appendPaymentType(name: StringData[]) {
     let numEntries = name.length;
 
@@ -162,6 +215,14 @@ export function appendPaymentType(name: StringData[]) {
 
     return append(sheet, entries);
 }
+/**
+ * Appends the given values to the Income sheet.
+ * 
+ * @param date The date values to append
+ * @param confirmed The confirmed values to append
+ * 
+ * @throws IllegalArgumentError if not all parameters are the same length
+ */
 export function appendStatement(
     date: DateData[],
     confirmed: BooleanData[]
@@ -191,6 +252,15 @@ export function appendStatement(
 
     return append(sheet, entries);
 }
+/**
+ * Appends the given values to the Income sheet.
+ * 
+ * @param date The date values to append
+ * @param memberIds The memberIds values to append
+ * @param quarterId The quarterId values to append
+ * 
+ * @throws IllegalArgumentError if not all parameters are the same length
+ */
 export function appendAttendance(
     date: DateData[],
     memberIds: IntListData[],

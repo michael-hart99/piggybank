@@ -2,12 +2,17 @@ import { disableForm, enableForm } from './forms/disable';
 import { refreshAddExpense, refreshAddIncome, refreshAddMemberIou, refreshCollectDues, refreshConfirmTransfer, refreshNextQuarter, refreshResolveMemberIou, refreshTakeAttendance, refreshTransferFunds, refreshUpdateContactSettings, refreshUpdateMemberStatus } from './forms/refresh';
 import { refreshAccountInfo, refreshAllTransactions, refreshExpenses, refreshIncomes, refreshMembers, refreshStatements } from './views/refresh';
 
+/**
+ * A collection of error types that can be thrown, indicating common problems.
+ */
 export abstract class ErrorType {
-    static FieldNotFoundError = 'FieldNotFoundError';
     static IllegalArgumentError = 'IllegalArgumentError';
     static AssertionError = 'AssertionError';
     static NoMatchFoundError = 'NoMatchFoundError';
 }
+/**
+ * An enumerable of school quarters.
+ */
 export enum Quarter {
     WINTER,
     SPRING,
@@ -15,14 +20,31 @@ export enum Quarter {
     FALL,
 }
 
+/**
+ * A Dictionary/Map (just a type wrapper over a basic Object).
+ */
 export type Dictionary<K extends keyof any, V> = { [P in K]?: V }
+/**
+ * A Set of unique values
+ */
 export class UniqueList<T> {
+    /** the values of this set */
     private vals: T[];
 
+    /**
+     * Initializes a new set.
+     * 
+     * @param vals The values to initialize this set with
+     */
     constructor(vals?: T[]) {
         if (vals) this.vals = vals;
         else this.vals = [];
     }
+    /**
+     * Adds a value to this set. Returns true if value wasn't already present.
+     * 
+     * @param x The value to be added
+     */
     add(x: T) {
         if (this.vals.indexOf(x) === -1) {
             this.vals.push(x);
@@ -30,14 +52,23 @@ export class UniqueList<T> {
         }
         return false;
     }
+    /**
+     * Returns the number of values in this set.
+     */
     size() {
         return this.vals.length;
     }
+    /**
+     * Returns the values of this set as an array.
+     */
     asArray() {
         return this.vals.map(x => x);
     }
 }
 
+/**
+ * A mapping from phone carrier names to the associated email domain.
+ */
 export const CARRIERS: Dictionary<string, string> = {
     'AT&T': '@txt.att.net',
     'T-Mobile': '@tmomail.net',
@@ -57,15 +88,24 @@ export const CARRIERS: Dictionary<string, string> = {
     'Page Plus': '@vtext.com'
 };
 
+/**
+ * Describes the parameter of an onEdit event.
+ */
 export interface EditEvent {
     range: GoogleAppsScript.Spreadsheet.Range;
     source: GoogleAppsScript.Spreadsheet.Spreadsheet;
 }
+/**
+ * Describes the specification used by GAS to sort objects.
+ */
 export interface SortSpecObj {
     column: number;
     ascending: boolean;
 }
 
+/**
+ * Various colors' hexadecimal values.
+ */
 export abstract class Color {
     static WHITE = '#ffffff';
     static BLACK = '#000000';
@@ -75,6 +115,9 @@ export abstract class Color {
     static PALE_GREEN = '#f2fff0';
     static PALE_BLUE = '#ecf1f8';
 }
+/**
+ * Various regex numberformats usable by GAS.
+ */
 export abstract class NumberFormat {
     static TEXT = '';
     static MONEY = '"$"#,##0.00';
@@ -82,12 +125,18 @@ export abstract class NumberFormat {
     static DATE = 'MMM dd, yyyy';
 }
 
+/**
+ * A wrapper for forms/sheets/etc generated from the database tables.
+ */
 export abstract class Generated {
     constructor(private name: string, private refreshFn: Function) { }
 
     public getName() { return this.name; }
     public getRefreshFn() { return this.refreshFn; }
 }
+/**
+ * Represents a table generated from the database values.
+ */
 export class GeneratedTable extends Generated {
     static ACCOUNT_INFO = new GeneratedTable('Account Info', refreshAccountInfo);
     static MEMBERS = new GeneratedTable('Members', refreshMembers);
@@ -100,6 +149,9 @@ export class GeneratedTable extends Generated {
         super(name, refreshFn);
     }
 }
+/**
+ * Represents a form generated from the database values.
+ */
 export class GeneratedForm extends Generated {
     static ADD_EXPENSE = new GeneratedForm('Add Expense', refreshAddExpense);
     static ADD_INCOME = new GeneratedForm('Add Income', refreshAddIncome);
@@ -117,6 +169,9 @@ export class GeneratedForm extends Generated {
         super(name, refreshFn);
     }
 }
+/**
+ * Represents a table within the database.
+ */
 export class DataTable {
     static MEMBER = new DataTable('Member', [
         GeneratedTable.MEMBERS,
@@ -188,13 +243,27 @@ export class DataTable {
     public getDependentForms() { return this.dependentForms; }
 }
 
+/**
+ * A static class that is used to control when the structures generated from
+ * the database are refreshed.
+ */
 export abstract class RefreshLogger {
+    /** The tables that have been updated */
     static tables: UniqueList<DataTable> = new UniqueList<DataTable>();
 
+    /**
+     * Marks the given table as having changed, meaning the dependent
+     * structures will update when refreshed.
+     * 
+     * @param table The table that has been changed
+     */
     static markAsUpdated(table: DataTable) {
         this.tables.add(table);
     }
-    static run() {
+    /**
+     * Refresh all of the generated structures dependent on the marked tables.
+     */
+    static refresh() {
         const forms = new UniqueList<GeneratedForm>();
 
         this.tables.asArray().forEach(table => {
@@ -204,9 +273,9 @@ export abstract class RefreshLogger {
         const lock = LockService.getScriptLock();
         lock.waitLock(5 * 60 * 1000) // five minutes
 
-        forms.asArray().forEach(form => disableForm(form));
-
         try {
+            forms.asArray().forEach(form => disableForm(form));
+
             this.tables.asArray().forEach(table => {
                 table.getDependentTables().forEach(x => x.getRefreshFn()());
             });
@@ -222,14 +291,36 @@ export abstract class RefreshLogger {
     }
 }
 
+/**
+ * Data that is inserted or read from a sheet.
+ */
 export abstract class Data {
+    /**
+     * Returns the string representation of this object.
+     */
     abstract toString(): string;
+    /**
+     * Returns a value that is representative of this object.
+     */
     abstract getValue(): any;
 }
+/**
+ * A wrapper on a string.
+ */
 export class StringData extends Data {
+    /**
+     * Creates a new StringData from a string.
+     * 
+     * @param val The value of this data
+     */
     constructor(private val: string) {
         super();
     }
+    /**
+     * Creates a new StringData from the given string.
+     * 
+     * @param s A string that can be converted to this datatype
+     */
     static create(s: string) {
         return new StringData(s);
     }
@@ -240,13 +331,30 @@ export class StringData extends Data {
         return this.val;
     }
 }
+/**
+ * A wrapper on an integer.
+ */
 export class IntData extends Data {
+    /**
+     * Creates a new IntData from an integer.
+     * 
+     * @param val The value of this data
+     * 
+     * @throws IllegalArgumentError if val is not an integer
+     */
     constructor(private val: number) {
         super();
         if (val % 1 !== 0) {
             throw ErrorType.IllegalArgumentError;
         }
     }
+    /**
+     * Creates a new IntData from the given string.
+     * 
+     * @param s A string that can be converted to this datatype
+     * 
+     * @throws IllegalArgumentError if the string is not an integer
+     */
     static create(s: string) {
         let n = parseInt(s, 10);
         if (isNaN(n)) throw ErrorType.IllegalArgumentError;
@@ -259,31 +367,34 @@ export class IntData extends Data {
         return this.val;
     }
 }
-export class FloatData extends Data {
-    constructor(private val: number) {
-        super();
-    }
-    static create(s: string) {
-        let n = parseFloat(s);
-        if (isNaN(n)) throw ErrorType.IllegalArgumentError;
-        return new FloatData(n);
-    }
-    toString() {
-        return this.val.toString();
-    }
-    getValue() {
-        return this.val;
-    }
-}
+/**
+ * A wrapper on a date.
+ */
 export class DateData extends Data {
+    /**
+     * Creates a new DateData from a date.
+     * 
+     * @param val The value of this data
+     */
     constructor(private val: Date) {
         super();
     }
+    /**
+     * Creates a new DateData from the given string (The number of milliseconds
+     * since 1970).
+     * 
+     * @param s A string that can be converted to this datatype
+     * 
+     * @throws IllegalArgumentError if the string is not an integer
+     */
     static create(s: string) {
         let n = parseInt(s, 10);
         if (isNaN(n)) throw ErrorType.IllegalArgumentError;
         return new DateData(new Date(n));
     }
+    /**
+     * Returns this data in a string of the format "Mmm dd, yyyy".
+     */
     toDateString() {
         let month: string;
         switch (this.val.getMonth()) {
@@ -335,26 +446,28 @@ export class DateData extends Data {
         return this.val;
     }
 }
+/**
+ * A wrapper on a boolean.
+ */
 export class BooleanData extends Data {
-    private val: boolean;
-
     static TRUE = new BooleanData(true);
     static FALSE = new BooleanData(false);
 
-    constructor(val: boolean | string) {
+    /**
+     * Creates a new BooleanData from a boolean value.
+     * 
+     * @param val The value of this data
+     */
+    constructor(private val: boolean) {
         super();
-        if (typeof val === 'string') {
-            if (val === '1') {
-                this.val = true;
-            } else if (val === '0') {
-                this.val = false;
-            } else {
-                throw ErrorType.IllegalArgumentError;
-            }
-        } else {
-            this.val = val;
-        }
     }
+    /**
+     * Creates a new BooleanData from the given string ("0" or "1").
+     * 
+     * @param s A string that can be converted to this datatype
+     * 
+     * @throws IllegalArgumentError if the string is not "0" or "1"
+     */
     static create(s: string) {
         switch (s) {
             case '0':
@@ -372,10 +485,19 @@ export class BooleanData extends Data {
         return this.val;
     }
 }
+/**
+ * Represents a year & quarter/season.
+ */
 export class QuarterData extends Data {
     private val: IntData;
     private dateString: string;
 
+    /**
+     * Creates a new QuarterData from a Quarter and a year.
+     * 
+     * @param quarter The Quarter value of this data
+     * @param year The year value of this data
+     */
     constructor(private quarter: Quarter, private year: IntData) {
         super();
         switch (quarter) {
@@ -396,9 +518,16 @@ export class QuarterData extends Data {
                 this.dateString = `Fall ${year}`;
                 break;
             default:
-                throw ErrorType.IllegalArgumentError;
+                throw ErrorType.AssertionError;
         }
     }
+    /**
+     * Creates a new QuarterData from the given string(an integer).
+     * 
+     * @param s A string that can be converted to this datatype
+     * 
+     * @throws IllegalArgumentError if the string is not an integer
+     */
     static create(s: string) {
         let n = parseInt(s, 10);
         if (isNaN(n)) throw ErrorType.IllegalArgumentError;
@@ -435,15 +564,27 @@ export class QuarterData extends Data {
     getValue() {
         return this.val.getValue();
     }
+    /**
+     * Returns data as "<Quarter> yyyy".
+     */
     toDateString() {
         return this.dateString;
     }
+    /**
+     * Returns the quarter of this data.
+     */
     getQuarter() {
         return this.quarter;
     }
+    /**
+     * Returns the year of this data.
+     */
     getYear() {
         return this.year;
     }
+    /**
+     * Returns the quarter after this QuarterData.
+     */
     next() {
         switch (this.quarter) {
             case Quarter.WINTER:
@@ -457,14 +598,30 @@ export class QuarterData extends Data {
         }
     }
 }
+/**
+ * A wrapper on an integer list.
+ */
 export class IntListData extends Data {
     private s: string;
 
+    /**
+     * Creates a new IntListData from a list of IntData.
+     * 
+     * @param val The value of this data
+     */
     constructor(private vals: IntData[]) {
         super();
-        this.vals = vals;
         this.s = vals.join(',');
     }
+    /**
+     * Creates a new IntListData from the given string(comma-seperated
+     * integers).
+     * 
+     * @param s A string that can be converted to this datatype
+     * 
+     * @throws IllegalArgumentError if the string is not comma-seperated
+     *                                 integers
+     */
     static create(s: string) {
         if (s.length === 0) {
             return new IntListData([]);
@@ -486,12 +643,25 @@ export class IntListData extends Data {
     }
 }
 
+/**
+ * Describes an entry of a sheet.
+ */
 export abstract class Entry {
     constructor(public id?: IntData) { }
 
+    /**
+     * Creates an array from the values of this entry. All undefined values
+     * will be ignored.
+     */
     abstract toArray(): string[];
+    /**
+     * Returns the number of fields that are accessible in this entry.
+     */
     abstract length(): number;
 }
+/**
+ * Describes an entry of the "Member" sheet.
+ */
 export class MemberEntry extends Entry {
     constructor(
         id?: IntData,
@@ -506,8 +676,7 @@ export class MemberEntry extends Entry {
         public notifyPoll?: BooleanData,
         public sendReceipt?: BooleanData
     ) {
-        super();
-        this.id = id;
+        super(id);
     }
 
     toArray() {
@@ -531,6 +700,9 @@ export class MemberEntry extends Entry {
         return 11;
     }
 }
+/**
+ * Describes an entry of the "Income" sheet.
+ */
 export class IncomeEntry extends Entry {
     constructor(
         id?: IntData,
@@ -540,8 +712,7 @@ export class IncomeEntry extends Entry {
         public paymentTypeId?: IntData,
         public statementId?: IntData
     ) {
-        super();
-        this.id = id;
+        super(id);
     }
 
     toArray() {
@@ -560,6 +731,9 @@ export class IncomeEntry extends Entry {
         return 6;
     }
 }
+/**
+ * Describes an entry of the "Expense" sheet.
+ */
 export class ExpenseEntry extends Entry {
     constructor(
         id?: IntData,
@@ -570,8 +744,7 @@ export class ExpenseEntry extends Entry {
         public recipientId?: IntData,
         public statementId?: IntData
     ) {
-        super();
-        this.id = id;
+        super(id);
     }
 
     toArray() {
@@ -591,10 +764,12 @@ export class ExpenseEntry extends Entry {
         return 7;
     }
 }
+/**
+ * Describes an entry of the "Recipient" sheet.
+ */
 export class RecipientEntry extends Entry {
     constructor(id?: IntData, public name?: StringData) {
-        super();
-        this.id = id;
+        super(id);
     }
 
     toArray() {
@@ -609,10 +784,12 @@ export class RecipientEntry extends Entry {
         return 2;
     }
 }
+/**
+ * Describes an entry of the "PaymentType" sheet.
+ */
 export class PaymentTypeEntry extends Entry {
     constructor(id?: IntData, public name?: StringData) {
-        super();
-        this.id = id;
+        super(id);
     }
 
     toArray() {
@@ -627,14 +804,16 @@ export class PaymentTypeEntry extends Entry {
         return 2;
     }
 }
+/**
+ * Describes an entry of the "Statement" sheet.
+ */
 export class StatementEntry extends Entry {
     constructor(
         id?: IntData,
         public date?: DateData,
         public confirmed?: BooleanData
     ) {
-        super();
-        this.id = id;
+        super(id);
     }
 
     toArray() {
@@ -650,6 +829,9 @@ export class StatementEntry extends Entry {
         return 3;
     }
 }
+/**
+ * Describes an entry of the "Attendance" sheet.
+ */
 export class AttendanceEntry extends Entry {
     constructor(
         id?: IntData,
@@ -657,8 +839,7 @@ export class AttendanceEntry extends Entry {
         public member_ids?: IntListData,
         public quarter_id?: QuarterData
     ) {
-        super();
-        this.id = id;
+        super(id);
     }
 
     toArray() {
@@ -675,6 +856,9 @@ export class AttendanceEntry extends Entry {
         return 4;
     }
 }
+/**
+ * Describes an entry of the "ClubInfo" sheet.
+ */
 export class ClubInfoEntry {
     constructor(
         public memberFee: IntData,
@@ -698,6 +882,12 @@ export class ClubInfoEntry {
     }
 }
 
+/**
+ * Returns an array of given length, each index filled with the given value.
+ * 
+ * @param val The value to be repeated
+ * @param length The number of times to repeat the value
+ */
 export function repeat<T>(val: T, length: number): T[] {
     const array: T[] = Array(length);
     for (let i = 0; i < length; ++i) {
@@ -705,6 +895,12 @@ export function repeat<T>(val: T, length: number): T[] {
     }
     return array;
 }
+/**
+ * Capitalizes the first letter and all letters that are
+ * following a space(' ').
+ * 
+ * @param s The string to capitalize
+ */
 export function capitalizeString(s: string) {
     function capitalize(s: string) {
         if (s.length <= 0) {
@@ -722,6 +918,12 @@ export function capitalizeString(s: string) {
     }
     return output;
 }
+/**
+ * Returns the given number of cents as a string in dollars.
+ * E.g. 1296 -> "$12.96".
+ * 
+ * @param n The number of cents
+ */
 export function centsToString(n: IntData) {
     if (n.getValue() < 0) {
         return '-$'.concat((Math.abs(n.getValue()) / 100).toFixed(2));
@@ -729,6 +931,13 @@ export function centsToString(n: IntData) {
         return '$'.concat((n.getValue() / 100).toFixed(2));
     }
 }
+/**
+ * Returns positive if the first date is earlier, negative if the first date is
+ * later, and zero if the dates are the same.
+ * 
+ * @param a A date
+ * @param b A date
+ */
 export function compareByDateDesc(
     a: IncomeEntry | ExpenseEntry | StatementEntry,
     b: IncomeEntry | ExpenseEntry | StatementEntry
@@ -736,7 +945,9 @@ export function compareByDateDesc(
     if (!a.date || !b.date) throw ErrorType.AssertionError;
     return b.date.getValue().valueOf() - a.date.getValue().valueOf();
 }
-// 'yyyy-mm-dd' -> obj
+/**
+ * Creates a date object from a string in format "yyyy-mm-dd".
+ */
 export function datestrToDate(date: string) {
     const vals = date.split('-');
     if (vals.length < 3) throw ErrorType.IllegalArgumentError;

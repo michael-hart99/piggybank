@@ -6,6 +6,14 @@ import { removeMember, removePaymentType, removeRecipient } from '../tables/remo
 import { updateAttendance, updateExpense, updateIncome, updateMember, updatePaymentType, updateRecipient } from '../tables/update';
 import { BooleanData, DateData, ErrorType, IntData, IntListData, Quarter, QuarterData, RefreshLogger, repeat, StringData } from '../types';
 
+/**
+ * Handles the request to add a member from the Google Sheets menu.
+ * 
+ * @param name The name for this member
+ * @param dateJoined The dateJoined for this member 
+ * 
+ * @toasts Failed if name already exists
+ */
 export function menuAddMember(name: string, dateJoined: string) {
     const nameData = new StringData(name.toLowerCase());
     const date = DateData.create(dateJoined);
@@ -28,13 +36,21 @@ export function menuAddMember(name: string, dateJoined: string) {
             );
             SpreadsheetApp.openById(VIEWS_ID).toast(`Added Member`, 'Success', 5);
 
-            RefreshLogger.run();
+            RefreshLogger.refresh();
         } else {
             SpreadsheetApp.openById(VIEWS_ID).toast('Check error log for details', 'Adding Failed', 5);
             throw e;
         }
     }
 }
+/**
+ * Handles the request to add an attendance from the Google Sheets menu.
+ * 
+ * @param date The date of this attendance
+ * @param members The members of this attendance
+ * @param quarter The quarter of this qttendance
+ * @param year The year of this attendance
+ */
 export function menuAddAttendance(date: string, members: string, quarter: string, year: string) {
     try {
         const dateAsData = DateData.create(date);
@@ -70,8 +86,16 @@ export function menuAddAttendance(date: string, members: string, quarter: string
 
     SpreadsheetApp.openById(VIEWS_ID).toast(`Added new attendance record`, 'Success', 5);
 
-    RefreshLogger.run();
+    RefreshLogger.refresh();
 }
+/**
+ * Handles the request to add an income from the Google Sheets menu.
+ * 
+ * @param date The date of the income
+ * @param amount The amount of the income
+ * @param description The description of the income
+ * @param payType The pay type of the income
+ */
 export function menuAddIncome(date: string, amount: string, description: string, payType: string) {
     try {
         const payId = getPaymentTypeIds([new StringData(payType.toLowerCase())])[0];
@@ -93,8 +117,17 @@ export function menuAddIncome(date: string, amount: string, description: string,
 
     SpreadsheetApp.openById(VIEWS_ID).toast(`Added new income`, 'Success', 5);
 
-    RefreshLogger.run();
+    RefreshLogger.refresh();
 }
+/**
+ * Handles the request to add an expense from the Google Sheets menu.
+ * 
+ * @param date The date of the expense
+ * @param amount The account of the expense
+ * @param description The description of the expense
+ * @param recipient The recipient of the expense
+ * @param payType The pay type of the expense
+ */
 export function menuAddExpense(date: string, amount: string, description: string, recipient: string, payType: string) {
     try {
         const payId = getPaymentTypeIds([new StringData(payType.toLowerCase())])[0];
@@ -129,12 +162,21 @@ export function menuAddExpense(date: string, amount: string, description: string
 
     SpreadsheetApp.openById(VIEWS_ID).toast(`Added new expense`, 'Success', 5);
 
-    RefreshLogger.run();
+    RefreshLogger.refresh();
 }
+/**
+ * Handles the request to add a statement from the Google Sheets menu.
+ * 
+ * @param date The date of the statement
+ * @param incomes The incomes of the statement
+ * @param expenses The expenses of the statement
+ * 
+ * @toasts No change if no incomes/expenses specified
+ */
 export function menuAddStatement(date: string, incomes: string, expenses: string) {
     try {
         if (incomes.length === 0 && expenses.length === 0) {
-            SpreadsheetApp.openById(VIEWS_ID).toast(`No incomes or expenses were provided`, 'No Change', 5);
+            SpreadsheetApp.openById(VIEWS_ID).toast(`No incomes or expenses were specified`, 'No Change', 5);
             return;
         }
         const statementId = appendStatement([DateData.create(date)], [BooleanData.FALSE])[0];
@@ -154,8 +196,15 @@ export function menuAddStatement(date: string, incomes: string, expenses: string
 
     SpreadsheetApp.openById(VIEWS_ID).toast(`Added new statement`, 'Success', 5);
 
-    RefreshLogger.run();
+    RefreshLogger.refresh();
 }
+/**
+ * Handles the request to add a pay type from the Google Sheets menu.
+ * 
+ * @param name The name of the pay type
+ * 
+ * @toasts Failed if name already exists, Success otherwise
+ */
 export function menuAddPayType(name: string) {
     try {
         const nameData = StringData.create(name.toLowerCase());
@@ -177,8 +226,15 @@ export function menuAddPayType(name: string) {
 
     SpreadsheetApp.openById(VIEWS_ID).toast(`Added new payment type`, 'Success', 5);
 
-    RefreshLogger.run();
+    RefreshLogger.refresh();
 }
+/**
+ * Handles the request to add a recipient from the Google Sheets menu.
+ * 
+ * @param name The name of the recipient
+ * 
+ * @toasts Failed if name already exists, Success otherwise
+ */
 export function menuAddRecipient(name: string) {
     try {
         const nameData = StringData.create(name.toLowerCase());
@@ -200,16 +256,28 @@ export function menuAddRecipient(name: string) {
 
     SpreadsheetApp.openById(VIEWS_ID).toast(`Added new recipient`, 'Success', 5);
 
-    RefreshLogger.run();
+    RefreshLogger.refresh();
 }
 
-function rename(oldName: string, newName: string, idFromNameFn: (name: StringData[]) => IntData[], updateFn: (ids: IntData[], names: StringData[]) => void) {
+/**
+ * Uses a nameToId function to get the id from the name of a
+ * member/pay type/recipient, then changes that entry's name to the new name
+ * using the update function.
+ * 
+ * @param oldName The current name
+ * @param newName The new name
+ * @param idFromNameFn A function that will return the id associated with this
+ *                     name
+ * @param updateFn A function that will update the database with a new name
+ *                 when given an id and the new name
+ */
+function rename(oldName: string, newName: string, nameToIdFn: (name: StringData[]) => IntData[], updateFn: (ids: IntData[], names: StringData[]) => void) {
     const oldNameData = new StringData(oldName.toLowerCase());
     const newNameData = new StringData(newName.toLowerCase());
 
     let noMatch = false;
     try {
-        idFromNameFn([newNameData])
+        nameToIdFn([newNameData])
     } catch (e) {
         if (e === ErrorType.NoMatchFoundError) {
             noMatch = true;
@@ -220,23 +288,49 @@ function rename(oldName: string, newName: string, idFromNameFn: (name: StringDat
     if (!noMatch) {
         SpreadsheetApp.openById(VIEWS_ID).toast('New name is already in use, try merging instead', 'Renaming Failed', 5);
     } else {
-        const id = idFromNameFn([oldNameData])[0];
+        const id = nameToIdFn([oldNameData])[0];
         updateFn([id], [newNameData]);
         SpreadsheetApp.openById(VIEWS_ID).toast(`Renamed ${oldName} to ${newName}`, 'Success', 5);
     }
 
-    RefreshLogger.run();
+    RefreshLogger.refresh();
 }
+/**
+ * Handles the request to rename a member from the Google Sheets menu.
+ * 
+ * @param oldName The current name
+ * @param newName The new name
+ */
 export function renameMember(oldName: string, newName: string) {
     rename(oldName, newName, getMemberIds, updateMember);
 }
+/**
+ * Handles the request to rename a payment type from the Google Sheets menu.
+ * 
+ * @param oldName The current name
+ * @param newName The new name
+ */
 export function renamePaymentType(oldName: string, newName: string) {
     rename(oldName, newName, getPaymentTypeIds, updatePaymentType);
 }
+/**
+ * Handles the request to rename a recipient from the Google Sheets menu.
+ * 
+ * @param oldName The current name
+ * @param newName The new name
+ */
 export function renameRecipient(oldName: string, newName: string) {
     rename(oldName, newName, getRecipientIds, updateRecipient);
 }
 
+/**
+ * Handles the request to merge members from the Google Sheets menu.
+ * 
+ * @param aliases The members to be overwritten by an existing name
+ * @param name The member that will replace the aliases
+ * 
+ * @toasts No action taken if no aliases specified
+ */
 export function mergeMember(aliases: string, name: string) {
     const aliasList = aliases.toLowerCase().split('\n');
     const i = aliasList.indexOf(name.toLowerCase());
@@ -281,8 +375,16 @@ export function mergeMember(aliases: string, name: string) {
 
     SpreadsheetApp.openById(VIEWS_ID).toast(`Merged into ${name}`, 'Success', 5);
 
-    RefreshLogger.run();
+    RefreshLogger.refresh();
 }
+/**
+ * Handles the request to merge payment types from the Google Sheets menu.
+ * 
+ * @param aliases The payment types to be overwritten by an existing name
+ * @param name The payment type that will replace the aliases
+ * 
+ * @toasts No action taken if no aliases specified
+ */
 export function mergePaymentType(aliases: string, name: string) {
     const aliasList = aliases.toLowerCase().split('\n');
     const i = aliasList.indexOf(name.toLowerCase());
@@ -327,8 +429,16 @@ export function mergePaymentType(aliases: string, name: string) {
 
     SpreadsheetApp.openById(VIEWS_ID).toast(`Merged into ${name}`, 'Success', 5);
 
-    RefreshLogger.run();
+    RefreshLogger.refresh();
 }
+/**
+ * Handles the request to merge recipients from the Google Sheets menu.
+ * 
+ * @param aliases The recipients to be overwritten by an existing name
+ * @param name The recipient that will replace the aliases
+ * 
+ * @toasts No action taken if no aliases specified
+ */
 export function mergeRecipient(aliases: string, name: string) {
     const aliasList = aliases.toLowerCase().split('\n');
     const i = aliasList.indexOf(name.toLowerCase());
@@ -363,13 +473,28 @@ export function mergeRecipient(aliases: string, name: string) {
 
     SpreadsheetApp.openById(VIEWS_ID).toast(`Merged into ${name}`, 'Success', 5);
 
-    RefreshLogger.run();
+    RefreshLogger.refresh();
 }
 
+/**
+ * Sends a notification to all performing members who are noted as wanting to
+ * be notified.
+ * 
+ * @param title The name of the poll 
+ * @param deadline The deadline of the poll
+ * @param link The link to the poll
+ */
 export function pollNotification(title: string, deadline: string, link: string) {
     emailPollNotification(title, new Date(deadline), link);
     SpreadsheetApp.openById(VIEWS_ID).toast('Emails sent', 'Success', 5);
 }
+/**
+ * Sends a custom email to specified members.
+ * 
+ * @param memberNames The members to be emailed
+ * @param subject The subject of the message
+ * @param body The body of the message
+ */
 export function notifyMembers(memberNames: string, subject: string, body: string) {
     const memberList = memberNames.toLowerCase().split('\n');
 

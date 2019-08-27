@@ -2,6 +2,9 @@ import { getAttendances, getClubInfo, getExpenses, getIncomes, getMembers, getPa
 import { capitalizeString, centsToString, compareByDateDesc, Dictionary, ErrorType, IntData, Quarter, UniqueList } from '../types';
 
 // Reports
+/**
+ * Returns the HTML as a string for the Member Details Google Sheets menu option.
+ */
 export function memberDetailsHTML() {
   const clubInfo = getClubInfo();
   const memAttendance: Dictionary<number, UniqueList<number>> = {};
@@ -139,6 +142,9 @@ export function memberDetailsHTML() {
     </script>
     `;
 }
+/**
+ * Returns the HTML as a string for the Attendance Records Google Sheets menu option.
+ */
 export function attendanceRecordsHTML() {
   const idToMember: Dictionary<number, string> = {};
   getMembers().forEach(entry => {
@@ -322,6 +328,9 @@ export function attendanceRecordsHTML() {
     </script>
     `;
 }
+/**
+ * Returns the HTML as a string for the Attendance Summary Google Sheets menu option.
+ */
 export function attendanceSummaryHTML() {
   const idToName: string[] = getMembers().map(entry => {
     if (!entry.id || !entry.name) throw ErrorType.AssertionError;
@@ -549,6 +558,9 @@ export function attendanceSummaryHTML() {
     </script>
     `;
 }
+/**
+ * Returns the HTML as a string for the Full Finance History Google Sheets menu option.
+ */
 export function fullFinanceHistoryHTML() {
   // maps month&year id to the income and expense during that month
   const moneyData: Dictionary<number, { income: number, expense: number }> = {};
@@ -747,6 +759,9 @@ export function fullFinanceHistoryHTML() {
 
 // Actions
 //   Add
+/**
+ * Returns the HTML as a string for the Add Member Google Sheets menu option.
+ */
 export function addMemberHTML() {
   return `
     <!DOCTYPE html>
@@ -801,6 +816,9 @@ export function addMemberHTML() {
     </script>
     `;
 }
+/**
+ * Returns the HTML as a string for the Add Attendance Google Sheets menu option.
+ */
 export function addAttendanceHTML() {
   const nameCheckbox: string[] = [];
   getMembers().sort((a, b) => {
@@ -919,6 +937,9 @@ export function addAttendanceHTML() {
     </script>
     `;
 }
+/**
+ * Returns the HTML as a string for the Add Income Google Sheets menu option.
+ */
 export function addIncomeHTML() {
   const payTypes = getPaymentTypes().sort((a, b) => {
     if (!a.name || !b.name) throw ErrorType.AssertionError;
@@ -992,6 +1013,9 @@ export function addIncomeHTML() {
     </script>
     `;
 }
+/**
+ * Returns the HTML as a string for the Add Expense Google Sheets menu option.
+ */
 export function addExpenseHTML() {
   const payTypes = getPaymentTypes().sort((a, b) => {
     if (!a.name || !b.name) throw ErrorType.AssertionError;
@@ -1070,6 +1094,9 @@ export function addExpenseHTML() {
     </script>
     `;
 }
+/**
+ * Returns the HTML as a string for the Add Statement Google Sheets menu option.
+ */
 export function addStatementHTML() {
   const idToPayType: Dictionary<number, string> = {};
   getPaymentTypes().forEach(entry => {
@@ -1176,6 +1203,9 @@ export function addStatementHTML() {
     </script>
     `;
 }
+/**
+ * Returns the HTML as a string for the Add Recipient Google Sheets menu option.
+ */
 export function addRecipientHTML() {
   return `
     <!DOCTYPE html>
@@ -1202,6 +1232,9 @@ export function addRecipientHTML() {
     </script>
     `;
 }
+/**
+ * Returns the HTML as a string for the Add Pay Type Google Sheets menu option.
+ */
 export function addPayTypeHTML() {
   return `
     <!DOCTYPE html>
@@ -1229,6 +1262,9 @@ export function addPayTypeHTML() {
     `;
 }
 //   Rename
+/**
+ * Returns the HTML as a string for the Rename Member Google Sheets menu option.
+ */
 export function renameMemberHTML() {
   const memberNames = getMembers().sort((a, b) => {
     if (!a.name || !b.name) throw ErrorType.AssertionError;
@@ -1268,6 +1304,9 @@ export function renameMemberHTML() {
     </script>
     `;
 }
+/**
+ * Returns the HTML as a string for the Rename Pay Type Google Sheets menu option.
+ */
 export function renamePaymentTypeHTML() {
   const payTypes = getPaymentTypes().sort((a, b) => {
     if (!a.name || !b.name) throw ErrorType.AssertionError;
@@ -1307,6 +1346,9 @@ export function renamePaymentTypeHTML() {
     </script>
     `;
 }
+/**
+ * Returns the HTML as a string for the Rename Recipient Google Sheets menu option.
+ */
 export function renameRecipientHTML() {
   const recipients = getRecipients().sort((a, b) => {
     if (!a.name || !b.name) throw ErrorType.AssertionError;
@@ -1347,6 +1389,9 @@ export function renameRecipientHTML() {
     `;
 }
 //   Merge
+/**
+ * Returns the HTML as a string for the Merge Member Google Sheets menu option.
+ */
 export function mergeMemberHTML() {
   const nameSelect: string[] = [];
   const nameCheckbox: string[] = [];
@@ -1405,6 +1450,9 @@ export function mergeMemberHTML() {
     </script>
     `;
 }
+/**
+ * Returns the HTML as a string for the Merge Payment Type Google Sheets menu option.
+ */
 export function mergePaymentTypeHTML() {
   const nameSelect: string[] = [];
   const nameCheckbox: string[] = [];
@@ -1463,6 +1511,9 @@ export function mergePaymentTypeHTML() {
     </script>
     `;
 }
+/**
+ * Returns the HTML as a string for the Merge Recipient Google Sheets menu option.
+ */
 export function mergeRecipientHTML() {
   const nameSelect: string[] = [];
   const nameCheckbox: string[] = [];
@@ -1521,6 +1572,9 @@ export function mergeRecipientHTML() {
     </script>
     `;
 }
+/**
+ * Returns the HTML as a string for the Poll Notification Google Sheets menu option.
+ */
 export function pollNotificationHTML() {
   return `
     <!DOCTYPE html>
@@ -1562,6 +1616,9 @@ export function pollNotificationHTML() {
     </script>
     `;
 }
+/**
+ * Returns the HTML as a string for the Notify Members Google Sheets menu option.
+ */
 export function notifyMembersHTML() {
   const members: string[] = [];
   getMembers().sort((a, b) => {

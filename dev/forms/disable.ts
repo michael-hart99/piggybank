@@ -11,7 +11,17 @@ import { ID as UCS_ID } from '../ids/ucs';
 import { ID as UMS_ID } from '../ids/ums';
 import { ErrorType, GeneratedForm } from '../types';
 
+/** The title of the item that disables the form */
 const DISABLED_ITEM_TITLE = 'Loading values, please refresh your browser';
+
+/**
+ * Returns the id of the form document with the given name.
+ * 
+ * @param formName The name of a form
+ * 
+ * @throws IllegalArgumentError if the given name is not the name of a known
+ *                                 form
+ */
 function getIdFromName(formName: string) {
     switch (formName) {
         case 'Add Expense':
@@ -37,10 +47,16 @@ function getIdFromName(formName: string) {
         case 'Update Member Status':
             return UMS_ID;
         default:
-            throw ErrorType.AssertionError;
+            throw ErrorType.IllegalArgumentError;
     }
 }
 
+/**
+ * Disables the given form and clears all of the form's contents. If the form
+ * is already disabled, nothing happens.
+ * 
+ * @param form The form to disable
+ */
 export function disableForm(form: GeneratedForm) {
     const formApp = FormApp.openById(getIdFromName(form.getName()));
 
@@ -61,6 +77,12 @@ export function disableForm(form: GeneratedForm) {
         }
     }
 }
+/**
+ * Enables the given form, deleting the disabling item if it's present at the
+ * top of the form.
+ * 
+ * @param form The form to enable
+ */
 export function enableForm(form: GeneratedForm) {
     const formApp = FormApp.openById(getIdFromName(form.getName()));
 

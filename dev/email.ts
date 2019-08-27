@@ -2,10 +2,24 @@ import { GROUP_NAME } from './projectInfo';
 import { getMembers } from './tables/get';
 import { ErrorType, StringData } from './types';
 
+/**
+ * Send an identical email message to several recipients.
+ * 
+ * @param emails A list of email addresses
+ * @param subject The subject of the message being sent
+ * @param body The body of the message being sent
+ */
 function sendEmails(emails: string[], subject: string, body: string) {
     emails.forEach(email => GmailApp.sendEmail(email, subject, body));
 }
 
+/**
+ * Sends emails to club members confirming the receipt of payment.
+ * 
+ * @param memberNames A list of club members' names
+ * @param amount The amount received by the club
+ * @param description Details on what the amount was for
+ */
 export function emailReceipts(memberNames: StringData[], amount: string, description: string) {
     const members = getMembers();
 
@@ -20,7 +34,7 @@ export function emailReceipts(memberNames: StringData[], amount: string, descrip
             if (!curName || !curEmail || !curSendReceipt) {
                 throw ErrorType.AssertionError;
             } else if (curName.toString() === name.toString()) {
-                if (curSendReceipt.getValue()) {
+                if (curSendReceipt.getValue() && curEmail.getValue().length !== 0) {
                     emails.push(curEmail.getValue());
                 }
                 startIndex = i;
@@ -32,6 +46,13 @@ export function emailReceipts(memberNames: StringData[], amount: string, descrip
 
     sendEmails(emails, `Receipt from ${GROUP_NAME}`, `This is confirming your payment of $${amount} to ${GROUP_NAME} for '${description}'.`);
 }
+/**
+ * Sends emails to club members confirming their debt to the club
+ * 
+ * @param memberNames A list of club members' names
+ * @param amount The amount owed to the club
+ * @param description Details on what the amount is for
+ */
 export function emailIOUNotification(memberNames: StringData[], amount: string, description: string) {
     const members = getMembers();
 
@@ -42,11 +63,10 @@ export function emailIOUNotification(memberNames: StringData[], amount: string, 
         do {
             const curName = members[i].name;
             const curEmail = members[i].email;
-            const curSendReceipt = members[i].sendReceipt;
-            if (!curName || !curEmail || !curSendReceipt) {
+            if (!curName || !curEmail) {
                 throw ErrorType.AssertionError;
             } else if (curName.toString() === name.toString()) {
-                if (curSendReceipt.getValue()) {
+                if (curEmail.getValue().length !== 0) {
                     emails.push(curEmail.getValue());
                 }
                 startIndex = i;
@@ -58,6 +78,13 @@ export function emailIOUNotification(memberNames: StringData[], amount: string, 
 
     sendEmails(emails, `IOU for ${GROUP_NAME}`, `This is confirming that you owe $${amount} to ${GROUP_NAME} for '${description}'.`);
 }
+/**
+ * Sends emails to members notifying them of a performance poll
+ * 
+ * @param pollName The name of the poll
+ * @param deadline The deadline for the poll to be filled out by
+ * @param link The link to the poll
+ */
 export function emailPollNotification(pollName: string, deadline: Date, link: string) {
     const members = getMembers();
 

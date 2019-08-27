@@ -4,6 +4,14 @@ import { getClubInfo, getMemberIds, getMembers, getPaymentTypeIds, getRecipientI
 import { updateClubInfo, updateExpense, updateIncome, updateMember, updateStatement } from '../tables/update';
 import { BooleanData, capitalizeString, CARRIERS, DateData, ErrorType, IntData, IntListData, repeat, StringData } from "../types";
 
+/**
+ * Returns the amount owed by the given members.
+ * 
+ * @param memberNames The members to read the amounts owed of
+ * 
+ * @throws NoMatchFoundError if a name in memberNames is not in the Member
+ *                              sheet
+ */
 function getAmountOwed(memberNames: StringData[]) {
     const members = getMembers();
 
@@ -25,8 +33,20 @@ function getAmountOwed(memberNames: StringData[]) {
         } while (i !== startIndex);
     }
 
+    if (owed.length !== memberNames.length) {
+        throw ErrorType.NoMatchFoundError;
+    }
+
     return owed;
 }
+/**
+ * Returns the dues owed by the given members.
+ * 
+ * @param memberNames The members to read the dues values of
+ * 
+ * @throws NoMatchFoundError if a name in memberNames is not in the Member
+ *                              sheet
+ */
 function getDuesValues(memberNames: StringData[]) {
     const clubInfo = getClubInfo();
     const members = getMembers();
@@ -51,6 +71,13 @@ function getDuesValues(memberNames: StringData[]) {
 
     return duesVals;
 }
+/**
+ * Returns true if passed "Yes" and false if passed "No".
+ * 
+ * @param yesno A string that is either "Yes" or "No"
+ * 
+ * @throws IllegalArgumentError if yesno is not "Yes" or "No"
+ */
 function yesnoToBool(yesno: string) {
     switch (yesno) {
         case 'Yes':
@@ -62,9 +89,17 @@ function yesnoToBool(yesno: string) {
     }
 }
 
+/**
+ * Adds a new expense entry described by a response to the Add Expense form.
+ * 
+ * @param amountRes The amount given in the form response
+ * @param description The description given in the form response
+ * @param recipient The recipient given in the form response
+ * @param paymentType The payment type given in the form response
+ */
 export function addExpense(
     amountRes: string,
-    desc: string,
+    description: string,
     recipient: string,
     paymentType: string
 ) {
@@ -94,12 +129,22 @@ export function addExpense(
         }
     }
 
-    const amount = parseFloat(amountRes) * 100;
-    appendExpense([today], [new IntData(amount)], [new StringData(desc)], [payTypeId], [recipientId], [new IntData(-1)]);
+    const amount = parseFloat(amountRes);
+    if (isNaN(amount)) {
+        throw "parseFloat error: Unable to parse amount given";
+    }
+    appendExpense([today], [new IntData(Math.round(amount * 100))], [new StringData(description)], [payTypeId], [recipientId], [new IntData(-1)]);
 }
+/**
+ * Adds a new income entry described by a response to the Add Income form.
+ * 
+ * @param amountRes The amount given in the form response
+ * @param description The description given in the form response
+ * @param paymentType The payment type given in the form response
+ */
 export function addIncome(
     amountRes: string,
-    desc: string,
+    description: string,
     paymentType: string
 ) {
     const today = new DateData(new Date());
@@ -116,20 +161,41 @@ export function addIncome(
         }
     }
 
-    const amount = parseFloat(amountRes) * 100;
-    appendIncome([today], [new IntData(amount)], [new StringData(desc)], [payTypeId], [new IntData(-1)]);
+    const amount = parseFloat(amountRes);
+    if (isNaN(amount)) {
+        throw "parseFloat error: Unable to parse amount given";
+    }
+    appendIncome([today], [new IntData(Math.round(amount * 100))], [new StringData(description)], [payTypeId], [new IntData(-1)]);
 }
-export function addMemberIOU(membersRes: string[], amount: string, description: string) {
+/**
+ * Adds member debt described by a response to the Add Member IOU form.
+ * 
+ * @param membersRes The members given in the form response
+ * @param amountRes The amount given in the form response
+ * @param description The description given in the form response
+ */
+export function addMemberIOU(membersRes: string[], amountRes: string, description: string) {
     const memberNames = membersRes.map(member => new StringData(member.substr(0, member.indexOf(':')).toLowerCase()));
-    emailIOUNotification(memberNames.map(member => new StringData(capitalizeString(member.getValue()))), amount, description)
+    emailIOUNotification(memberNames.map(member => new StringData(capitalizeString(member.getValue()))), amountRes, description)
 
     const memberIds = getMemberIds(memberNames);
 
-    const amountCents = Math.round(parseFloat(amount) * 100);
+    const amount = parseFloat(amountRes);
+    if (isNaN(amount)) {
+        throw "parseFloat error: Unable to parse amount given";
+    }
+    const amountCents = Math.round(amount * 100);
     const curOwed = getAmountOwed(memberNames);
 
     updateMember(memberIds, undefined, undefined, curOwed.map(cur => new IntData(cur.getValue() + amountCents)));
 }
+/**
+ * Updates the database to reflect members as having paid dues, described by a
+ * response to the Collect Dues form.
+ * 
+ * @param memListRes The members given in the form response
+ * @param paymentTypeRes The payment types given in the form response
+ */
 export function collectDues(memListRes: string[], paymentTypeRes: string) {
     memListRes = memListRes.map(res => res.substr(0, res.indexOf(':')));
 
@@ -187,6 +253,12 @@ export function collectDues(memListRes: string[], paymentTypeRes: string) {
         repeat(new IntData(-1), members.length)
     );
 }
+/**
+ * Marks statements as confirmed, described by a form response to the Confirm
+ * Transfer form.
+ * 
+ * @param statementList The statements given in the form response
+ */
 export function confirmTransfer(statementList: string[]) {
     const ids = statementList.map(s => {
         const start = s.lastIndexOf('[');
@@ -196,6 +268,10 @@ export function confirmTransfer(statementList: string[]) {
 
     updateStatement(ids, undefined, repeat(BooleanData.TRUE, ids.length));
 }
+/**
+ * Updates the database to reflect that a new quarter has begun, intended to be
+ * run on the submit of the Next Quarter form.
+ */
 export function nextQuarter() {
     const clubInfo = getClubInfo();
     const ids = getMembers().map(member => {
@@ -206,6 +282,15 @@ export function nextQuarter() {
     updateClubInfo(undefined, undefined, undefined, clubInfo.currentQuarterId.next());
     updateMember(ids, undefined, undefined, undefined, undefined, undefined, undefined, undefined, repeat(BooleanData.FALSE, ids.length));
 }
+/**
+ * Updates the database to reflect that members have resolved debt, described
+ * by a response to the Resolve Member IOU form response.
+ * 
+ * @param membersRes The members given in the form response
+ * @param amount The amount given in the form response
+ * @param description The description given in the form response
+ * @param paymentType The payment type given in the form response
+ */
 export function resolveMemberIOU(membersRes: string[], amount: string, description: string, paymentType: string) {
     const memberNames = membersRes.map(member => new StringData(member.substr(0, member.indexOf(':')).toLowerCase()));
 
@@ -239,6 +324,13 @@ export function resolveMemberIOU(membersRes: string[], amount: string, descripti
         repeat(new IntData(-1), memberNames.length)
     );
 }
+/**
+ * Updates the database to reflect attendance that was just taken, described
+ * by a response to the Take Attendance form.
+ * 
+ * @param memListRes The current members given in the form response
+ * @param newMemberRes The new members given in the form response
+ */
 export function takeAttendance(memListRes: string[], newMemberRes?: string) {
     const curQuarter = getClubInfo().currentQuarterId;
     const today = new DateData(new Date());
@@ -294,6 +386,13 @@ export function takeAttendance(memListRes: string[], newMemberRes?: string) {
         appendAttendance([today], [new IntListData(prevIds.concat(newIds))], [curQuarter]);
     }
 }
+/**
+ * Updates the database to reflect a set of transactions as being migrated to
+ * the bank account, described by a response to the Transfer Funds form.
+ * 
+ * @param incomes The incomes given in the form response
+ * @param expenses The expenses given in the form response
+ */
 export function transferFunds(incomes?: string[], expenses?: string[]) {
     if (incomes || expenses) {
         const today = new DateData(new Date());
@@ -319,6 +418,17 @@ export function transferFunds(incomes?: string[], expenses?: string[]) {
         }
     }
 }
+/**
+ * Updates member information with contact info and notification preferences,
+ * described by a response to the Update Contact Settings form.
+ * 
+ * @param name The member name given in the form response
+ * @param email The email given in the form response
+ * @param phone The phone number given in the form response
+ * @param carrier The carrier given in the form response
+ * @param notifyPoll The notification preference given in the form response
+ * @param sendReceipt The notification preference given in the form response
+ */
 export function updateContactSettings(name: string, email?: string, phone?: string, carrier?: string, notifyPoll?: string, sendReceipt?: string) {
     const memberData = new StringData(name.toLowerCase());
     const memberId = getMemberIds([memberData]);
@@ -348,6 +458,15 @@ export function updateContactSettings(name: string, email?: string, phone?: stri
         sendReceipt ? [yesnoToBool(sendReceipt)] : undefined,
     );
 }
+/**
+ * Updates member information with member status, described by a response to
+ * the Update Member Status form.
+ * 
+ * @param memberNames The member name given in the form response
+ * @param performingRes The performing status given in the form response
+ * @param activeRes The active status given in the form response
+ * @param officerRes The officer status given in the form response
+ */
 export function updateMemberStatus(memberNames: string[], performingRes?: string, activeRes?: string, officerRes?: string) {
     const memberData = memberNames.map(name => new StringData(name.toLowerCase()));
     const memberId = getMemberIds(memberData);

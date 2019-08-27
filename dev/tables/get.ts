@@ -1,7 +1,10 @@
 import { ID as TABLES_ID } from '../ids/tablesId';
-import { getIdsFromVals, selectAll } from '../tableOps';
+import { getIdsFromFields, selectAll } from '../tableOps';
 import { AttendanceEntry, BooleanData, ClubInfoEntry, DateData, ExpenseEntry, IncomeEntry, IntData, IntListData, MemberEntry, PaymentTypeEntry, QuarterData, RecipientEntry, StatementEntry, StringData } from '../types';
 
+/**
+ * Returns all of the entries in the Member sheet.
+ */
 export function getMembers() {
     return selectAll(SpreadsheetApp.openById(TABLES_ID).getSheetByName('Member'))
         .map(row => new MemberEntry(
@@ -18,6 +21,9 @@ export function getMembers() {
             BooleanData.create(row[10].toString())
         ));
 }
+/**
+ * Returns all of the entries in the Income sheet.
+ */
 export function getIncomes() {
     return selectAll(SpreadsheetApp.openById(TABLES_ID).getSheetByName('Income'))
         .map(row => new IncomeEntry(
@@ -29,6 +35,9 @@ export function getIncomes() {
             IntData.create(row[5].toString())
         ));
 }
+/**
+ * Returns all of the entries in the Expense sheet.
+ */
 export function getExpenses() {
     return selectAll(SpreadsheetApp.openById(TABLES_ID).getSheetByName('Expense'))
         .map(row => new ExpenseEntry(
@@ -41,6 +50,9 @@ export function getExpenses() {
             IntData.create(row[6].toString())
         ));
 }
+/**
+ * Returns all of the entries in the Recipient sheet.
+ */
 export function getRecipients() {
     return selectAll(SpreadsheetApp.openById(TABLES_ID).getSheetByName('Recipient'))
         .map(row => new RecipientEntry(
@@ -48,6 +60,9 @@ export function getRecipients() {
             StringData.create(row[1].toString())
         ));
 }
+/**
+ * Returns all of the entries in the PaymentType sheet.
+ */
 export function getPaymentTypes() {
     return selectAll(SpreadsheetApp.openById(TABLES_ID).getSheetByName('PaymentType'))
         .map(row => new PaymentTypeEntry(
@@ -55,6 +70,9 @@ export function getPaymentTypes() {
             StringData.create(row[1].toString())
         ));
 }
+/**
+ * Returns all of the entries in the Statement sheet.
+ */
 export function getStatements() {
     return selectAll(SpreadsheetApp.openById(TABLES_ID).getSheetByName('Statement'))
         .map(row => new StatementEntry(
@@ -63,6 +81,9 @@ export function getStatements() {
             BooleanData.create(row[2].toString())
         ));
 }
+/**
+ * Returns all of the entries in the Attendance sheet.
+ */
 export function getAttendances() {
     return selectAll(SpreadsheetApp.openById(TABLES_ID).getSheetByName('Attendance'))
         .map(row => new AttendanceEntry(
@@ -72,6 +93,9 @@ export function getAttendances() {
             QuarterData.create(row[3].toString())
         ));
 }
+/**
+ * Returns an entry describing the ClubInfo sheet.
+ */
 export function getClubInfo() {
     const tableVals = selectAll(SpreadsheetApp.openById(TABLES_ID).getSheetByName('ClubInfo'))[0];
 
@@ -83,22 +107,40 @@ export function getClubInfo() {
     );
 }
 
+/**
+ * Returns the ids in the Member sheet that have names matching the given
+ * member names.
+ * 
+ * @param member The member names to get the ids of
+ */
 export function getMemberIds(member: StringData[]) {
-    return getIdsFromVals(
+    return getIdsFromFields(
         SpreadsheetApp.openById(TABLES_ID).getSheetByName('Member'),
         ['name'],
         member.map(m => [m])
     );
 }
+/**
+ * Returns the ids in the Recipient sheet that have names matching the given
+ * recipient names.
+ * 
+ * @param recipient The recipient names to get the ids of
+ */
 export function getRecipientIds(recipient: StringData[]) {
-    return getIdsFromVals(
+    return getIdsFromFields(
         SpreadsheetApp.openById(TABLES_ID).getSheetByName('Recipient'),
         ['name'],
         [recipient]
     );
 }
+/**
+ * Returns the ids in the PaymentType sheet that have names matching the given
+ * paymentType names.
+ * 
+ * @param member The paymentType names to get the ids of
+ */
 export function getPaymentTypeIds(paymentType: StringData[]) {
-    return getIdsFromVals(
+    return getIdsFromFields(
         SpreadsheetApp.openById(TABLES_ID).getSheetByName('PaymentType'),
         ['name'],
         [paymentType]

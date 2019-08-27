@@ -3,6 +3,9 @@ import { setData } from '../tableOps';
 import { getAttendances, getClubInfo, getExpenses, getIncomes, getMembers, getPaymentTypeIds, getPaymentTypes, getRecipients, getStatements } from "../tables/get";
 import { capitalizeString, Color, compareByDateDesc, Dictionary, ErrorType, NumberFormat, StringData, UniqueList } from '../types';
 
+/**
+ * Refreshes all of the sheets in the Views spreadsheet using values from the database.
+ */
 export function refreshAllViews() {
     refreshAccountInfo();
     refreshMembers();
@@ -12,6 +15,9 @@ export function refreshAllViews() {
     refreshStatements()
 }
 
+/**
+ * Refreshes the Account Info view using values from the database.
+ */
 export function refreshAccountInfo() {
     const curQuarter = getClubInfo().currentQuarterId;
 
@@ -89,6 +95,9 @@ export function refreshAccountInfo() {
     const sheet = SpreadsheetApp.openById(ID).getSheetByName('Account Info');
     setData(sheet, tableVals, tableFormats);
 }
+/**
+ * Refreshes the Members view using values from the database.
+ */
 export function refreshMembers() {
     const clubInfo = getClubInfo();
 
@@ -205,6 +214,9 @@ export function refreshMembers() {
     const sheet = SpreadsheetApp.openById(ID).getSheetByName('Members');
     setData(sheet, tableVals, tableFormats, tableColors, breakLineNums);
 }
+/**
+ * Refreshes the Incomes view using values from the database.
+ */
 export function refreshIncomes() {
     const incomes = getIncomes().sort(compareByDateDesc);
 
@@ -261,6 +273,9 @@ export function refreshIncomes() {
     const sheet = SpreadsheetApp.openById(ID).getSheetByName('Incomes');
     setData(sheet, tableVals, tableFormats, tableColors);
 }
+/**
+ * Refreshes the Expenses view using values from the database.
+ */
 export function refreshExpenses() {
     const expenses = getExpenses().sort(compareByDateDesc);
 
@@ -328,6 +343,9 @@ export function refreshExpenses() {
     const sheet = SpreadsheetApp.openById(ID).getSheetByName('Expenses');
     setData(sheet, tableVals, tableFormats, tableColors);
 }
+/**
+ * Refreshes the All Transactions view using values from the database.
+ */
 export function refreshAllTransactions() {
     const incomes = getIncomes().sort(compareByDateDesc);
     const expenses = getExpenses().sort(compareByDateDesc);
@@ -503,6 +521,9 @@ export function refreshAllTransactions() {
     const sheet = SpreadsheetApp.openById(ID).getSheetByName('All Transactions');
     setData(sheet, tableVals, tableFormats, tableColors);
 }
+/**
+ * Refreshes the Statements view using values from the database.
+ */
 export function refreshStatements() {
     const statements = getStatements().sort(compareByDateDesc);
 

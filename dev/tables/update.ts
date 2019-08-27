@@ -2,6 +2,25 @@ import { ID } from '../ids/tablesId';
 import { GAS_OFFSET, getIndicesFromIds, HEADER_LEN, selectAll, update } from '../tableOps';
 import { AttendanceEntry, BooleanData, DataTable, DateData, ErrorType, ExpenseEntry, IncomeEntry, IntData, IntListData, MemberEntry, PaymentTypeEntry, QuarterData, RecipientEntry, RefreshLogger, StatementEntry, StringData } from '../types';
 
+/**
+ * Updates the rows in Member with matching ids to have the given values. Any
+ * unspecified values will not be changed.
+ * 
+ * @param id The ids to use to find matching rows in the sheet
+ * @param name The name values to update with
+ * @param dateJoined The dateJoined values to update with
+ * @param amountOwed The amountOwed values to update with
+ * @param email The email values to update with
+ * @param performing The performing values to update with
+ * @param active The active values to update with
+ * @param officer The officer values to update with
+ * @param currentDuesPaid The currentDuesPaid values to update with
+ * @param notifyPoll The notifyPoll values to update with
+ * @param sendReceipt The sendReceipt values to update with
+ * 
+ * @throws IllegalArgumentError if not all parameters are the same length
+ * @throws NoMatchFoundError if an id is not found in the sheet
+ */
 export function updateMember(
     id: IntData[],
     name?: StringData[],
@@ -75,6 +94,20 @@ export function updateMember(
 
     update(sheet, entries);
 }
+/**
+ * Updates the rows in Income with matching ids to have the given values. Any
+ * unspecified values will not be changed.
+ * 
+ * @param id The ids to use to find the matching rows in the sheet
+ * @param date The date values to update with
+ * @param amount The amount values to update with
+ * @param description The description values to update with
+ * @param paymentTypeId The paymentTypeId values to update with
+ * @param statementId The statementId values to update with
+ * 
+ * @throws IllegalArgumentError if not all parameters are the same length
+ * @throws NoMatchFoundError if an id is not found in the sheet
+ */
 export function updateIncome(
     id: IntData[],
     date?: DateData[],
@@ -127,6 +160,21 @@ export function updateIncome(
 
     update(sheet, entries);
 }
+/**
+ * Updates the rows in Expense with matching ids to have the given values. Any
+ * unspecified values will not be changed.
+ * 
+ * @param id The ids to use to find the matching rows in the sheet
+ * @param date The date values to update with
+ * @param amount The amount values to update with
+ * @param description The description values to update with
+ * @param paymentTypeId The paymentTypeId values to update with
+ * @param recipientId The recipientId values to update with
+ * @param statementId The statementId values to update with
+ * 
+ * @throws IllegalArgumentError if not all parameters are the same length
+ * @throws NoMatchFoundError if an id is not found in the sheet
+ */
 export function updateExpense(
     id: IntData[],
     date?: DateData[],
@@ -184,6 +232,16 @@ export function updateExpense(
 
     update(sheet, entries);
 }
+/**
+ * Updates the rows in Recipient with matching ids to have the given values. Any
+ * unspecified values will not be changed.
+ * 
+ * @param id The ids to use to find the matching rows in the sheet
+ * @param name The name values to update with
+ * 
+ * @throws IllegalArgumentError if not all parameters are the same length
+ * @throws NoMatchFoundError if an id is not found in the sheet
+ */
 export function updateRecipient(id: IntData[], name: StringData[]) {
     const sheet = SpreadsheetApp.openById(ID).getSheetByName('Recipient');
 
@@ -202,6 +260,16 @@ export function updateRecipient(id: IntData[], name: StringData[]) {
 
     update(sheet, entries);
 }
+/**
+ * Updates the rows in PaymentType with matching ids to have the given values. Any
+ * unspecified values will not be changed.
+ * 
+ * @param id The ids to use to find the matching rows in the sheet
+ * @param name The name values to update with
+ * 
+ * @throws IllegalArgumentError if not all parameters are the same length
+ * @throws NoMatchFoundError if an id is not found in the sheet
+ */
 export function updatePaymentType(id: IntData[], name: StringData[]) {
     const sheet = SpreadsheetApp.openById(ID).getSheetByName('PaymentType');
 
@@ -220,6 +288,17 @@ export function updatePaymentType(id: IntData[], name: StringData[]) {
 
     update(sheet, entries);
 }
+/**
+ * Updates the rows in Statement with matching ids to have the given values. Any
+ * unspecified values will not be changed.
+ * 
+ * @param id The ids to use to find the matching rows in the sheet
+ * @param date The date values to update with
+ * @param confirmed The confirmed values to update with
+ * 
+ * @throws IllegalArgumentError if not all parameters are the same length
+ * @throws NoMatchFoundError if an id is not found in the sheet
+ */
 export function updateStatement(
     id: IntData[],
     date?: DateData[],
@@ -258,6 +337,18 @@ export function updateStatement(
 
     update(sheet, entries);
 }
+/**
+ * Updates the rows in Attendance with matching ids to have the given values. Any
+ * unspecified values will not be changed.
+ * 
+ * @param id The ids to use to find the matching rows in the sheet
+ * @param date The date values to update with
+ * @param memberIds The memberIds values to update with
+ * @param quarterId The quarterId values to update with
+ * 
+ * @throws IllegalArgumentError if not all parameters are the same length
+ * @throws NoMatchFoundError if an id is not found in the sheet
+ */
 export function updateAttendance(
     id: IntData[],
     date?: DateData[],
@@ -296,6 +387,14 @@ export function updateAttendance(
 
     update(sheet, entries);
 }
+/**
+ * Updates the values in ClubInfo. Any unspecified values will not be changed.
+ * 
+ * @param memberFee The memberFee value to update with
+ * @param officerFee The officerFee value to update with
+ * @param daysUntilFeeRequired The daysUntilFeeRequired value to update with
+ * @param currentQuarterId The currentQuarterId value to update with
+ */
 export function updateClubInfo(
     memberFee?: IntData,
     officerFee?: IntData,

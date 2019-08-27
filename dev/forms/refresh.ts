@@ -13,6 +13,9 @@ import { getClubInfo, getExpenses, getIncomes, getMembers, getPaymentTypes, getS
 import { capitalizeString, CARRIERS, centsToString, compareByDateDesc, Dictionary, ErrorType, GeneratedForm, IntData } from '../types';
 import { disableForm, enableForm } from './disable';
 
+/**
+ * Refreshes all of the forms using values from the database.
+ */
 export function refreshAllForms() {
     refreshAddExpense();
     refreshAddIncome();
@@ -27,6 +30,9 @@ export function refreshAllForms() {
     refreshUpdateMemberStatus();
 }
 
+/**
+ * Refreshes the Add Expense form using values from the database.
+ */
 export function refreshAddExpense() {
     const payTypes = getPaymentTypes().map(entry => {
         if (!entry.name) throw ErrorType.AssertionError;
@@ -34,7 +40,6 @@ export function refreshAddExpense() {
     });
 
     const form = FormApp.openById(AE_ID);
-    disableForm(GeneratedForm.ADD_EXPENSE);
 
     form.addTextItem()
         .setTitle('Amount')
@@ -64,6 +69,9 @@ export function refreshAddExpense() {
 
     enableForm(GeneratedForm.ADD_EXPENSE);
 }
+/**
+ * Refreshes the Add Income form using values from the database.
+ */
 export function refreshAddIncome() {
     const payTypes = getPaymentTypes().map(entry => {
         if (!entry.name) throw ErrorType.AssertionError;
@@ -98,6 +106,9 @@ export function refreshAddIncome() {
 
     enableForm(GeneratedForm.ADD_INCOME);
 }
+/**
+ * Refreshes the Add Member IOU form using values from the database.
+ */
 export function refreshAddMemberIou() {
     const memberNames = getMembers().map(entry => {
         if (!entry.name || !entry.amountOwed) throw ErrorType.AssertionError;
@@ -136,6 +147,9 @@ export function refreshAddMemberIou() {
 
     enableForm(GeneratedForm.ADD_MEMBER_IOU);
 }
+/**
+ * Refreshes the Collect Dues form using values from the database.
+ */
 export function refreshCollectDues() {
     const clubInfo = getClubInfo();
     const memberFee = centsToString(clubInfo.memberFee);
@@ -189,6 +203,9 @@ export function refreshCollectDues() {
 
     enableForm(GeneratedForm.COLLECT_DUES);
 }
+/**
+ * Refreshes the Confirm Transfer form using values from the database.
+ */
 export function refreshConfirmTransfer() {
     const statementDetails: Dictionary<number, { payType: number, amount: number }> = {};
     getIncomes().forEach(entry => {
@@ -259,6 +276,9 @@ export function refreshConfirmTransfer() {
 
     enableForm(GeneratedForm.CONFIRM_TRANSFER);
 }
+/**
+ * Refreshes the Next Quarter form using values from the database.
+ */
 export function refreshNextQuarter() {
     const clubInfo = getClubInfo();
 
@@ -272,6 +292,9 @@ export function refreshNextQuarter() {
 
     enableForm(GeneratedForm.NEXT_QUARTER);
 }
+/**
+ * Refreshes the Resolve Member IOU form using values from the database.
+ */
 export function refreshResolveMemberIou() {
     const memberNames = getMembers().map(entry => {
         if (!entry.name || !entry.amountOwed) throw ErrorType.AssertionError;
@@ -327,6 +350,9 @@ export function refreshResolveMemberIou() {
 
     enableForm(GeneratedForm.RESOLVE_MEMBER_IOU);
 }
+/**
+ * Refreshes the Take Attendance form using values from the database.
+ */
 export function refreshTakeAttendance() {
     const memberNames = getMembers().map(entry => {
         if (!entry.name) throw ErrorType.AssertionError;
@@ -355,6 +381,9 @@ export function refreshTakeAttendance() {
 
     enableForm(GeneratedForm.TAKE_ATTENDANCE);
 }
+/**
+ * Refreshes the Transfer Funds form using values from the database.
+ */
 export function refreshTransferFunds() {
     const idToPayType: Dictionary<number, string> = {};
     getPaymentTypes().forEach(entry => {
@@ -422,6 +451,9 @@ export function refreshTransferFunds() {
 
     enableForm(GeneratedForm.TRANSFER_FUNDS);
 }
+/**
+ * Refreshes the Update Contact Settings form using values from the database.
+ */
 export function refreshUpdateContactSettings() {
     const memberNames: string[] = [];
     getMembers().forEach(entry => {
@@ -436,6 +468,8 @@ export function refreshUpdateContactSettings() {
 
     const form = FormApp.openById(UCS_ID);
     disableForm(GeneratedForm.UPDATE_CONTACT_SETTINGS);
+
+    form.setDescription('Please only choose phone OR email, only one will be recorded.');
 
     if (memberNames.length === 0) {
         form.addCheckboxItem()
@@ -475,6 +509,9 @@ export function refreshUpdateContactSettings() {
 
     enableForm(GeneratedForm.UPDATE_CONTACT_SETTINGS);
 }
+/**
+ * Refreshes the Update Member Status form using values from the database.
+ */
 export function refreshUpdateMemberStatus() {
     const memberNames = getMembers().map(entry => {
         if (!entry.name) throw ErrorType.AssertionError;
