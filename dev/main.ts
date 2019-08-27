@@ -124,10 +124,15 @@ export function setupTriggers() {
 }
 
 export function everyDay() { }
-export function everyWeek() { }
-export function everyMonth() {
-    createBackup();
+export function everyWeek() {
+    const today = new Date();
+
+    // Every other week
+    if (today.getDate() % 14 >= 7) {
+        createBackup();
+    }
 }
+export function everyMonth() { }
 
 export function tablesOnOpen() { }
 export function tablesOnEdit(e: EditEvent) {
