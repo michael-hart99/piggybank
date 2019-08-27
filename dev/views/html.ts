@@ -92,17 +92,17 @@ export function memberDetailsHTML() {
     </select>
     </br>
     <div id="display">
-      <p>Name: </p><p id="name"></p></br>
-      <p>Status: </p><p id="status"></p></br>
-      <p>Date joined: </p><p id="dateJoined"></p></br>
+      <p><b>Name: </b></p><p id="name"></p></br>
+      <p><b>Status: </b></p><p id="status"></p></br>
+      <p><b>Date joined: </b></p><p id="dateJoined"></p></br>
       </br>
-      <p>Attendances: </p><p id="attendances"></p></br>
-      <p>Paid current dues?: </p><p id="paidDues"></p></br>
-      <p>Amount owed: </p><p id="amountOwed"></p></br>
+      <p><b>Attendances: </b></p><p id="attendances"></p></br>
+      <p><b>Paid current dues?: </b></p><p id="paidDues"></p></br>
+      <p><b>Amount owed: </b></p><p id="amountOwed"></p></br>
       </br>
-      <p>Email: </p><p id="email"></p></br>
-      <p>Notify of polls?: </p><p id="notifyPoll"></p></br>
-      <p>Send receipts?: </p><p id="sendReceipt"></p></br>
+      <p><b>Email: </b></p><p id="email"></p></br>
+      <p><b>Notify of polls?: </b></p><p id="notifyPoll"></p></br>
+      <p><b>Send receipts?: </b></p><p id="sendReceipt"></p></br>
     </div>
     </body>
 
@@ -542,15 +542,24 @@ export function attendanceSummaryHTML() {
           percentage = 100 * ((endVal - startVal) / totalDays);
           
           if (percentage !== 0) {
-            fillData.push('<b>' + idToName[memId] + '</b>: ' + percentage.toFixed(1) + '%');
+            fillData.push({
+              html: '<b>' + idToName[memId] + '</b>: ' + percentage.toFixed(1) + '%',
+              amount: endVal - startVal
+            });
           }
         }
       });
-      fillData.sort();
+      fillData.sort(function(a, b) {
+        if (a.amount === b.amount) {
+          return a.html.localeCompare(b.html);
+        } else {
+          return b.amount - a.amount;
+        }
+      });
 
       numDaysElt.hidden = false;
       numDaysElt.innerHTML = "Total Days: " + totalDays;
-      memberList.innerHTML = fillData.join("<br/>");
+      memberList.innerHTML = fillData.map(function(d) {return d.html}).join("<br/>");
     }
     
     startDate.addEventListener("change", refreshStats);

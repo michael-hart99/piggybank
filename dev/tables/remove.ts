@@ -21,7 +21,7 @@ export function removeMember(id?: IntData[], name?: IntData[]) {
         if (!name) {
             throw ErrorType.IllegalArgumentError;
         }
-        id = getIdsFromFields(sheet, ['name'], [name]);
+        id = getIdsFromFields(sheet, ['name'], name.map(s => [s]));
     }
 
     const entries = id.map(i => new MemberEntry(i));
@@ -87,7 +87,7 @@ export function removeRecipient(id?: IntData[], name?: IntData[]) {
         if (!name) {
             throw ErrorType.IllegalArgumentError;
         }
-        id = getIdsFromFields(sheet, ['name'], [name]);
+        id = getIdsFromFields(sheet, ['name'], name.map(s => [s]));
     }
 
     const entries = id.map(i => new RecipientEntry(i));
@@ -115,7 +115,7 @@ export function removePaymentType(id?: IntData[], name?: IntData[]) {
         if (!name) {
             throw ErrorType.IllegalArgumentError;
         }
-        id = getIdsFromFields(sheet, ['name'], [name]);
+        id = getIdsFromFields(sheet, ['name'], name.map(s => [s]));
     }
 
     const entries = id.map(i => new PaymentTypeEntry(i));

@@ -130,7 +130,7 @@ export function getRecipientIds(recipient: StringData[]) {
     return getIdsFromFields(
         SpreadsheetApp.openById(TABLES_ID).getSheetByName('Recipient'),
         ['name'],
-        [recipient]
+        recipient.map(r => [r])
     );
 }
 /**
@@ -143,6 +143,6 @@ export function getPaymentTypeIds(paymentType: StringData[]) {
     return getIdsFromFields(
         SpreadsheetApp.openById(TABLES_ID).getSheetByName('PaymentType'),
         ['name'],
-        [paymentType]
+        paymentType.map(p => [p])
     );
 }

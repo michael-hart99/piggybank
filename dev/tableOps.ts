@@ -110,7 +110,7 @@ export function getIndicesFromIds(
  * found by comparing the fields in the sheet to values in each row of vals.
  * 
  * @param sheet The sheet being searched for matching entries
- * @param fields The fields to match to (order matters)
+ * @param fields The n fields to match to (order matters)
  * @param vals A list of column data, where each row has n Data values
  * 
  * @throws IllegalArgumentError if fields has length 0 ||
@@ -277,9 +277,10 @@ export function remove(sheet: GoogleAppsScript.Spreadsheet.Sheet, entries: Entry
         return entry.id;
     });
     const indices = getIndicesFromIds(sheet, ids);
+    indices.sort((a, b) => b - a);
 
     for (let i = 0; i < indices.length; ++i) {
-        sheet.deleteRow(indices[i] + HEADER_LEN + GAS_OFFSET - i);
+        sheet.deleteRow(indices[i] + HEADER_LEN + GAS_OFFSET);
     }
 }
 
