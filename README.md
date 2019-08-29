@@ -8,11 +8,7 @@ attendances, and member information. This was created for groups without
 experience using a database programming language to have a system similar
 to using a database that has easy shortcuts for common operations.
 
-<p align="center">
-<video autoplay>
-    <source src="media/demo.mp4" type="video/mp4">
-</video>
-</p>
+[![Demo video](media/Preview.png)](https://youtu.be/lqzI_y59EEI)
 
 #### Database
 The database is a spreadsheet containing 8 sheets that are designed to have
