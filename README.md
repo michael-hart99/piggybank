@@ -8,6 +8,12 @@ attendances, and member information. This was created for groups without
 experience using a database programming language to have a system similar
 to using a database that has easy shortcuts for common operations.
 
+<p align="center">
+<video autoplay>
+    <source src="media/demo.mp4" type="video/mp4">
+</video>
+</p>
+
 #### Database
 The database is a spreadsheet containing 8 sheets that are designed to have
 no overlapping information. Any time a sheet is modified, all of the sheets
@@ -33,14 +39,35 @@ the database in case data is accidentally lost.
 
 ## Set-up
 
+I created this to be set up on a Linux machine, however I think it is also
+compatible with Mac OS. I have never attempted setting up on Windows, but am
+doubtful that it would work.
+
+Setting up requires the following:
+* [Python 3 and pip][link_python]
+* [NPM][link_npm]
+
 Fork and/or clone this repo.
 
 Follow step 1 in [this tutorial][link_quickstart]. Be sure to download the
-`credentials.json` file and wait one minute before continuing to ensure that
-the Drive API is set up fully.
-(potentially wait a minute?)
+`credentials.json` file, move it to the repository's directory.
 
-Install the python package for accessing Google's Drive API by running
+<p align="center">
+ <img alt="Enable Drive API" src="media/Enable_Drive_API_pt1.png" title="Enable Drive API">
+ <img alt="Enable Drive API" src="media/Enable_Drive_API_pt2.png" title="Enable Drive API">
+ <img alt="Enable Drive API" src="media/Enable_Drive_API_pt3.png" title="Enable Drive API">
+</p>
+
+Go to [this settings page](https://script.google.com/u/3/home/usersettings) for Google Scripts to enable Google Apps Script API.
+
+<p align="center">
+ <img alt="Enable GAS API" src="media/Enable_GAS_API_pt1.png" title="Enable GAS API">
+ <img alt="Enable GAS API" src="media/Enable_GAS_API_pt2.png" title="Enable GAS API">
+</p>
+
+Wait 10 minuntes to ensure that the API permissions are fully enabled.
+
+Install the python library for accessing Google's Drive API by running
 
 ```
 pip3 install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib
@@ -58,9 +85,29 @@ and edit the files it has created, the other will be to authorize the project
 to run scripts to fully manage files within your Google Drive using Google
 Script.
 
+The Google Script project should open after everything has been initialized.
+Switch tabs to `unwrapBundle.gs`, select function `initialize`, then run it.
+This will bring up an authorization dialog, give the script authorization so
+that it can create automatic triggers and edit the sheets and forms as
+necessary.
+
+<p align="center">
+ <img alt="Google Script Initialize" src="media/GS_Initialize_pt1.png" title="Google Script Initialize">
+ <img alt="Google Script Initialize" src="media/GS_Initialize_pt2.png" title="Google Script Initialize">
+ <img alt="Google Script Initialize" src="media/GS_Initialize_pt3.png" title="Google Script Initialize">
+ <img alt="Google Script Authorize" src="media/GS_Authorization_pt1.png" title="Google Script Authorize">
+ <img alt="Google Script Authorize" src="media/GS_Authorization_pt2.png" title="Google Script Authorize">
+ <img alt="Google Script Authorize" src="media/GS_Authorization_pt3.png" title="Google Script Authorize">
+ <img alt="Google Script Authorize" src="media/GS_Authorization_pt4.png" title="Google Script Authorize">
+</p>
+
 Now your Google Drive files are all set up.
 
 ## Deploying Customizations
+
+<p align="center">
+ <img alt="Code Preview" src="media/Code_Preview.png" title="Code Preview">
+</p>
 
 If you'd like to customize the code, please feel free! The code was designed
 be as readable as possible while working smoothly with Google Apps Script. Some
@@ -107,5 +154,9 @@ strange quirks about the GAS system.
 [link_npm]: https://www.npmjs.com/
 [link_typescript]: https://github.com/microsoft/TypeScript
 [link_webpack]: https://webpack.js.org/
+
 [link_quickstart]: https://developers.google.com/drive/api/v3/quickstart/python
+[link_python]: https://www.python.org/downloads/release/python-374/
+[link_npm]: https://www.npmjs.com/get-npm
+
 [link_ferreira]: https://the-eye.eu/public/Books/IT%20Various/OReilly%20Google%20Apps%20Script%2C%20Web%20Application%20Development%20Essentials%202nd%20%282014%29.pdf
