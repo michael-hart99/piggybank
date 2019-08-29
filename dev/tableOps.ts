@@ -42,7 +42,7 @@ function getNextId(sheet: GoogleAppsScript.Spreadsheet.Sheet) {
         GAS_OFFSET,
         1,
         sheet.getLastColumn()
-    ).getValues().map(row => row.toString());
+    ).getValues()[0].map(row => row.toString());
 
     let idIndex: number;
     try {
