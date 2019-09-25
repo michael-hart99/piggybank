@@ -8,7 +8,7 @@ attendances, and member information. This was created for groups without
 experience using a database programming language to have a system similar
 to using a database that has easy shortcuts for common operations.
 
-[![Demo video](media/Preview.png)](https://youtu.be/lqzI_y59EEI)
+[![Demo video](https://i.imgur.com/BSASBoS.png)](https://youtu.be/lqzI_y59EEI)
 
 #### Database
 The database is a spreadsheet containing 8 sheets that are designed to have
@@ -49,16 +49,16 @@ Follow step 1 in [this tutorial][link_quickstart]. Be sure to download the
 `credentials.json` file, move it to the repository's directory.
 
 <p align="center">
- <img alt="Enable Drive API" src="media/Enable_Drive_API_pt1.png" title="Enable Drive API">
- <img alt="Enable Drive API" src="media/Enable_Drive_API_pt2.png" title="Enable Drive API">
- <img alt="Enable Drive API" src="media/Enable_Drive_API_pt3.png" title="Enable Drive API">
+ <img alt="Enable Drive API" src="https://i.imgur.com/wLkAPLc.png" title="Enable Drive API">
+ <img alt="Enable Drive API" src="https://i.imgur.com/bumBvCI.png" title="Enable Drive API">
+ <img alt="Enable Drive API" src="https://i.imgur.com/5OaPeHX.png" title="Enable Drive API">
 </p>
 
 Go to [this settings page](https://script.google.com/u/3/home/usersettings) for Google Scripts to enable Google Apps Script API.
 
 <p align="center">
- <img alt="Enable GAS API" src="media/Enable_GAS_API_pt1.png" title="Enable GAS API">
- <img alt="Enable GAS API" src="media/Enable_GAS_API_pt2.png" title="Enable GAS API">
+ <img alt="Enable GAS API" src="https://i.imgur.com/IbKyJyl.png" title="Enable GAS API">
+ <img alt="Enable GAS API" src="https://i.imgur.com/e1Kyivi.png" title="Enable GAS API">
 </p>
 
 Wait 10 minuntes to ensure that the API permissions are fully enabled.
@@ -88,13 +88,13 @@ that it can create automatic triggers and edit the sheets and forms as
 necessary.
 
 <p align="center">
- <img alt="Google Script Initialize" src="media/GS_Initialize_pt1.png" title="Google Script Initialize">
- <img alt="Google Script Initialize" src="media/GS_Initialize_pt2.png" title="Google Script Initialize">
- <img alt="Google Script Initialize" src="media/GS_Initialize_pt3.png" title="Google Script Initialize">
- <img alt="Google Script Authorize" src="media/GS_Authorization_pt1.png" title="Google Script Authorize">
- <img alt="Google Script Authorize" src="media/GS_Authorization_pt2.png" title="Google Script Authorize">
- <img alt="Google Script Authorize" src="media/GS_Authorization_pt3.png" title="Google Script Authorize">
- <img alt="Google Script Authorize" src="media/GS_Authorization_pt4.png" title="Google Script Authorize">
+ <img alt="Google Script Initialize" src="https://i.imgur.com/abvXAtj.png" title="Google Script Initialize">
+ <img alt="Google Script Initialize" src="https://i.imgur.com/QRIsqM6.png" title="Google Script Initialize">
+ <img alt="Google Script Initialize" src="https://i.imgur.com/ymBs31y.png" title="Google Script Initialize">
+ <img alt="Google Script Authorize" src="https://i.imgur.com/k46o0Cy.png" title="Google Script Authorize">
+ <img alt="Google Script Authorize" src="https://i.imgur.com/d4dfVzO.png" title="Google Script Authorize">
+ <img alt="Google Script Authorize" src="https://i.imgur.com/ltqBg98.png" title="Google Script Authorize">
+ <img alt="Google Script Authorize" src="https://i.imgur.com/xlaoQ7G.png" title="Google Script Authorize">
 </p>
 
 Now your Google Drive files are all set up.
@@ -102,7 +102,7 @@ Now your Google Drive files are all set up.
 ## Deploying Customizations
 
 <p align="center">
- <img alt="Code Preview" src="media/Code_Preview.png" title="Code Preview">
+ <img alt="Code Preview" src="https://i.imgur.com/YQkQ6Ex.png" title="Code Preview">
 </p>
 
 If you'd like to customize the code, please feel free! The code was designed
