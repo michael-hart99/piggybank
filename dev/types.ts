@@ -176,31 +176,31 @@ export class DataTable {
     static MEMBER = new DataTable('Member', [
         GeneratedTable.MEMBERS,
     ], [
-            GeneratedForm.ADD_MEMBER_IOU,
-            GeneratedForm.COLLECT_DUES,
-            GeneratedForm.RESOLVE_MEMBER_IOU,
-            GeneratedForm.TAKE_ATTENDANCE,
-            GeneratedForm.UPDATE_CONTACT_SETTINGS,
-            GeneratedForm.UPDATE_MEMBER_STATUS
-        ]);
+        GeneratedForm.ADD_MEMBER_IOU,
+        GeneratedForm.COLLECT_DUES,
+        GeneratedForm.RESOLVE_MEMBER_IOU,
+        GeneratedForm.TAKE_ATTENDANCE,
+        GeneratedForm.UPDATE_CONTACT_SETTINGS,
+        GeneratedForm.UPDATE_MEMBER_STATUS
+    ]);
     static INCOME = new DataTable('Income', [
         GeneratedTable.ACCOUNT_INFO,
         GeneratedTable.INCOMES,
         GeneratedTable.ALL_TRANSACTIONS,
         GeneratedTable.STATEMENTS
     ], [
-            GeneratedForm.CONFIRM_TRANSFER,
-            GeneratedForm.TRANSFER_FUNDS
-        ]);
+        GeneratedForm.CONFIRM_TRANSFER,
+        GeneratedForm.TRANSFER_FUNDS
+    ]);
     static EXPENSE = new DataTable('Expense', [
         GeneratedTable.ACCOUNT_INFO,
         GeneratedTable.EXPENSES,
         GeneratedTable.ALL_TRANSACTIONS,
         GeneratedTable.STATEMENTS
     ], [
-            GeneratedForm.CONFIRM_TRANSFER,
-            GeneratedForm.TRANSFER_FUNDS
-        ]);
+        GeneratedForm.CONFIRM_TRANSFER,
+        GeneratedForm.TRANSFER_FUNDS
+    ]);
     static RECIPIENT = new DataTable('Recipient', [
         GeneratedTable.EXPENSES,
         GeneratedTable.ALL_TRANSACTIONS
@@ -212,19 +212,19 @@ export class DataTable {
         GeneratedTable.ALL_TRANSACTIONS,
         GeneratedTable.STATEMENTS
     ], [
-            GeneratedForm.ADD_EXPENSE,
-            GeneratedForm.ADD_INCOME,
-            GeneratedForm.COLLECT_DUES,
-            GeneratedForm.CONFIRM_TRANSFER,
-            GeneratedForm.RESOLVE_MEMBER_IOU,
-            GeneratedForm.TRANSFER_FUNDS
-        ]);
+        GeneratedForm.ADD_EXPENSE,
+        GeneratedForm.ADD_INCOME,
+        GeneratedForm.COLLECT_DUES,
+        GeneratedForm.CONFIRM_TRANSFER,
+        GeneratedForm.RESOLVE_MEMBER_IOU,
+        GeneratedForm.TRANSFER_FUNDS
+    ]);
     static STATEMENT = new DataTable('Statement', [
         GeneratedTable.STATEMENTS
     ], [
-            GeneratedForm.CONFIRM_TRANSFER,
-            GeneratedForm.TRANSFER_FUNDS
-        ]);
+        GeneratedForm.CONFIRM_TRANSFER,
+        GeneratedForm.TRANSFER_FUNDS
+    ]);
     static ATTENDANCE = new DataTable('Attendance', [
         GeneratedTable.MEMBERS
     ], []);
@@ -232,9 +232,9 @@ export class DataTable {
         GeneratedTable.ACCOUNT_INFO,
         GeneratedTable.MEMBERS
     ], [
-            GeneratedForm.COLLECT_DUES,
-            GeneratedForm.NEXT_QUARTER
-        ]);
+        GeneratedForm.COLLECT_DUES,
+        GeneratedForm.NEXT_QUARTER
+    ]);
 
     private constructor(private name: string, private dependentTables: GeneratedTable[], private dependentForms: GeneratedForm[]) { }
 
@@ -250,6 +250,9 @@ export class DataTable {
 export abstract class RefreshLogger {
     /** The tables that have been updated */
     static tables: UniqueList<DataTable> = new UniqueList<DataTable>();
+
+    /** Hides constructor */
+    private constructor() { }
 
     /**
      * Marks the given table as having changed, meaning the dependent
@@ -286,6 +289,8 @@ export abstract class RefreshLogger {
             forms.asArray().forEach(form => enableForm(form));
             throw e;
         }
+
+        this.tables = new UniqueList<DataTable>();
 
         lock.releaseLock();
     }
