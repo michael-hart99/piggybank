@@ -156,6 +156,10 @@ def main():
     subprocess.run('clasp create --type standalone --title "Piggybank"', shell=True)
     os.chdir(base_dir)
 
+    manifest_file = open(base_dir + '/' + BUILD_DIR + '/' + 'appsscript.json', "w")
+    manifest_file.write('{"timeZone":"America/New_York","dependencies":{"enabledAdvancedServices":[{"userSymbol":"Drive","serviceId":"drive","version":"v2"}]},"exceptionLogging":"STACKDRIVER"}')
+    manifest_file.close()
+
     subprocess.run('npm run deploy', shell=True)
 
     os.chdir(base_dir + '/' + BUILD_DIR)
