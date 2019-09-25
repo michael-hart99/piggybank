@@ -8,13 +8,16 @@ import { DataTable, ErrorType, ExpenseEntry, IncomeEntry, IntData, MemberEntry, 
  * 
  * @param id The ids of the entries to be removed
  * @param name The names of the entries to be removed 
+ * @param sheetId The id of the spreadsheet to operate on
  * 
  * @throws IllegalArgumentError if both id and name are not specified
  * @throws NoMatchFoundError if a given name is not found in the sheet ||
  *                              a given id is not found in the sheet
  */
-export function removeMember(id?: IntData[], name?: IntData[]) {
-    const sheet = SpreadsheetApp.openById(ID).getSheetByName('Member');
+export function removeMember(id?: IntData[], name?: IntData[], sheetId?: string) {
+    const sheet = sheetId ?
+        SpreadsheetApp.openById(sheetId).getSheetByName('Member') :
+        SpreadsheetApp.openById(ID).getSheetByName('Member');
 
     if (!id) {
         // If not enough info is given to find ID, throw error
@@ -35,13 +38,17 @@ export function removeMember(id?: IntData[], name?: IntData[]) {
  * name can be specified to be used to find the matching ids.
  * 
  * @param id The ids of the entries to be removed
+ * @param sheetId The id of the spreadsheet to operate on
  * 
  * @throws NoMatchFoundError if a given id is not found in the sheet
  */
 export function removeIncome(
     id: IntData[],
+    sheetId?: string
 ) {
-    const sheet = SpreadsheetApp.openById(ID).getSheetByName('Income');
+    const sheet = sheetId ?
+        SpreadsheetApp.openById(sheetId).getSheetByName('Income') :
+        SpreadsheetApp.openById(ID).getSheetByName('Income');
 
     const entries = id.map(i => new IncomeEntry(i));
 
@@ -54,13 +61,17 @@ export function removeIncome(
  * name can be specified to be used to find the matching ids.
  * 
  * @param id The ids of the entries to be removed
+ * @param sheetId The id of the spreadsheet to operate on
  * 
  * @throws NoMatchFoundError if a given id is not found in the sheet
  */
 export function removeExpense(
     id: IntData[],
+    sheetId?: string
 ) {
-    const sheet = SpreadsheetApp.openById(ID).getSheetByName('Expense');
+    const sheet = sheetId ?
+        SpreadsheetApp.openById(sheetId).getSheetByName('Expense') :
+        SpreadsheetApp.openById(ID).getSheetByName('Expense');
 
     const entries = id.map(i => new ExpenseEntry(i));
 
@@ -74,13 +85,16 @@ export function removeExpense(
  * 
  * @param id The ids of the entries to be removed
  * @param name The names of the entries to be removed 
+ * @param sheetId The id of the spreadsheet to operate on
  * 
  * @throws IllegalArgumentError if both id and name are not specified
  * @throws NoMatchFoundError if a given name is not found in the sheet ||
  *                              a given id is not found in the sheet
  */
-export function removeRecipient(id?: IntData[], name?: IntData[]) {
-    const sheet = SpreadsheetApp.openById(ID).getSheetByName('Recipient');
+export function removeRecipient(id?: IntData[], name?: IntData[], sheetId?: string) {
+    const sheet = sheetId ?
+        SpreadsheetApp.openById(sheetId).getSheetByName('Recipient') :
+        SpreadsheetApp.openById(ID).getSheetByName('Recipient');
 
     if (!id) {
         // If not enough info is given to find ID, throw error
@@ -102,13 +116,16 @@ export function removeRecipient(id?: IntData[], name?: IntData[]) {
  * 
  * @param id The ids of the entries to be removed
  * @param name The names of the entries to be removed 
+ * @param sheetId The id of the spreadsheet to operate on
  * 
  * @throws IllegalArgumentError if both id and name are not specified
  * @throws NoMatchFoundError if a given name is not found in the sheet ||
  *                              a given id is not found in the sheet
  */
-export function removePaymentType(id?: IntData[], name?: IntData[]) {
-    const sheet = SpreadsheetApp.openById(ID).getSheetByName('PaymentType');
+export function removePaymentType(id?: IntData[], name?: IntData[], sheetId?: string) {
+    const sheet = sheetId ?
+        SpreadsheetApp.openById(sheetId).getSheetByName('PaymentType') :
+        SpreadsheetApp.openById(ID).getSheetByName('PaymentType');
 
     if (!id) {
         // If not enough info is given to find ID, throw error
@@ -129,13 +146,17 @@ export function removePaymentType(id?: IntData[], name?: IntData[]) {
  * name can be specified to be used to find the matching ids.
  * 
  * @param id The ids of the entries to be removed
+ * @param sheetId The id of the spreadsheet to operate on
  * 
  * @throws NoMatchFoundError if a given id is not found in the sheet
  */
 export function removeStatement(
     id: IntData[],
+    sheetId?: string
 ) {
-    const sheet = SpreadsheetApp.openById(ID).getSheetByName('Statement');
+    const sheet = sheetId ?
+        SpreadsheetApp.openById(sheetId).getSheetByName('Statement') :
+        SpreadsheetApp.openById(ID).getSheetByName('Statement');
 
     const entries = id.map(i => new StatementEntry(i));
 
@@ -148,13 +169,17 @@ export function removeStatement(
  * name can be specified to be used to find the matching ids.
  * 
  * @param id The ids of the entries to be removed
+ * @param sheetId The id of the spreadsheet to operate on
  * 
  * @throws NoMatchFoundError if a given id is not found in the sheet
  */
 export function removeAttendance(
     id: IntData[],
+    sheetId?: string
 ) {
-    const sheet = SpreadsheetApp.openById(ID).getSheetByName('Attendance');
+    const sheet = sheetId ?
+        SpreadsheetApp.openById(sheetId).getSheetByName('Attendance') :
+        SpreadsheetApp.openById(ID).getSheetByName('Attendance');
 
     const entries = id.map(i => new StatementEntry(i));
 

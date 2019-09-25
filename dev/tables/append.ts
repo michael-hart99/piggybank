@@ -15,6 +15,7 @@ import { AttendanceEntry, BooleanData, DataTable, DateData, ErrorType, ExpenseEn
  * @param currentDuesPaid The currentDuesPaid values to append
  * @param notifyPoll The notifyPoll values to append
  * @param sendReceipt The sendReceipt values to append
+ * @param sheetId The id of the spreadsheet to operate on
  * 
  * @throws IllegalArgumentError if not all parameters are the same length
  */
@@ -28,7 +29,8 @@ export function appendMember(
     officer: BooleanData[],
     currentDuesPaid: BooleanData[],
     notifyPoll: BooleanData[],
-    sendReceipt: BooleanData[]
+    sendReceipt: BooleanData[],
+    sheetId?: string
 ) {
     // Check that all arrays are the same length if given
     let numEntries = name.length;
@@ -65,7 +67,9 @@ export function appendMember(
         );
     }
 
-    const sheet = SpreadsheetApp.openById(ID).getSheetByName('Member');
+    const sheet = sheetId ?
+        SpreadsheetApp.openById(sheetId).getSheetByName('Member') :
+        SpreadsheetApp.openById(ID).getSheetByName('Member');
 
     RefreshLogger.markAsUpdated(DataTable.MEMBER);
 
@@ -79,6 +83,7 @@ export function appendMember(
  * @param description The description values to append
  * @param paymentTypeId The paymentTypeId values to append
  * @param statementId The statementId values to append
+ * @param sheetId The id of the spreadsheet to operate on
  * 
  * @throws IllegalArgumentError if not all parameters are the same length
  */
@@ -87,7 +92,8 @@ export function appendIncome(
     amount: IntData[],
     description: StringData[],
     paymentTypeId: IntData[],
-    statementId: IntData[]
+    statementId: IntData[],
+    sheetId?: string
 ) {
     // Check that all arrays are the same length if given
     let numEntries = date.length;
@@ -114,7 +120,9 @@ export function appendIncome(
         );
     }
 
-    const sheet = SpreadsheetApp.openById(ID).getSheetByName('Income');
+    const sheet = sheetId ?
+        SpreadsheetApp.openById(sheetId).getSheetByName('Income') :
+        SpreadsheetApp.openById(ID).getSheetByName('Income');
 
     RefreshLogger.markAsUpdated(DataTable.INCOME);
 
@@ -129,6 +137,7 @@ export function appendIncome(
  * @param paymentTypeId The paymentTypeId values to append
  * @param recipientId The recipientId values to append
  * @param statementId The statementId values to append
+ * @param sheetId The id of the spreadsheet to operate on
  * 
  * @throws IllegalArgumentError if not all parameters are the same length
  */
@@ -138,7 +147,8 @@ export function appendExpense(
     description: StringData[],
     paymentTypeId: IntData[],
     recipientId: IntData[],
-    statementId: IntData[]
+    statementId: IntData[],
+    sheetId?: string
 ) {
     // Check that all arrays are the same length if given
     let numEntries = date.length;
@@ -167,7 +177,9 @@ export function appendExpense(
         );
     }
 
-    const sheet = SpreadsheetApp.openById(ID).getSheetByName('Expense');
+    const sheet = sheetId ?
+        SpreadsheetApp.openById(sheetId).getSheetByName('Expense') :
+        SpreadsheetApp.openById(ID).getSheetByName('Expense');
 
     RefreshLogger.markAsUpdated(DataTable.EXPENSE);
 
@@ -177,10 +189,9 @@ export function appendExpense(
  * Appends the given values to the Income sheet.
  * 
  * @param name The name values to append
- * 
- * @throws IllegalArgumentError if not all parameters are the same length
+ * @param sheetId The id of the spreadsheet to operate on
  */
-export function appendRecipient(name: StringData[]) {
+export function appendRecipient(name: StringData[], sheetId?: string) {
     let numEntries = name.length;
 
     const entries: RecipientEntry[] = [];
@@ -188,7 +199,9 @@ export function appendRecipient(name: StringData[]) {
         entries.push(new RecipientEntry(undefined, name[i]));
     }
 
-    const sheet = SpreadsheetApp.openById(ID).getSheetByName('Recipient');
+    const sheet = sheetId ?
+        SpreadsheetApp.openById(sheetId).getSheetByName('Recipient') :
+        SpreadsheetApp.openById(ID).getSheetByName('Recipient');
 
     RefreshLogger.markAsUpdated(DataTable.RECIPIENT);
 
@@ -198,10 +211,9 @@ export function appendRecipient(name: StringData[]) {
  * Appends the given values to the Income sheet.
  * 
  * @param name The name values to append
- * 
- * @throws IllegalArgumentError if not all parameters are the same length
+ * @param sheetId The id of the spreadsheet to operate on
  */
-export function appendPaymentType(name: StringData[]) {
+export function appendPaymentType(name: StringData[], sheetId?: string) {
     let numEntries = name.length;
 
     const entries: PaymentTypeEntry[] = [];
@@ -209,7 +221,9 @@ export function appendPaymentType(name: StringData[]) {
         entries.push(new PaymentTypeEntry(undefined, name[i]));
     }
 
-    const sheet = SpreadsheetApp.openById(ID).getSheetByName('PaymentType');
+    const sheet = sheetId ?
+        SpreadsheetApp.openById(sheetId).getSheetByName('PaymentType') :
+        SpreadsheetApp.openById(ID).getSheetByName('PaymentType');
 
     RefreshLogger.markAsUpdated(DataTable.PAYMENT_TYPE);
 
@@ -220,12 +234,14 @@ export function appendPaymentType(name: StringData[]) {
  * 
  * @param date The date values to append
  * @param confirmed The confirmed values to append
+ * @param sheetId The id of the spreadsheet to operate on
  * 
  * @throws IllegalArgumentError if not all parameters are the same length
  */
 export function appendStatement(
     date: DateData[],
-    confirmed: BooleanData[]
+    confirmed: BooleanData[],
+    sheetId?: string
 ) {
     // Check that all arrays are the same length if given
     let numEntries = date.length;
@@ -246,7 +262,9 @@ export function appendStatement(
         );
     }
 
-    const sheet = SpreadsheetApp.openById(ID).getSheetByName('Statement');
+    const sheet = sheetId ?
+        SpreadsheetApp.openById(sheetId).getSheetByName('Statement') :
+        SpreadsheetApp.openById(ID).getSheetByName('Statement');
 
     RefreshLogger.markAsUpdated(DataTable.STATEMENT);
 
@@ -258,13 +276,15 @@ export function appendStatement(
  * @param date The date values to append
  * @param memberIds The memberIds values to append
  * @param quarterId The quarterId values to append
+ * @param sheetId The id of the spreadsheet to operate on
  * 
  * @throws IllegalArgumentError if not all parameters are the same length
  */
 export function appendAttendance(
     date: DateData[],
     memberIds: IntListData[],
-    quarterId: QuarterData[]
+    quarterId: QuarterData[],
+    sheetId?: string
 ) {
     // Check that all arrays are the same length if given
     let numEntries = date.length;
@@ -279,7 +299,9 @@ export function appendAttendance(
         );
     }
 
-    const sheet = SpreadsheetApp.openById(ID).getSheetByName('Attendance');
+    const sheet = sheetId ?
+        SpreadsheetApp.openById(sheetId).getSheetByName('Attendance') :
+        SpreadsheetApp.openById(ID).getSheetByName('Attendance');
 
     RefreshLogger.markAsUpdated(DataTable.ATTENDANCE);
 
