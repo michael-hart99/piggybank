@@ -16,6 +16,7 @@ import { ID as VIEWS_ID } from './ids/viewsId';
 import { MEMBER_DUES, NUM_ATTNS, OFFICER_DUES, START_QUARTER, START_YEAR } from './projectInfo';
 import { orderBy } from './tableOps';
 import { createBackup } from './tables/backup';
+import { UnitTester } from './test';
 import { DataTable, EditEvent, ErrorType, IntData, Quarter, QuarterData, RefreshLogger } from './types';
 import { menuAddAttendance, menuAddExpense, menuAddIncome, menuAddMember, menuAddPayType, menuAddRecipient, menuAddStatement, mergeMember, mergePaymentType, mergeRecipient, notifyMembers, pollNotification, renameMember, renamePaymentType, renameRecipient } from './views/handlers';
 import { addAttendanceHTML, addExpenseHTML, addIncomeHTML, addMemberHTML, addPayTypeHTML, addRecipientHTML, addStatementHTML, attendanceRecordsHTML, attendanceSummaryHTML, fullFinanceHistoryHTML, memberDetailsHTML, mergeMemberHTML, mergePaymentTypeHTML, mergeRecipientHTML, notifyMembersHTML, pollNotificationHTML, renameMemberHTML, renamePaymentTypeHTML, renameRecipientHTML } from './views/html';
@@ -28,6 +29,10 @@ export function initializeAll() {
     setupTriggers();
 
     refreshAll();
+}
+
+export function test() {
+    UnitTester.runTests();
 }
 
 export function refreshAll() {

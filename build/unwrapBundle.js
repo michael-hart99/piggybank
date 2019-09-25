@@ -1,6 +1,9 @@
 function initialize() {
     Bundle.initializeAll();
 }
+function test() {
+    Bundle.test();
+}
 function refreshAll() {
     Bundle.refreshAll();
 }
