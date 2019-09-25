@@ -133,10 +133,29 @@ Google Scripts.
 
 ## Testing
 
-Currently, there is only a method of testing the success of operations on the
-database. The testing suite will begin by creating a fresh database with no
-forms or triggers, then proceeds to test all available functions to input,
-modify, or delete data from the database.
+The testing suite creates a fresh database in your drive, then proceeds to run
+tests on the data-managing functionalities. These tests can be found in
+`dev/test.ts` and new test cases can be added to the UnitTester class in that
+file.
+
+To run the tests, open the Google Scripts project using `npm run open`. Then,
+switch to `unwrapBundle.js` and run the `test` function(depicted in the below
+image). This is similar to when the project was initialized and `initialize`
+was run.
+
+<p align="center">
+ <img alt="Run Tests" src="https://i.imgur.com/i9BxrqL.png" title="Run Tests">
+</p>
+
+To view the results, open [Google Script's My Executions][link_script_execs]
+and click on the most recent `test` execution. This will expand it, where you
+can see the console output.
+
+<p align="center">
+ <img alt="View Tests" src="https://i.imgur.com/Hzm2VlK.png" title="View Tests">
+</p>
+
+After the tests finish running, the newly made database will be deleted.
 
 ## Built With
 
@@ -151,6 +170,8 @@ modify, or delete data from the database.
 I think it's important to mention
 [Ferreira's Google Apps Script][link_ferreira] for helping me solve some truly
 strange quirks about the GAS system.
+
+[link_script_execs]: https://script.google.com/home/executions
 
 [link_gas]: https://developers.google.com/apps-script/
 [link_clasp]: https://github.com/google/clasp
