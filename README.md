@@ -131,6 +131,13 @@ npm run deploy
 This will compile the Typescript, bundle the files together, then push to
 Google Scripts.
 
+## Testing
+
+Currently, there is only a method of testing the success of operations on the
+database. The testing suite will begin by creating a fresh database with no
+forms or triggers, then proceeds to test all available functions to input,
+modify, or delete data from the database.
+
 ## Built With
 
 * [Google Apps Script][link_gas] - Used to create triggers and update Google Files
