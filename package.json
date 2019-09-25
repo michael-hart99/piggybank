@@ -18,6 +18,7 @@
     "setup": "./scripts/setup.sh",
     "lint": "./scripts/lint.sh",
     "build": "./scripts/build.sh",
+    "open": "./scripts/open.sh",
     "deploy": "./scripts/deploy.sh",
     "clean": "./scripts/clean.sh"
   },
