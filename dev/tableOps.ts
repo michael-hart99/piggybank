@@ -85,20 +85,14 @@ export function getIndicesFromIds(
 
     const indices = [];
 
-    let startIndex = 0;
-    for (const id of ids) {
-        let i = startIndex;
-        let foundMatch = false;
-        do {
-            if (tableIds[i].toString() === id.toString()) {
-                foundMatch = true;
-                indices.push(i);
-                startIndex = i;
+    for (let id_i = 0; id_i < ids.length; ++id_i) {
+        for (let table_i = 0; table_i < tableIds.length; ++table_i) {
+            if (tableIds[table_i].toString() === ids[id_i].toString()) {
+                indices.push(table_i);
                 break;
             }
-            i = (i + 1) % tableIds.length;
-        } while (i !== startIndex);
-        if (!foundMatch) {
+        }
+        if (indices.length !== id_i + 1) {
             throw ErrorType.NoMatchFoundError;
         }
     }
@@ -133,13 +127,9 @@ export function getIdsFromFields(
     if (tableVals.length === 0) throw ErrorType.NoMatchFoundError;
 
     const ids: IntData[] = [];
-    let startIndex = 0;
     for (let val_i = 0; val_i < vals.length; ++val_i) {
-        let table_i = startIndex;
-        let foundMatch = false;
-        do {
-            // See if all fields match table's entry
-            foundMatch = true;
+        for (let table_i = 0; table_i < tableVals.length; ++table_i) {
+            let foundMatch = true;
             for (let j = 0; j < vals[val_i].length; ++j) {
                 if (
                     tableVals[table_i][j + 1].toString() !==
@@ -149,15 +139,14 @@ export function getIdsFromFields(
                     break;
                 }
             }
+
             if (foundMatch) {
                 ids.push(IntData.create(tableVals[table_i][0].toString()));
-                startIndex = table_i;
                 break;
             }
-            table_i = (table_i + 1) % tableVals.length
         }
-        while (table_i !== startIndex);
-        if (!foundMatch) {
+
+        if (ids.length !== val_i + 1) {
             throw ErrorType.NoMatchFoundError;
         }
     }

@@ -251,6 +251,9 @@ export abstract class RefreshLogger {
     /** The tables that have been updated */
     static tables: UniqueList<DataTable> = new UniqueList<DataTable>();
 
+    /** The form to be updated first (recently submitted) */
+    static priorityForm: GeneratedForm | null = null;
+
     /** Hides constructor */
     private constructor() { }
 
@@ -263,6 +266,17 @@ export abstract class RefreshLogger {
     static markAsUpdated(table: DataTable) {
         this.tables.add(table);
     }
+
+    /**
+     * Marks the given form as a priority. This form will be disabled and
+     * repopulated before all other forms and views.
+     * 
+     * @param form The form to mark as a priority
+     */
+    static markAsPriority(form: GeneratedForm) {
+        this.priorityForm = form;
+    }
+
     /**
      * Refresh all of the generated structures dependent on the marked tables.
      */
@@ -274,23 +288,34 @@ export abstract class RefreshLogger {
         });
 
         const lock = LockService.getScriptLock();
-        lock.waitLock(5 * 60 * 1000) // five minutes
+        lock.tryLock(2 * 60 * 1000) // two minutes
+        if (!lock.hasLock()) {
+            // @ts-ignore Unable to find "console.log"
+            console.log('Refresh cancelled, unable to get Lock.');
+            return;
+        }
 
         try {
-            forms.asArray().forEach(form => disableForm(form));
+            let formsList = forms.asArray();
+            if (this.priorityForm !== null) {
+                this.priorityForm.getRefreshFn()();
+
+                formsList = formsList.filter(form => form !== this.priorityForm);
+            }
+
+            formsList.forEach(form => disableForm(form));
 
             this.tables.asArray().forEach(table => {
                 table.getDependentTables().forEach(x => x.getRefreshFn()());
             });
-            this.tables.asArray().forEach(table => {
-                table.getDependentForms().forEach(x => x.getRefreshFn()());
-            });
+            formsList.forEach(x => x.getRefreshFn()());
         } catch (e) {
             forms.asArray().forEach(form => enableForm(form));
             throw e;
         }
 
         this.tables = new UniqueList<DataTable>();
+        this.priorityForm = null;
 
         lock.releaseLock();
     }

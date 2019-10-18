@@ -58,7 +58,8 @@ export function updateMember(
     }
 
     const indicies = getIndicesFromIds(sheet, id);
-    const sheetVals = selectAll(sheet).filter((_, i) => indicies.indexOf(i) !== -1);
+    const allSheetVals = selectAll(sheet);
+    const sheetVals = indicies.map(i => allSheetVals[i]);
 
     if (!name) name = sheetVals.map(row => StringData.create(row[1].toString()));
     if (!dateJoined) dateJoined = sheetVals.map(row => DateData.create(row[2].toString()));
@@ -139,7 +140,8 @@ export function updateIncome(
     }
 
     const indicies = getIndicesFromIds(sheet, id);
-    const sheetVals = selectAll(sheet).filter((_, i) => indicies.indexOf(i) !== -1);
+    const allSheetVals = selectAll(sheet);
+    const sheetVals = indicies.map(i => allSheetVals[i]);
 
     if (!date) date = sheetVals.map(row => DateData.create(row[1].toString()));
     if (!amount) amount = sheetVals.map(row => IntData.create(row[2].toString()));
@@ -212,7 +214,8 @@ export function updateExpense(
     }
 
     const indicies = getIndicesFromIds(sheet, id);
-    const sheetVals = selectAll(sheet).filter((_, i) => indicies.indexOf(i) !== -1);
+    const allSheetVals = selectAll(sheet);
+    const sheetVals = indicies.map(i => allSheetVals[i]);
 
     if (!date) date = sheetVals.map(row => DateData.create(row[1].toString()));
     if (!amount) amount = sheetVals.map(row => IntData.create(row[2].toString()));
@@ -338,7 +341,8 @@ export function updateStatement(
     }
 
     const indicies = getIndicesFromIds(sheet, id);
-    const sheetVals = selectAll(sheet).filter((_, i) => indicies.indexOf(i) !== -1);
+    const allSheetVals = selectAll(sheet);
+    const sheetVals = indicies.map(i => allSheetVals[i]);
 
     if (!date) date = sheetVals.map(row => DateData.create(row[1].toString()));
     if (!confirmed)
@@ -394,7 +398,8 @@ export function updateAttendance(
     }
 
     const indicies = getIndicesFromIds(sheet, id);
-    const sheetVals = selectAll(sheet).filter((_, i) => indicies.indexOf(i) !== -1);
+    const allSheetVals = selectAll(sheet);
+    const sheetVals = indicies.map(i => allSheetVals[i]);
 
     if (!date) date = sheetVals.map(row => DateData.create(row[1].toString()));
     if (!memberIds)

@@ -1,4 +1,5 @@
 import { addExpense, addIncome, addMemberIOU, collectDues, confirmTransfer, nextQuarter, resolveMemberIOU, takeAttendance, transferFunds, updateContactSettings, updateMemberStatus } from './forms/actions';
+import { disableForm } from './forms/disable';
 import { refreshAllForms } from './forms/refresh';
 import { ID as AE_ID } from './ids/ae';
 import { ID as AI_ID } from './ids/ai';
@@ -16,8 +17,7 @@ import { ID as VIEWS_ID } from './ids/viewsId';
 import { MEMBER_DUES, NUM_ATTNS, OFFICER_DUES, START_QUARTER, START_YEAR } from './projectInfo';
 import { orderBy } from './tableOps';
 import { createBackup } from './tables/backup';
-import { UnitTester } from './test';
-import { DataTable, EditEvent, ErrorType, IntData, Quarter, QuarterData, RefreshLogger } from './types';
+import { DataTable, EditEvent, ErrorType, GeneratedForm, IntData, Quarter, QuarterData, RefreshLogger } from './types';
 import { menuAddAttendance, menuAddExpense, menuAddIncome, menuAddMember, menuAddPayType, menuAddRecipient, menuAddStatement, mergeMember, mergePaymentType, mergeRecipient, notifyMembers, pollNotification, renameMember, renamePaymentType, renameRecipient } from './views/handlers';
 import { addAttendanceHTML, addExpenseHTML, addIncomeHTML, addMemberHTML, addPayTypeHTML, addRecipientHTML, addStatementHTML, attendanceRecordsHTML, attendanceSummaryHTML, fullFinanceHistoryHTML, memberDetailsHTML, mergeMemberHTML, mergePaymentTypeHTML, mergeRecipientHTML, notifyMembersHTML, pollNotificationHTML, renameMemberHTML, renamePaymentTypeHTML, renameRecipientHTML } from './views/html';
 import { refreshAllViews } from './views/refresh';
@@ -29,10 +29,6 @@ export function initializeAll() {
     setupTriggers();
 
     refreshAll();
-}
-
-export function test() {
-    UnitTester.runTests();
 }
 
 export function refreshAll() {
@@ -203,8 +199,9 @@ export function addExpenseOnFormSubmit() {
     // Multi-choice
     const paymentType = resItems[3].getResponse() as string;
 
+    disableForm(GeneratedForm.ADD_EXPENSE);
+    RefreshLogger.markAsPriority(GeneratedForm.ADD_EXPENSE);
     addExpense(amountRes, desc, recipient, paymentType);
-
     RefreshLogger.refresh();
 }
 export function addIncomeOnFormSubmit() {
@@ -217,8 +214,9 @@ export function addIncomeOnFormSubmit() {
     // Multi-choice
     const paymentType = resItems[2].getResponse() as string;
 
+    disableForm(GeneratedForm.ADD_INCOME);
+    RefreshLogger.markAsPriority(GeneratedForm.ADD_INCOME);
     addIncome(amountRes, desc, paymentType);
-
     RefreshLogger.refresh();
 }
 export function addMemberIouOnFormSubmit() {
@@ -231,8 +229,9 @@ export function addMemberIouOnFormSubmit() {
     // Long text
     const description = resItems[2].getResponse() as string;
 
+    disableForm(GeneratedForm.ADD_MEMBER_IOU);
+    RefreshLogger.markAsPriority(GeneratedForm.ADD_MEMBER_IOU);
     addMemberIOU(membersRes, amount, description);
-
     RefreshLogger.refresh();
 }
 export function collectDuesOnFormSubmit() {
@@ -243,8 +242,9 @@ export function collectDuesOnFormSubmit() {
     // Multi-choice
     const paymentTypeRes = resItems[1].getResponse() as string;
 
+    disableForm(GeneratedForm.COLLECT_DUES);
+    RefreshLogger.markAsPriority(GeneratedForm.COLLECT_DUES);
     collectDues(memListRes, paymentTypeRes);
-
     RefreshLogger.refresh();
 }
 export function confirmTransferOnFormSubmit() {
@@ -253,13 +253,15 @@ export function confirmTransferOnFormSubmit() {
     // Checkbox
     const statementList = resItems[0].getResponse() as string[];
 
+    disableForm(GeneratedForm.CONFIRM_TRANSFER);
+    RefreshLogger.markAsPriority(GeneratedForm.CONFIRM_TRANSFER);
     confirmTransfer(statementList);
-
     RefreshLogger.refresh();
 }
 export function nextQuarterOnFormSubmit() {
+    disableForm(GeneratedForm.NEXT_QUARTER);
+    RefreshLogger.markAsPriority(GeneratedForm.NEXT_QUARTER);
     nextQuarter();
-
     RefreshLogger.refresh();
 }
 export function resolveMemberIouOnFormSubmit() {
@@ -274,31 +276,31 @@ export function resolveMemberIouOnFormSubmit() {
     // Multi-choice
     const paymentType = resItems[3].getResponse() as string;
 
+    disableForm(GeneratedForm.RESOLVE_MEMBER_IOU);
+    RefreshLogger.markAsPriority(GeneratedForm.RESOLVE_MEMBER_IOU);
     resolveMemberIOU(membersRes, amount, description, paymentType);
-
     RefreshLogger.refresh();
 }
 export function takeAttendanceOnFormSubmit() {
     const resItems = getMostRecentResponse(FormApp.openById(TA_ID));
 
     // Checkbox
-    let memListRes: string[];
+    let memListRes: string[] | undefined;
     // Short text
     let newMemberRes: string | undefined;
-    if (resItems.length === 2) {
-        memListRes = resItems[0].getResponse() as string[];
-        newMemberRes = resItems[1].getResponse() as string;
-        takeAttendance(memListRes, newMemberRes);
-    } else if (resItems.length === 1) {
+    if (resItems[0]) {
         if (resItems[0].getItem().getIndex() === 0) {
             memListRes = resItems[0].getResponse() as string[];
+            if (resItems[1]) {
+                newMemberRes = resItems[1].getResponse() as string;
+            }
         } else {
-            memListRes = [];
-            newMemberRes = resItems[0].getResponse() as string;
+            newMemberRes = resItems[1].getResponse() as string;
         }
-        takeAttendance(memListRes, newMemberRes);
     }
-
+    disableForm(GeneratedForm.TAKE_ATTENDANCE);
+    RefreshLogger.markAsPriority(GeneratedForm.TAKE_ATTENDANCE);
+    takeAttendance(memListRes, newMemberRes);
     RefreshLogger.refresh();
 }
 export function transferFundsOnFormSubmit() {
@@ -321,8 +323,9 @@ export function transferFundsOnFormSubmit() {
         }
     }
 
+    disableForm(GeneratedForm.TRANSFER_FUNDS);
+    RefreshLogger.markAsPriority(GeneratedForm.TRANSFER_FUNDS);
     transferFunds(incomes, expenses);
-
     RefreshLogger.refresh();
 }
 export function updateContactSettingsOnFormSubmit() {
@@ -414,8 +417,9 @@ export function updateContactSettingsOnFormSubmit() {
         }
     }
 
+    disableForm(GeneratedForm.UPDATE_CONTACT_SETTINGS);
+    RefreshLogger.markAsPriority(GeneratedForm.UPDATE_CONTACT_SETTINGS);
     updateContactSettings(name, email, phone, carrier, notifyPoll, sendReceipt);
-
     RefreshLogger.refresh();
 }
 export function updateMemberStatusOnFormSubmit() {
@@ -463,8 +467,9 @@ export function updateMemberStatusOnFormSubmit() {
         }
     }
 
+    disableForm(GeneratedForm.UPDATE_MEMBER_STATUS);
+    RefreshLogger.markAsPriority(GeneratedForm.UPDATE_MEMBER_STATUS);
     updateMemberStatus(memberName, performingRes, activeRes, officerRes);
-
     RefreshLogger.refresh();
 }
 

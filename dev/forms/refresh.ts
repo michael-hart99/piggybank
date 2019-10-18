@@ -11,7 +11,7 @@ import { ID as UCS_ID } from '../ids/ucs';
 import { ID as UMS_ID } from '../ids/ums';
 import { getClubInfo, getExpenses, getIncomes, getMembers, getPaymentTypes, getStatements } from '../tables/get';
 import { capitalizeString, CARRIERS, centsToString, compareByDateDesc, Dictionary, ErrorType, GeneratedForm, IntData } from '../types';
-import { disableForm, enableForm } from './disable';
+import { enableForm } from './disable';
 
 /**
  * Refreshes all of the forms using values from the database.
@@ -79,7 +79,6 @@ export function refreshAddIncome() {
     });
 
     const form = FormApp.openById(AI_ID);
-    disableForm(GeneratedForm.ADD_INCOME);
 
     form.addTextItem()
         .setTitle('Amount')
@@ -117,7 +116,6 @@ export function refreshAddMemberIou() {
     }).sort();
 
     const form = FormApp.openById(AMI_ID);
-    disableForm(GeneratedForm.ADD_MEMBER_IOU);
 
     if (memberNames.length === 0) {
         form.addCheckboxItem()
@@ -171,7 +169,6 @@ export function refreshCollectDues() {
     });
 
     const form = FormApp.openById(CD_ID);
-    disableForm(GeneratedForm.COLLECT_DUES);
 
     if (memberNames.length === 0) {
         form.addCheckboxItem()
@@ -256,7 +253,6 @@ export function refreshConfirmTransfer() {
     });
 
     const form = FormApp.openById(CT_ID);
-    disableForm(GeneratedForm.CONFIRM_TRANSFER);
 
     if (transfers.length === 0) {
         form.addCheckboxItem()
@@ -283,7 +279,6 @@ export function refreshNextQuarter() {
     const clubInfo = getClubInfo();
 
     const form = FormApp.openById(NQ_ID);
-    disableForm(GeneratedForm.NEXT_QUARTER);
 
     form.addCheckboxItem()
         .setTitle('Confirmation')
@@ -308,7 +303,6 @@ export function refreshResolveMemberIou() {
     });
 
     const form = FormApp.openById(RMI_ID);
-    disableForm(GeneratedForm.RESOLVE_MEMBER_IOU);
 
     if (memberNames.length === 0) {
         form.addCheckboxItem()
@@ -354,13 +348,35 @@ export function refreshResolveMemberIou() {
  * Refreshes the Take Attendance form using values from the database.
  */
 export function refreshTakeAttendance() {
-    const memberNames = getMembers().map(entry => {
+    const memberNames = getMembers().filter(entry => {
+        if (!entry.active) throw ErrorType.AssertionError;
+        return entry.active.getValue();
+    }).sort((a, b) => {
+        if (
+            !a.dateJoined || !a.name || !a.active ||
+            !b.dateJoined || !b.name || !b.active
+        ) {
+            throw ErrorType.AssertionError;
+        }
+
+        // SORT BY YEAR JOINED
+
+        const aYear = a.dateJoined.getValue().getFullYear();
+        const bYear = b.dateJoined.getValue().getFullYear();
+        if (aYear !== bYear) {
+            return aYear - bYear;
+        } else {
+            return a.name.getValue().localeCompare(b.name.getValue());
+        }
+
+        // SORT ALPHABETICALLY
+        // return a.name.getValue().localeCompare(b.name.getValue());
+    }).map(entry => {
         if (!entry.name) throw ErrorType.AssertionError;
         return capitalizeString(entry.name.getValue());
-    }).sort();
+    });
 
     const form = FormApp.openById(TA_ID);
-    disableForm(GeneratedForm.TAKE_ATTENDANCE);
 
     if (memberNames.length === 0) {
         form.addCheckboxItem()
@@ -420,7 +436,6 @@ export function refreshTransferFunds() {
     });
 
     const form = FormApp.openById(TF_ID);
-    disableForm(GeneratedForm.TRANSFER_FUNDS);
 
     if (incomes.length === 0) {
         form.addCheckboxItem()
@@ -467,7 +482,6 @@ export function refreshUpdateContactSettings() {
     const carriers = Object.keys(CARRIERS);
 
     const form = FormApp.openById(UCS_ID);
-    disableForm(GeneratedForm.UPDATE_CONTACT_SETTINGS);
 
     form.setDescription('Please only choose phone OR email, only one will be recorded.');
 
@@ -519,7 +533,6 @@ export function refreshUpdateMemberStatus() {
     }).sort();
 
     const form = FormApp.openById(UMS_ID);
-    disableForm(GeneratedForm.UPDATE_MEMBER_STATUS);
 
     if (memberNames.length === 0) {
         form.addCheckboxItem()

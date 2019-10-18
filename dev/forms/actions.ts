@@ -8,12 +8,13 @@ import { BooleanData, capitalizeString, CARRIERS, DateData, ErrorType, IntData, 
  * Returns the amount owed by the given members.
  * 
  * @param memberNames The members to read the amounts owed of
+ * @param sheetId The id of the spreadsheet to operate on
  * 
  * @throws NoMatchFoundError if a name in memberNames is not in the Member
  *                              sheet
  */
-function getAmountOwed(memberNames: StringData[]) {
-    const members = getMembers();
+function getAmountOwed(memberNames: StringData[], sheetId?: string) {
+    const members = getMembers(sheetId);
 
     const owed: IntData[] = [];
     let startIndex = 0;
@@ -43,13 +44,14 @@ function getAmountOwed(memberNames: StringData[]) {
  * Returns the dues owed by the given members.
  * 
  * @param memberNames The members to read the dues values of
+ * @param sheetId The id of the spreadsheet to operate on
  * 
  * @throws NoMatchFoundError if a name in memberNames is not in the Member
  *                              sheet
  */
-function getDuesValues(memberNames: StringData[]) {
-    const clubInfo = getClubInfo();
-    const members = getMembers();
+function getDuesValues(memberNames: StringData[], sheetId?: string) {
+    const clubInfo = getClubInfo(sheetId);
+    const members = getMembers(sheetId);
 
     const duesVals: IntData[] = [];
     let startIndex = 0;
@@ -96,23 +98,25 @@ function yesnoToBool(yesno: string) {
  * @param description The description given in the form response
  * @param recipient The recipient given in the form response
  * @param paymentType The payment type given in the form response
+ * @param sheetId The id of the spreadsheet to operate on
  */
 export function addExpense(
     amountRes: string,
     description: string,
     recipient: string,
-    paymentType: string
+    paymentType: string,
+    sheetId?: string
 ) {
     const today = new DateData(new Date());
-    const recipientData = new StringData(recipient.toLowerCase());
-    const payTypeData = new StringData(paymentType.toLowerCase());
+    const recipientData = new StringData(recipient.trim().toLowerCase());
+    const payTypeData = new StringData(paymentType.trim().toLowerCase());
 
     let payTypeId: IntData;
     try {
-        payTypeId = getPaymentTypeIds([payTypeData])[0];
+        payTypeId = getPaymentTypeIds([payTypeData], sheetId)[0];
     } catch (e) {
         if (e === ErrorType.NoMatchFoundError) {
-            payTypeId = appendPaymentType([payTypeData])[0];
+            payTypeId = appendPaymentType([payTypeData], sheetId)[0];
         } else {
             throw e;
         }
@@ -120,10 +124,10 @@ export function addExpense(
 
     let recipientId: IntData;
     try {
-        recipientId = getRecipientIds([recipientData])[0];
+        recipientId = getRecipientIds([recipientData], sheetId)[0];
     } catch (e) {
         if (e === ErrorType.NoMatchFoundError) {
-            recipientId = appendRecipient([recipientData])[0];
+            recipientId = appendRecipient([recipientData], sheetId)[0];
         } else {
             throw e;
         }
@@ -133,7 +137,7 @@ export function addExpense(
     if (isNaN(amount)) {
         throw "parseFloat error: Unable to parse amount given";
     }
-    appendExpense([today], [new IntData(Math.round(amount * 100))], [new StringData(description)], [payTypeId], [recipientId], [new IntData(-1)]);
+    appendExpense([today], [new IntData(Math.round(amount * 100))], [new StringData(description)], [payTypeId], [recipientId], [new IntData(-1)], sheetId);
 }
 /**
  * Adds a new income entry described by a response to the Add Income form.
@@ -141,21 +145,23 @@ export function addExpense(
  * @param amountRes The amount given in the form response
  * @param description The description given in the form response
  * @param paymentType The payment type given in the form response
+ * @param sheetId The id of the spreadsheet to operate on
  */
 export function addIncome(
     amountRes: string,
     description: string,
-    paymentType: string
+    paymentType: string,
+    sheetId?: string
 ) {
     const today = new DateData(new Date());
 
-    const payTypeData = new StringData(paymentType.toLowerCase());
+    const payTypeData = new StringData(paymentType.trim().toLowerCase());
     let payTypeId: IntData;
     try {
-        payTypeId = getPaymentTypeIds([payTypeData])[0];
+        payTypeId = getPaymentTypeIds([payTypeData], sheetId)[0];
     } catch (e) {
         if (e === ErrorType.NoMatchFoundError) {
-            payTypeId = appendPaymentType([payTypeData])[0];
+            payTypeId = appendPaymentType([payTypeData], sheetId)[0];
         } else {
             throw e;
         }
@@ -165,7 +171,7 @@ export function addIncome(
     if (isNaN(amount)) {
         throw "parseFloat error: Unable to parse amount given";
     }
-    appendIncome([today], [new IntData(Math.round(amount * 100))], [new StringData(description)], [payTypeId], [new IntData(-1)]);
+    appendIncome([today], [new IntData(Math.round(amount * 100))], [new StringData(description)], [payTypeId], [new IntData(-1)], sheetId);
 }
 /**
  * Adds member debt described by a response to the Add Member IOU form.
@@ -173,21 +179,37 @@ export function addIncome(
  * @param membersRes The members given in the form response
  * @param amountRes The amount given in the form response
  * @param description The description given in the form response
+ * @param sheetId The id of the spreadsheet to operate on
  */
-export function addMemberIOU(membersRes: string[], amountRes: string, description: string) {
+export function addMemberIOU(membersRes: string[], amountRes: string, description: string, sheetId?: string) {
     const memberNames = membersRes.map(member => new StringData(member.substr(0, member.indexOf(':')).toLowerCase()));
-    emailIOUNotification(memberNames.map(member => new StringData(capitalizeString(member.getValue()))), amountRes, description)
+    if (!sheetId) {
+        emailIOUNotification(memberNames.map(member => new StringData(capitalizeString(member.getValue()))), amountRes, description)
+    }
 
-    const memberIds = getMemberIds(memberNames);
+    const memberIds = getMemberIds(memberNames, sheetId);
 
     const amount = parseFloat(amountRes);
     if (isNaN(amount)) {
         throw "parseFloat error: Unable to parse amount given";
     }
     const amountCents = Math.round(amount * 100);
-    const curOwed = getAmountOwed(memberNames);
+    const curOwed = getAmountOwed(memberNames, sheetId);
 
-    updateMember(memberIds, undefined, undefined, curOwed.map(cur => new IntData(cur.getValue() + amountCents)));
+    updateMember(
+        memberIds,
+        undefined,
+        undefined,
+        curOwed.map(cur => new IntData(cur.getValue() + amountCents)),
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        sheetId
+    );
 }
 /**
  * Updates the database to reflect members as having paid dues, described by a
@@ -195,23 +217,24 @@ export function addMemberIOU(membersRes: string[], amountRes: string, descriptio
  * 
  * @param memListRes The members given in the form response
  * @param paymentTypeRes The payment types given in the form response
+ * @param sheetId The id of the spreadsheet to operate on
  */
-export function collectDues(memListRes: string[], paymentTypeRes: string) {
+export function collectDues(memListRes: string[], paymentTypeRes: string, sheetId?: string) {
     memListRes = memListRes.map(res => res.substr(0, res.indexOf(':')));
 
-    const curQuarter = getClubInfo().currentQuarterId;
+    const curQuarter = getClubInfo(sheetId).currentQuarterId;
 
     const members = memListRes.map(name => new StringData(name.toLowerCase()));
     const descriptions = memListRes.map(
         name => new StringData(`${name}, dues for ${curQuarter.toDateString()}`)
     );
 
-    const paymentType = new StringData(paymentTypeRes.toLowerCase());
+    const paymentType = new StringData(paymentTypeRes.trim().toLowerCase());
 
     const today = new DateData(new Date());
 
     // Update members as having paid dues
-    const memberIds = getMemberIds(members);
+    const memberIds = getMemberIds(members, sheetId);
     updateMember(
         memberIds,
         undefined,
@@ -221,28 +244,33 @@ export function collectDues(memListRes: string[], paymentTypeRes: string) {
         undefined,
         undefined,
         undefined,
-        repeat(BooleanData.TRUE, members.length)
+        repeat(BooleanData.TRUE, members.length),
+        undefined,
+        undefined,
+        sheetId
     );
 
     // Append new income
-    const duesAmounts = getDuesValues(members);
+    const duesAmounts = getDuesValues(members, sheetId);
     let payTypeId: IntData;
     try {
-        payTypeId = getPaymentTypeIds([paymentType])[0];
+        payTypeId = getPaymentTypeIds([paymentType], sheetId)[0];
     } catch (e) {
         if (e === ErrorType.NoMatchFoundError) {
-            payTypeId = appendPaymentType([paymentType])[0];
+            payTypeId = appendPaymentType([paymentType], sheetId)[0];
         } else {
             throw e;
         }
     }
 
-    for (let i = 0; i < members.length; ++i) {
-        emailReceipts(
-            [new StringData(capitalizeString(members[i].getValue()))],
-            (duesAmounts[i].getValue() / 100).toString(),
-            descriptions[i].toString()
-        );
+    if (!sheetId) {
+        for (let i = 0; i < members.length; ++i) {
+            emailReceipts(
+                [new StringData(capitalizeString(members[i].getValue()))],
+                (duesAmounts[i].getValue() / 100).toString(),
+                descriptions[i].toString()
+            );
+        }
     }
 
     appendIncome(
@@ -250,7 +278,8 @@ export function collectDues(memListRes: string[], paymentTypeRes: string) {
         duesAmounts,
         descriptions,
         repeat(payTypeId, members.length),
-        repeat(new IntData(-1), members.length)
+        repeat(new IntData(-1), members.length),
+        sheetId
     );
 }
 /**
@@ -258,29 +287,32 @@ export function collectDues(memListRes: string[], paymentTypeRes: string) {
  * Transfer form.
  * 
  * @param statementList The statements given in the form response
+ * @param sheetId The id of the spreadsheet to operate on
  */
-export function confirmTransfer(statementList: string[]) {
+export function confirmTransfer(statementList: string[], sheetId?: string) {
     const ids = statementList.map(s => {
         const start = s.lastIndexOf('[');
         const end = s.lastIndexOf(']');
         return IntData.create(s.substr(start + 1, end - start - 1));
     });
 
-    updateStatement(ids, undefined, repeat(BooleanData.TRUE, ids.length));
+    updateStatement(ids, undefined, repeat(BooleanData.TRUE, ids.length), sheetId);
 }
 /**
  * Updates the database to reflect that a new quarter has begun, intended to be
  * run on the submit of the Next Quarter form.
+ * 
+ * @param sheetId The id of the spreadsheet to operate on
  */
-export function nextQuarter() {
-    const clubInfo = getClubInfo();
-    const ids = getMembers().map(member => {
+export function nextQuarter(sheetId?: string) {
+    const clubInfo = getClubInfo(sheetId);
+    const ids = getMembers(sheetId).map(member => {
         if (!member.id) throw ErrorType.AssertionError;
         return member.id;
     });
 
-    updateClubInfo(undefined, undefined, undefined, clubInfo.currentQuarterId.next());
-    updateMember(ids, undefined, undefined, undefined, undefined, undefined, undefined, undefined, repeat(BooleanData.FALSE, ids.length));
+    updateClubInfo(undefined, undefined, undefined, clubInfo.currentQuarterId.next(), sheetId);
+    updateMember(ids, undefined, undefined, undefined, undefined, undefined, undefined, undefined, repeat(BooleanData.FALSE, ids.length), undefined, undefined, sheetId);
 }
 /**
  * Updates the database to reflect that members have resolved debt, described
@@ -290,30 +322,46 @@ export function nextQuarter() {
  * @param amount The amount given in the form response
  * @param description The description given in the form response
  * @param paymentType The payment type given in the form response
+ * @param sheetId The id of the spreadsheet to operate on
  */
-export function resolveMemberIOU(membersRes: string[], amount: string, description: string, paymentType: string) {
+export function resolveMemberIOU(membersRes: string[], amount: string, description: string, paymentType: string, sheetId?: string) {
     const memberNames = membersRes.map(member => new StringData(member.substr(0, member.indexOf(':')).toLowerCase()));
 
-    emailReceipts(memberNames.map(member => new StringData(capitalizeString(member.getValue()))), amount, description)
+    if (!sheetId) {
+        emailReceipts(memberNames.map(member => new StringData(capitalizeString(member.getValue()))), amount, description)
+    }
 
-    const memberIds = getMemberIds(memberNames);
+    const memberIds = getMemberIds(memberNames, sheetId);
 
     const amountCents = Math.round(parseFloat(amount) * 100);
-    const curOwed = getAmountOwed(memberNames);
+    const curOwed = getAmountOwed(memberNames, sheetId);
 
-    const payTypeData = new StringData(paymentType.toLowerCase());
+    const payTypeData = new StringData(paymentType.trim().toLowerCase());
     let payTypeId: IntData;
     try {
-        payTypeId = getPaymentTypeIds([payTypeData])[0];
+        payTypeId = getPaymentTypeIds([payTypeData], sheetId)[0];
     } catch (e) {
         if (e === ErrorType.NoMatchFoundError) {
-            payTypeId = appendPaymentType([payTypeData])[0];
+            payTypeId = appendPaymentType([payTypeData], sheetId)[0];
         } else {
             throw e;
         }
     }
 
-    updateMember(memberIds, undefined, undefined, curOwed.map(cur => new IntData(cur.getValue() - amountCents)));
+    updateMember(
+        memberIds,
+        undefined,
+        undefined,
+        curOwed.map(cur => new IntData(cur.getValue() - amountCents)),
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        sheetId
+    );
 
     const today = new DateData(new Date());
     appendIncome(
@@ -321,7 +369,8 @@ export function resolveMemberIOU(membersRes: string[], amount: string, descripti
         repeat(new IntData(amountCents), memberNames.length),
         memberNames.map(name => new StringData(capitalizeString(name.toString()) + ' ' + description + ' (debt)')),
         repeat(payTypeId, memberNames.length),
-        repeat(new IntData(-1), memberNames.length)
+        repeat(new IntData(-1), memberNames.length),
+        sheetId
     );
 }
 /**
@@ -330,11 +379,19 @@ export function resolveMemberIOU(membersRes: string[], amount: string, descripti
  * 
  * @param memListRes The current members given in the form response
  * @param newMemberRes The new members given in the form response
+ * @param sheetId The id of the spreadsheet to operate on
  */
-export function takeAttendance(memListRes: string[], newMemberRes?: string) {
-    const curQuarter = getClubInfo().currentQuarterId;
+export function takeAttendance(memListRes?: string[], newMemberRes?: string, sheetId?: string) {
+    if (!memListRes) {
+        if (!newMemberRes) {
+            return;
+        }
+        memListRes = [];
+    }
+
+    const curQuarter = getClubInfo(sheetId).currentQuarterId;
     const today = new DateData(new Date());
-    const curNames = getMembers().map(member => {
+    const curNames = getMembers(sheetId).map(member => {
         if (!member.name) throw ErrorType.AssertionError;
         return member.name.getValue();
     });
@@ -349,7 +406,7 @@ export function takeAttendance(memListRes: string[], newMemberRes?: string) {
     } else {
         newMemberRes = newMemberRes.toLowerCase();
 
-        const newMembers = newMemberRes.split('\n');
+        const newMembers = newMemberRes.split('\n').map(s => s.trim()).filter(s => s.length > 0);
 
         for (const member of newMembers) {
             if (curNames.indexOf(member) === -1) {
@@ -367,11 +424,12 @@ export function takeAttendance(memListRes: string[], newMemberRes?: string) {
                 repeat(new IntData(0), newMembersData.length),
                 repeat(new StringData(''), newMembersData.length),
                 repeat(BooleanData.FALSE, newMembersData.length),
+                repeat(BooleanData.TRUE, newMembersData.length),
                 repeat(BooleanData.FALSE, newMembersData.length),
                 repeat(BooleanData.FALSE, newMembersData.length),
                 repeat(BooleanData.FALSE, newMembersData.length),
                 repeat(BooleanData.FALSE, newMembersData.length),
-                repeat(BooleanData.FALSE, newMembersData.length),
+                sheetId
             );
         } else {
             newIds = [];
@@ -379,11 +437,11 @@ export function takeAttendance(memListRes: string[], newMemberRes?: string) {
     }
 
     if (prevMembersData.length === 0) {
-        appendAttendance([today], [new IntListData(newIds)], [curQuarter]);
+        appendAttendance([today], [new IntListData(newIds)], [curQuarter], sheetId);
     } else {
-        const prevIds = getMemberIds(prevMembersData);
+        const prevIds = getMemberIds(prevMembersData, sheetId);
         prevIds.sort((valA, valB) => valA.getValue() - valB.getValue());
-        appendAttendance([today], [new IntListData(prevIds.concat(newIds))], [curQuarter]);
+        appendAttendance([today], [new IntListData(prevIds.concat(newIds))], [curQuarter], sheetId);
     }
 }
 /**
@@ -392,13 +450,15 @@ export function takeAttendance(memListRes: string[], newMemberRes?: string) {
  * 
  * @param incomes The incomes given in the form response
  * @param expenses The expenses given in the form response
+ * @param sheetId The id of the spreadsheet to operate on
  */
-export function transferFunds(incomes?: string[], expenses?: string[]) {
+export function transferFunds(incomes?: string[], expenses?: string[], sheetId?: string) {
     if (incomes || expenses) {
         const today = new DateData(new Date());
         const statementId = appendStatement(
             [today],
-            [BooleanData.FALSE]
+            [BooleanData.FALSE],
+            sheetId
         )[0];
         if (incomes) {
             const incomeIds = incomes.map(s => {
@@ -406,7 +466,7 @@ export function transferFunds(incomes?: string[], expenses?: string[]) {
                 const end = s.lastIndexOf(']');
                 return IntData.create(s.substr(start + 1, end - start - 1));
             });
-            updateIncome(incomeIds, undefined, undefined, undefined, undefined, repeat(statementId, incomeIds.length));
+            updateIncome(incomeIds, undefined, undefined, undefined, undefined, repeat(statementId, incomeIds.length), sheetId);
         }
         if (expenses) {
             const expenseIds = expenses.map(s => {
@@ -414,7 +474,7 @@ export function transferFunds(incomes?: string[], expenses?: string[]) {
                 const end = s.lastIndexOf(']');
                 return IntData.create(s.substr(start + 1, end - start - 1));
             });
-            updateExpense(expenseIds, undefined, undefined, undefined, undefined, undefined, repeat(statementId, expenseIds.length));
+            updateExpense(expenseIds, undefined, undefined, undefined, undefined, undefined, repeat(statementId, expenseIds.length), sheetId);
         }
     }
 }
@@ -428,10 +488,11 @@ export function transferFunds(incomes?: string[], expenses?: string[]) {
  * @param carrier The carrier given in the form response
  * @param notifyPoll The notification preference given in the form response
  * @param sendReceipt The notification preference given in the form response
+ * @param sheetId The id of the spreadsheet to operate on
  */
-export function updateContactSettings(name: string, email?: string, phone?: string, carrier?: string, notifyPoll?: string, sendReceipt?: string) {
+export function updateContactSettings(name: string, email?: string, phone?: string, carrier?: string, notifyPoll?: string, sendReceipt?: string, sheetId?: string) {
     const memberData = new StringData(name.toLowerCase());
-    const memberId = getMemberIds([memberData]);
+    const memberId = getMemberIds([memberData], sheetId);
 
     let emailData: StringData | undefined;
     if (email) {
@@ -456,6 +517,7 @@ export function updateContactSettings(name: string, email?: string, phone?: stri
         undefined,
         notifyPoll ? [yesnoToBool(notifyPoll)] : undefined,
         sendReceipt ? [yesnoToBool(sendReceipt)] : undefined,
+        sheetId
     );
 }
 /**
@@ -466,10 +528,11 @@ export function updateContactSettings(name: string, email?: string, phone?: stri
  * @param performingRes The performing status given in the form response
  * @param activeRes The active status given in the form response
  * @param officerRes The officer status given in the form response
+ * @param sheetId The id of the spreadsheet to operate on
  */
-export function updateMemberStatus(memberNames: string[], performingRes?: string, activeRes?: string, officerRes?: string) {
+export function updateMemberStatus(memberNames: string[], performingRes?: string, activeRes?: string, officerRes?: string, sheetId?: string) {
     const memberData = memberNames.map(name => new StringData(name.toLowerCase()));
-    const memberId = getMemberIds(memberData);
+    const memberId = getMemberIds(memberData, sheetId);
 
     updateMember(
         memberId,
@@ -479,6 +542,10 @@ export function updateMemberStatus(memberNames: string[], performingRes?: string
         undefined,
         performingRes ? repeat(yesnoToBool(performingRes), memberId.length) : undefined,
         activeRes ? repeat(yesnoToBool(activeRes), memberId.length) : undefined,
-        officerRes ? repeat(yesnoToBool(officerRes), memberId.length) : undefined
+        officerRes ? repeat(yesnoToBool(officerRes), memberId.length) : undefined,
+        undefined,
+        undefined,
+        undefined,
+        sheetId
     );
 }
