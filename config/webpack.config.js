@@ -2,12 +2,15 @@ var path = require('path');
 
 module.exports = {
   mode: 'production',
-  entry: './dev/main.ts',
+  entry: {
+    main: './dev/main.ts',
+    test: './dev/test/testCases.ts'
+  },
   output: {
     path: path.join(__dirname, '../build'),
-    filename: 'bundle.js',
+    filename: '[name]-bundle.js',
     libraryTarget: 'var',
-    library: 'Bundle',
+    library: 'Bundle_[name]',
   },
   /* Disable 'uglification' */
   optimization: {

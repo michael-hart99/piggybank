@@ -1,177 +1,174 @@
 function initialize() {
-    Bundle.initializeAll();
-}
-function test() {
-    Bundle.test();
+    Bundle_main.initializeAll();
 }
 function refreshAll() {
-    Bundle.refreshAll();
+    Bundle_main.refreshAll();
 }
 function backupTables() {
-    Bundle.backupTables();
+    Bundle_main.backupTables();
 }
 function setupTriggers() {
-    Bundle.setupTriggers();
+    Bundle_main.setupTriggers();
 }
 
 function everyDay() {
-    Bundle.everyDay();
+    Bundle_main.everyDay();
 }
 function everyWeek() {
-    Bundle.everyWeek();
+    Bundle_main.everyWeek();
 }
 function everyMonth() {
-    Bundle.everyMonth();
+    Bundle_main.everyMonth();
 }
 
 function tablesOnOpen() {
-    Bundle.tablesOnOpen();
+    Bundle_main.tablesOnOpen();
 }
 function tablesOnEdit(e) {
-    Bundle.tablesOnEdit(e);
+    Bundle_main.tablesOnEdit(e);
 }
 
 function viewsOnOpen() {
-    Bundle.viewsOnOpen();
+    Bundle_main.viewsOnOpen();
 }
 function viewsOnEdit(e) {
-    Bundle.viewsOnEdit(e);
+    Bundle_main.viewsOnEdit(e);
 }
 
 function addExpenseOnFormSubmit() {
-    Bundle.addExpenseOnFormSubmit();
+    Bundle_main.addExpenseOnFormSubmit();
 }
 function addIncomeOnFormSubmit() {
-    Bundle.addIncomeOnFormSubmit();
+    Bundle_main.addIncomeOnFormSubmit();
 }
 function addMemberIouOnFormSubmit() {
-    Bundle.addMemberIouOnFormSubmit();
+    Bundle_main.addMemberIouOnFormSubmit();
 }
 function collectDuesOnFormSubmit() {
-    Bundle.collectDuesOnFormSubmit();
+    Bundle_main.collectDuesOnFormSubmit();
 }
 function confirmTransferOnFormSubmit() {
-    Bundle.confirmTransferOnFormSubmit();
+    Bundle_main.confirmTransferOnFormSubmit();
 }
 function nextQuarterOnFormSubmit() {
-    Bundle.nextQuarterOnFormSubmit();
+    Bundle_main.nextQuarterOnFormSubmit();
 }
 function resolveMemberIouOnFormSubmit() {
-    Bundle.resolveMemberIouOnFormSubmit();
+    Bundle_main.resolveMemberIouOnFormSubmit();
 }
 function takeAttendanceOnFormSubmit() {
-    Bundle.takeAttendanceOnFormSubmit();
+    Bundle_main.takeAttendanceOnFormSubmit();
 }
 function transferFundsOnFormSubmit() {
-    Bundle.transferFundsOnFormSubmit();
+    Bundle_main.transferFundsOnFormSubmit();
 }
 function updateContactSettingsOnFormSubmit() {
-    Bundle.updateContactSettingsOnFormSubmit();
+    Bundle_main.updateContactSettingsOnFormSubmit();
 }
 function updateMemberStatusOnFormSubmit() {
-    Bundle.updateMemberStatusOnFormSubmit();
+    Bundle_main.updateMemberStatusOnFormSubmit();
 }
 
 function memberDetailsDialog() {
-    Bundle.memberDetailsDialog();
+    Bundle_main.memberDetailsDialog();
 }
 function attendanceRecordsDialog() {
-    Bundle.attendanceRecordsDialog();
+    Bundle_main.attendanceRecordsDialog();
 }
 function attendanceSummaryDialog() {
-    Bundle.attendanceSummaryDialog();
+    Bundle_main.attendanceSummaryDialog();
 }
 function fullFinanceHistoryDialog() {
-    Bundle.fullFinanceHistoryDialog();
+    Bundle_main.fullFinanceHistoryDialog();
 }
 function addMemberDialog() {
-    Bundle.addMemberDialog();
+    Bundle_main.addMemberDialog();
 }
 function addAttendanceDialog() {
-    Bundle.addAttendanceDialog();
+    Bundle_main.addAttendanceDialog();
 }
 function addIncomeDialog() {
-    Bundle.addIncomeDialog();
+    Bundle_main.addIncomeDialog();
 }
 function addExpenseDialog() {
-    Bundle.addExpenseDialog();
+    Bundle_main.addExpenseDialog();
 }
 function addStatementDialog() {
-    Bundle.addStatementDialog();
+    Bundle_main.addStatementDialog();
 }
 function addRecipientDialog() {
-    Bundle.addRecipientDialog();
+    Bundle_main.addRecipientDialog();
 }
 function addPaymentTypeDialog() {
-    Bundle.addPaymentTypeDialog();
+    Bundle_main.addPaymentTypeDialog();
 }
 function renameMemberDialog() {
-    Bundle.renameMemberDialog();
+    Bundle_main.renameMemberDialog();
 }
 function renamePaymentTypeDialog() {
-    Bundle.renamePaymentTypeDialog();
+    Bundle_main.renamePaymentTypeDialog();
 }
 function renameRecipientDialog() {
-    Bundle.renameRecipientDialog();
+    Bundle_main.renameRecipientDialog();
 }
 function mergeMemberDialog() {
-    Bundle.mergeMemberDialog();
+    Bundle_main.mergeMemberDialog();
 }
 function mergePaymentTypeDialog() {
-    Bundle.mergePaymentTypeDialog();
+    Bundle_main.mergePaymentTypeDialog();
 }
 function mergeRecipientDialog() {
-    Bundle.mergeRecipientDialog();
+    Bundle_main.mergeRecipientDialog();
 }
 function pollNotificationDialog() {
-    Bundle.pollNotificationDialog();
+    Bundle_main.pollNotificationDialog();
 }
 function notifyMembersDialog() {
-    Bundle.notifyMembersDialog();
+    Bundle_main.notifyMembersDialog();
 }
 
 function handleAddMember(name, dateJoined) {
-    Bundle.handleAddMember(name, dateJoined);
+    Bundle_main.handleAddMember(name, dateJoined);
 }
 function handleAddAttendance(date, members, quarter, year) {
-    Bundle.handleAddAttendance(date, members, quarter, year);
+    Bundle_main.handleAddAttendance(date, members, quarter, year);
 }
 function handleAddIncome(date, amount, description, payType) {
-    Bundle.handleAddIncome(date, amount, description, payType);
+    Bundle_main.handleAddIncome(date, amount, description, payType);
 }
 function handleAddExpense(date, amount, description, recipient, payType) {
-    Bundle.handleAddExpense(date, amount, description, recipient, payType);
+    Bundle_main.handleAddExpense(date, amount, description, recipient, payType);
 }
 function handleAddStatement(date, incomes, expenses) {
-    Bundle.handleAddStatement(date, incomes, expenses);
+    Bundle_main.handleAddStatement(date, incomes, expenses);
 }
 function handleAddRecipient(name) {
-    Bundle.handleAddRecipient(name);
+    Bundle_main.handleAddRecipient(name);
 }
 function handleAddPayType(name) {
-    Bundle.handleAddPayType(name);
+    Bundle_main.handleAddPayType(name);
 }
 function handleRenameMember(oldName, newName) {
-    Bundle.handleRenameMember(oldName, newName);
+    Bundle_main.handleRenameMember(oldName, newName);
 }
 function handleRenamePaymentType(oldName, newName) {
-    Bundle.handleRenamePaymentType(oldName, newName);
+    Bundle_main.handleRenamePaymentType(oldName, newName);
 }
 function handleRenameRecipient(oldName, newName) {
-    Bundle.handleRenameRecipient(oldName, newName);
+    Bundle_main.handleRenameRecipient(oldName, newName);
 }
 function handleMergeMember(aliases, name) {
-    Bundle.handleMergeMember(aliases, name);
+    Bundle_main.handleMergeMember(aliases, name);
 }
 function handleMergePaymentType(aliases, name) {
-    Bundle.handleMergePaymentType(aliases, name);
+    Bundle_main.handleMergePaymentType(aliases, name);
 }
 function handleMergeRecipient(aliases, name) {
-    Bundle.handleMergeRecipient(aliases, name);
+    Bundle_main.handleMergeRecipient(aliases, name);
 }
 function handlePollNotification(title, deadline, link) {
-    Bundle.handlePollNotification(title, deadline, link);
+    Bundle_main.handlePollNotification(title, deadline, link);
 }
 function handleNotifyMembers(memberNames, subject, body) {
-    Bundle.handleNotifyMembers(memberNames, subject, body);
+    Bundle_main.handleNotifyMembers(memberNames, subject, body);
 }
