@@ -13,12 +13,21 @@ function testFormActionsPartOne() {
 function testFormActionsPartTwo() {
     Bundle_test.testFormActionsPartTwo();
 }
-function testUpdate() {
-    Bundle_test.testUpdate();
+function testUpdatePartOne() {
+    Bundle_test.testUpdatePartOne();
 }
-function testRemove() {
-    Bundle_test.testRemove();
+function testUpdatePartTwo() {
+    Bundle_test.testUpdatePartTwo();
 }
-function testMenuHandlers() {
-    Bundle_test.testMenuHandlers();
+function testRemovePartOne() {
+    Bundle_test.testRemovePartOne();
+}
+function testRemovePartTwo() {
+    Bundle_test.testRemovePartTwo();
+}
+function testMenuHandlersPartOne() {
+    Bundle_test.testMenuHandlersPartOne();
+}
+function testMenuHandlersPartTwo() {
+    Bundle_test.testMenuHandlersPartTwo();
 }

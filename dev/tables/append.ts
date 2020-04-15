@@ -17,7 +17,8 @@ import { AttendanceEntry, BooleanData, DataTable, DateData, ErrorType, ExpenseEn
  * @param sendReceipt The sendReceipt values to append
  * @param sheetId The id of the spreadsheet to operate on
  * 
- * @throws IllegalArgumentError if not all parameters are the same length
+ * @throws IllegalArgumentError if not all parameters are the same length or
+ *                              if length of parameters is zero
  */
 export function appendMember(
     name: StringData[],
@@ -85,7 +86,8 @@ export function appendMember(
  * @param statementId The statementId values to append
  * @param sheetId The id of the spreadsheet to operate on
  * 
- * @throws IllegalArgumentError if not all parameters are the same length
+ * @throws IllegalArgumentError if not all parameters are the same length or
+ *                              if length of parameters is zero
  */
 export function appendIncome(
     date: DateData[],
@@ -139,7 +141,8 @@ export function appendIncome(
  * @param statementId The statementId values to append
  * @param sheetId The id of the spreadsheet to operate on
  * 
- * @throws IllegalArgumentError if not all parameters are the same length
+ * @throws IllegalArgumentError if not all parameters are the same length or
+ *                              if length of parameters is zero
  */
 export function appendExpense(
     date: DateData[],
@@ -190,6 +193,8 @@ export function appendExpense(
  * 
  * @param name The name values to append
  * @param sheetId The id of the spreadsheet to operate on
+ * 
+ * @throws IllegalArgumentError if length of name is zero
  */
 export function appendRecipient(name: StringData[], sheetId?: string) {
     let numEntries = name.length;
@@ -212,6 +217,8 @@ export function appendRecipient(name: StringData[], sheetId?: string) {
  * 
  * @param name The name values to append
  * @param sheetId The id of the spreadsheet to operate on
+ * 
+ * @throws IllegalArgumentError if length of name is zero
  */
 export function appendPaymentType(name: StringData[], sheetId?: string) {
     let numEntries = name.length;
@@ -236,7 +243,8 @@ export function appendPaymentType(name: StringData[], sheetId?: string) {
  * @param confirmed The confirmed values to append
  * @param sheetId The id of the spreadsheet to operate on
  * 
- * @throws IllegalArgumentError if not all parameters are the same length
+ * @throws IllegalArgumentError if not all parameters are the same length or
+ *                              if length of parameters is zero
  */
 export function appendStatement(
     date: DateData[],
@@ -278,7 +286,8 @@ export function appendStatement(
  * @param quarterId The quarterId values to append
  * @param sheetId The id of the spreadsheet to operate on
  * 
- * @throws IllegalArgumentError if not all parameters are the same length
+ * @throws IllegalArgumentError if not all parameters are the same length or
+ *                              if length of parameters is zero
  */
 export function appendAttendance(
     date: DateData[],

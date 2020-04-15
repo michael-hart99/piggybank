@@ -1,7 +1,10 @@
 import { addExpense, addIncome, addMemberIOU, collectDues, confirmTransfer, nextQuarter, resolveMemberIOU, takeAttendance, transferFunds, updateContactSettings, updateMemberStatus } from '../forms/actions';
 import { appendAttendance, appendExpense, appendIncome, appendMember, appendPaymentType, appendRecipient, appendStatement } from '../tables/append';
 import { getAttendances, getClubInfo, getExpenses, getIncomes, getMemberIds, getMembers, getPaymentTypeIds, getPaymentTypes, getRecipientIds, getRecipients, getStatements } from '../tables/get';
+import { removeAttendance, removeExpense, removeIncome, removeMember, removePaymentType, removeRecipient, removeStatement } from '../tables/remove';
+import { updateAttendance, updateClubInfo, updateExpense, updateIncome, updateMember, updatePaymentType, updateRecipient, updateStatement } from '../tables/update';
 import { BooleanData, DateData, ErrorType, IntData, IntListData, Quarter, QuarterData, StringData } from '../types';
+import { menuAddAttendance, menuAddExpense, menuAddIncome, menuAddMember, menuAddPayType, menuAddRecipient, menuAddStatement, mergeMember, mergePaymentType, mergeRecipient, renameMember, renamePaymentType, renameRecipient } from '../views/handlers';
 import { arraysEqual, checkDatabaseValues, checkTableValues, fillWithData, getEmptyTableState, UnitTest, UnitTester, UnitTestSet } from './unitTester';
 
 export function testAppendPartOne() {
@@ -1513,33 +1516,1987 @@ export function testFormActionsPartTwo() {
         ])
     ]);
 }
-export function testUpdate() {
+export function testUpdatePartOne() {
     UnitTester.runTests([
-        new UnitTestSet('', [
-            new UnitTest('', (id: string) => {
+        new UnitTestSet('testUpdateMember', [
+            new UnitTest('emptyUpdate', (id: string) => {
                 const tableVals = getEmptyTableState();
+
+                try {
+                    updateMember([], [], [], [], [], [], [], [], [], [], [], id);
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.IllegalArgumentError) {
+                        throw e;
+                    }
+                }
                 return checkDatabaseValues(tableVals, id);
-            })
+            }),
+            new UnitTest('emptyUndefinedUpdate', (id: string) => {
+                const tableVals = getEmptyTableState();
+
+                try {
+                    updateMember([], undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, id);
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.IllegalArgumentError) {
+                        throw e;
+                    }
+                }
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateUnevenData', (id: string) => {
+                const tableVals = getEmptyTableState();
+
+                try {
+                    updateMember(
+                        [new IntData(0), new IntData(1)],
+                        [new StringData('joe schmo')],
+                        [new DateData(new Date(123456789))],
+                        [new IntData(0)],
+                        [new StringData('asdf@gmail.com')],
+                        [new BooleanData(false)],
+                        [new BooleanData(false)],
+                        [new BooleanData(false)],
+                        [new BooleanData(false)],
+                        [new BooleanData(false)],
+                        [new BooleanData(false)],
+                        id
+                    );
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.IllegalArgumentError) {
+                        throw e;
+                    }
+                }
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateNotFoundEmpty', (id: string) => {
+                const tableVals = getEmptyTableState();
+
+                try {
+                    updateMember(
+                        [new IntData(0)],
+                        [new StringData('joe schmo')],
+                        [new DateData(new Date(123456789))],
+                        [new IntData(0)],
+                        [new StringData('asdf@gmail.com')],
+                        [new BooleanData(false)],
+                        [new BooleanData(false)],
+                        [new BooleanData(false)],
+                        [new BooleanData(false)],
+                        [new BooleanData(false)],
+                        [new BooleanData(false)],
+                        id
+                    );
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.NoMatchFoundError) {
+                        throw e;
+                    }
+                }
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateNotFoundNonEmpty', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                try {
+                    updateMember(
+                        [new IntData(50)],
+                        [new StringData('joe schmo')],
+                        [new DateData(new Date(123456789))],
+                        [new IntData(0)],
+                        [new StringData('asdf@gmail.com')],
+                        [new BooleanData(false)],
+                        [new BooleanData(false)],
+                        [new BooleanData(false)],
+                        [new BooleanData(false)],
+                        [new BooleanData(false)],
+                        [new BooleanData(false)],
+                        id
+                    );
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.NoMatchFoundError) {
+                        throw e;
+                    }
+                }
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateOnePartialFields', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                updateMember(
+                    [new IntData(10)],
+                    [new StringData('abc')],
+                    [new DateData(new Date(123))],
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                    id
+                );
+                tableVals.member[11][1] = 'abc';
+                tableVals.member[11][2] = '123';
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateOneAllFields', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                updateMember(
+                    [new IntData(10)],
+                    [new StringData('abc')],
+                    [new DateData(new Date(123))],
+                    [new IntData(100)],
+                    [new StringData('email@email.com')],
+                    [new BooleanData(false)],
+                    [new BooleanData(true)],
+                    [new BooleanData(false)],
+                    [new BooleanData(true)],
+                    [new BooleanData(false)],
+                    [new BooleanData(true)],
+                    id
+                );
+                tableVals.member[11] = [
+                    '10',
+                    'abc',
+                    '123',
+                    '100',
+                    'email@email.com',
+                    '0',
+                    '1',
+                    '0',
+                    '1',
+                    '0',
+                    '1'
+                ];
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateTwoPartialFields', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                updateMember(
+                    [new IntData(10), new IntData(15)],
+                    [new StringData('abc'), new StringData('xyz')],
+                    [new DateData(new Date(123)), new DateData(new Date(789))],
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                    id
+                );
+
+                tableVals.member[11][1] = 'abc';
+                tableVals.member[11][2] = '123';
+
+                tableVals.member[16][1] = 'xyz';
+                tableVals.member[16][2] = '789';
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateTwoAllFields', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                updateMember(
+                    [new IntData(10), new IntData(15)],
+                    [new StringData('abc'), new StringData('xyz')],
+                    [new DateData(new Date(123)), new DateData(new Date(789))],
+                    [new IntData(100), new IntData(-55)],
+                    [new StringData('email@email.com'), new StringData('asdf@asdf.com')],
+                    [new BooleanData(false), new BooleanData(true)],
+                    [new BooleanData(true), new BooleanData(false)],
+                    [new BooleanData(false), new BooleanData(true)],
+                    [new BooleanData(true), new BooleanData(false)],
+                    [new BooleanData(false), new BooleanData(true)],
+                    [new BooleanData(true), new BooleanData(false)],
+                    id
+                );
+                tableVals.member[11] = [
+                    '10',
+                    'abc',
+                    '123',
+                    '100',
+                    'email@email.com',
+                    '0',
+                    '1',
+                    '0',
+                    '1',
+                    '0',
+                    '1'
+                ];
+                tableVals.member[16] = [
+                    '15',
+                    'xyz',
+                    '789',
+                    '-55',
+                    'asdf@asdf.com',
+                    '1',
+                    '0',
+                    '1',
+                    '0',
+                    '1',
+                    '0'
+                ];
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+        ]),
+        new UnitTestSet('testUpdateIncome', [
+            new UnitTest('emptyUpdate', (id: string) => {
+                const tableVals = getEmptyTableState();
+
+                try {
+                    updateIncome([], [], [], [], [], [], id);
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.IllegalArgumentError) {
+                        throw e;
+                    }
+                }
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('emptyUndefinedUpdate', (id: string) => {
+                const tableVals = getEmptyTableState();
+
+                try {
+                    updateIncome([], undefined, undefined, undefined, undefined, undefined, id);
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.IllegalArgumentError) {
+                        throw e;
+                    }
+                }
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateUnevenData', (id: string) => {
+                const tableVals = getEmptyTableState();
+
+                try {
+                    updateIncome(
+                        [new IntData(0), new IntData(1)],
+                        [new DateData(new Date(123456789))],
+                        [new IntData(444)],
+                        [new StringData('test')],
+                        [new IntData(0)],
+                        [new IntData(0)],
+                        id
+                    );
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.IllegalArgumentError) {
+                        throw e;
+                    }
+                }
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateNotFoundEmpty', (id: string) => {
+                const tableVals = getEmptyTableState();
+
+                try {
+                    updateIncome(
+                        [new IntData(0)],
+                        [new DateData(new Date(123456789))],
+                        [new IntData(444)],
+                        [new StringData('test')],
+                        [new IntData(0)],
+                        [new IntData(0)],
+                        id
+                    );
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.NoMatchFoundError) {
+                        throw e;
+                    }
+                }
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateNotFoundNonEmpty', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                try {
+                    updateIncome(
+                        [new IntData(400)],
+                        [new DateData(new Date(123456789))],
+                        [new IntData(444)],
+                        [new StringData('test')],
+                        [new IntData(0)],
+                        [new IntData(0)],
+                        id
+                    );
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.NoMatchFoundError) {
+                        throw e;
+                    }
+                }
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateOnePartialFields', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                updateIncome(
+                    [new IntData(10)],
+                    [new DateData(new Date(334455))],
+                    [new IntData(0)],
+                    undefined,
+                    undefined,
+                    undefined,
+                    id
+                );
+
+                tableVals.income[11][1] = '334455';
+                tableVals.income[11][2] = '0';
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateOneAllFields', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                updateIncome(
+                    [new IntData(10)],
+                    [new DateData(new Date(334455))],
+                    [new IntData(0)],
+                    [new StringData('other test')],
+                    [new IntData(1)],
+                    [new IntData(0)],
+                    id
+                );
+                tableVals.income[11] = [
+                    '10',
+                    '334455',
+                    '0',
+                    'other test',
+                    '1',
+                    '0'
+                ];
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateTwoPartialFields', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                updateIncome(
+                    [new IntData(10), new IntData(15)],
+                    [new DateData(new Date(334455)), new DateData(new Date(111223))],
+                    [new IntData(0), new IntData(1000000)],
+                    undefined,
+                    undefined,
+                    undefined,
+                    id
+                );
+
+                tableVals.income[11][1] = '334455';
+                tableVals.income[11][2] = '0';
+
+                tableVals.income[16][1] = '111223';
+                tableVals.income[16][2] = '1000000';
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateTwoAllFields', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                updateIncome(
+                    [new IntData(10), new IntData(15)],
+                    [new DateData(new Date(334455)), new DateData(new Date(111223))],
+                    [new IntData(0), new IntData(1000000)],
+                    [new StringData('other test'), new StringData('Large sum')],
+                    [new IntData(1), new IntData(99)],
+                    [new IntData(0), new IntData(77)],
+                    id
+                );
+                tableVals.income[11] = [
+                    '10',
+                    '334455',
+                    '0',
+                    'other test',
+                    '1',
+                    '0'
+                ];
+                tableVals.income[16] = [
+                    '15',
+                    '111223',
+                    '1000000',
+                    'Large sum',
+                    '99',
+                    '77'
+                ];
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+        ]),
+        new UnitTestSet('testUpdateExpense', [
+            new UnitTest('emptyUpdate', (id: string) => {
+                const tableVals = getEmptyTableState();
+
+                try {
+                    updateExpense([], [], [], [], [], [], [], id);
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.IllegalArgumentError) {
+                        throw e;
+                    }
+                }
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('emptyUndefinedUpdate', (id: string) => {
+                const tableVals = getEmptyTableState();
+
+                try {
+                    updateExpense([], undefined, undefined, undefined, undefined, undefined, undefined, id);
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.IllegalArgumentError) {
+                        throw e;
+                    }
+                }
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateUnevenData', (id: string) => {
+                const tableVals = getEmptyTableState();
+
+                try {
+                    updateExpense(
+                        [new IntData(0), new IntData(1)],
+                        [new DateData(new Date(123456789))],
+                        [new IntData(444)],
+                        [new StringData('test')],
+                        [new IntData(0)],
+                        [new IntData(0)],
+                        [new IntData(0)],
+                        id
+                    );
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.IllegalArgumentError) {
+                        throw e;
+                    }
+                }
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateNotFoundEmpty', (id: string) => {
+                const tableVals = getEmptyTableState();
+
+                try {
+                    updateExpense(
+                        [new IntData(0)],
+                        [new DateData(new Date(123456789))],
+                        [new IntData(444)],
+                        [new StringData('test')],
+                        [new IntData(0)],
+                        [new IntData(0)],
+                        [new IntData(0)],
+                        id
+                    );
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.NoMatchFoundError) {
+                        throw e;
+                    }
+                }
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateNotFoundNonEmpty', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                try {
+                    updateExpense(
+                        [new IntData(200)],
+                        [new DateData(new Date(123456789))],
+                        [new IntData(444)],
+                        [new StringData('test')],
+                        [new IntData(0)],
+                        [new IntData(0)],
+                        [new IntData(0)],
+                        id
+                    );
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.NoMatchFoundError) {
+                        throw e;
+                    }
+                }
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateOnePartialFields', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                updateExpense(
+                    [new IntData(10)],
+                    [new DateData(new Date(334455))],
+                    [new IntData(0)],
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                    id
+                );
+
+                tableVals.expense[11][1] = '334455';
+                tableVals.expense[11][2] = '0';
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateOneAllFields', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                updateExpense(
+                    [new IntData(10)],
+                    [new DateData(new Date(334455))],
+                    [new IntData(0)],
+                    [new StringData('other test')],
+                    [new IntData(1)],
+                    [new IntData(0)],
+                    [new IntData(0)],
+                    id
+                );
+                tableVals.expense[11] = [
+                    '10',
+                    '334455',
+                    '0',
+                    'other test',
+                    '1',
+                    '0',
+                    '0'
+                ];
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateTwoPartialFields', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                updateExpense(
+                    [new IntData(10), new IntData(15)],
+                    [new DateData(new Date(334455)), new DateData(new Date(111223))],
+                    [new IntData(0), new IntData(1000000)],
+                    undefined,
+                    undefined,
+                    undefined,
+                    undefined,
+                    id
+                );
+
+                tableVals.expense[11][1] = '334455';
+                tableVals.expense[11][2] = '0';
+
+                tableVals.expense[16][1] = '111223';
+                tableVals.expense[16][2] = '1000000';
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateTwoAllFields', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                updateExpense(
+                    [new IntData(10), new IntData(15)],
+                    [new DateData(new Date(334455)), new DateData(new Date(111223))],
+                    [new IntData(0), new IntData(1000000)],
+                    [new StringData('other test'), new StringData('Large sum')],
+                    [new IntData(1), new IntData(99)],
+                    [new IntData(0), new IntData(77)],
+                    [new IntData(0), new IntData(77)],
+                    id
+                );
+                tableVals.expense[11] = [
+                    '10',
+                    '334455',
+                    '0',
+                    'other test',
+                    '1',
+                    '0',
+                    '0'
+                ];
+                tableVals.expense[16] = [
+                    '15',
+                    '111223',
+                    '1000000',
+                    'Large sum',
+                    '99',
+                    '77',
+                    '77'
+                ];
+
+                return checkDatabaseValues(tableVals, id);
+            }),
         ])
     ]);
 }
-export function testRemove() {
+export function testUpdatePartTwo() {
     UnitTester.runTests([
-        new UnitTestSet('', [
-            new UnitTest('', (id: string) => {
+        new UnitTestSet('testUpdateRecipient', [
+            new UnitTest('emptyUpdate', (id: string) => {
                 const tableVals = getEmptyTableState();
+
+                try {
+                    updateRecipient([], [], id);
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.IllegalArgumentError) {
+                        throw e;
+                    }
+                }
                 return checkDatabaseValues(tableVals, id);
-            })
+            }),
+            new UnitTest('updateUnevenData', (id: string) => {
+                const tableVals = getEmptyTableState();
+
+                try {
+                    updateRecipient(
+                        [new IntData(0), new IntData(1)],
+                        [new StringData('test')],
+                        id
+                    );
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.IllegalArgumentError) {
+                        throw e;
+                    }
+                }
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateNotFoundEmpty', (id: string) => {
+                const tableVals = getEmptyTableState();
+
+                try {
+                    updateRecipient(
+                        [new IntData(0)],
+                        [new StringData('test')],
+                        id
+                    );
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.NoMatchFoundError) {
+                        throw e;
+                    }
+                }
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateNotFoundNonEmpty', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                try {
+                    updateRecipient(
+                        [new IntData(100)],
+                        [new StringData('test')],
+                        id
+                    );
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.NoMatchFoundError) {
+                        throw e;
+                    }
+                }
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateOneAllFields', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                updateRecipient(
+                    [new IntData(10)],
+                    [new StringData('costco')],
+                    id
+                );
+
+                tableVals.recipient[11][1] = 'costco';
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateTwoAllFields', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                updateRecipient(
+                    [new IntData(10), new IntData(15)],
+                    [new StringData('costco'), new StringData('this is a recipient')],
+                    id
+                );
+
+                tableVals.recipient[11][1] = 'costco';
+                tableVals.recipient[16][1] = 'this is a recipient';
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+        ]),
+        new UnitTestSet('testUpdatePaymentType', [
+            new UnitTest('emptyUpdate', (id: string) => {
+                const tableVals = getEmptyTableState();
+
+                try {
+                    updatePaymentType([], [], id);
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.IllegalArgumentError) {
+                        throw e;
+                    }
+                }
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateUnevenData', (id: string) => {
+                const tableVals = getEmptyTableState();
+
+                try {
+                    updatePaymentType(
+                        [new IntData(0), new IntData(1)],
+                        [new StringData('test')],
+                        id
+                    );
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.IllegalArgumentError) {
+                        throw e;
+                    }
+                }
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateNotFoundEmpty', (id: string) => {
+                const tableVals = getEmptyTableState();
+
+                try {
+                    updatePaymentType(
+                        [new IntData(0)],
+                        [new StringData('test')],
+                        id
+                    );
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.NoMatchFoundError) {
+                        throw e;
+                    }
+                }
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateNotFoundNonEmpty', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                try {
+                    updatePaymentType(
+                        [new IntData(10)],
+                        [new StringData('test')],
+                        id
+                    );
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.NoMatchFoundError) {
+                        throw e;
+                    }
+                }
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateOneAllFields', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                updatePaymentType(
+                    [new IntData(1)],
+                    [new StringData('xxxxx')],
+                    id
+                );
+
+                tableVals.paymentType[2][1] = 'xxxxx';
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateTwoAllFields', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                updatePaymentType(
+                    [new IntData(1), new IntData(6)],
+                    [new StringData('xxxxx'), new StringData('yyy')],
+                    id
+                );
+
+                tableVals.paymentType[2][1] = 'xxxxx';
+                tableVals.paymentType[4][1] = 'yyy';
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+        ]),
+        new UnitTestSet('testUpdateStatement', [
+            new UnitTest('emptyUpdate', (id: string) => {
+                const tableVals = getEmptyTableState();
+
+                try {
+                    updateStatement([], [], [], id);
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.IllegalArgumentError) {
+                        throw e;
+                    }
+                }
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('emptyUndefinedUpdate', (id: string) => {
+                const tableVals = getEmptyTableState();
+
+                try {
+                    updateStatement([], undefined, undefined, id);
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.IllegalArgumentError) {
+                        throw e;
+                    }
+                }
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateUnevenData', (id: string) => {
+                const tableVals = getEmptyTableState();
+
+                try {
+                    updateStatement(
+                        [new IntData(10), new IntData(15)],
+                        [new DateData(new Date(40))],
+                        [BooleanData.TRUE],
+                        id
+                    );
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.IllegalArgumentError) {
+                        throw e;
+                    }
+                }
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateNotFoundEmpty', (id: string) => {
+                const tableVals = getEmptyTableState();
+
+                try {
+                    updateStatement(
+                        [new IntData(0)],
+                        [new DateData(new Date(40))],
+                        [BooleanData.TRUE],
+                        id
+                    );
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.NoMatchFoundError) {
+                        throw e;
+                    }
+                }
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateNotFoundNonEmpty', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                try {
+                    updateStatement(
+                        [new IntData(250)],
+                        [new DateData(new Date(40))],
+                        [BooleanData.TRUE],
+                        id
+                    );
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.NoMatchFoundError) {
+                        throw e;
+                    }
+                }
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateOnePartialFields', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                updateStatement(
+                    [new IntData(10)],
+                    [new DateData(new Date(40))],
+                    undefined,
+                    id
+                );
+
+                tableVals.statement[11][1] = '40';
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateOneAllFields', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                updateStatement(
+                    [new IntData(10)],
+                    [new DateData(new Date(40))],
+                    [BooleanData.TRUE],
+                    id
+                );
+                tableVals.statement[11] = [
+                    '10',
+                    '40',
+                    '1'
+                ];
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateTwoPartialFields', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                updateStatement(
+                    [new IntData(10), new IntData(15)],
+                    [new DateData(new Date(40)), new DateData(new Date(222222))],
+                    undefined,
+                    id
+                );
+
+                tableVals.statement[11][1] = '40';
+
+                tableVals.statement[16][1] = '222222';
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateTwoAllFields', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                updateStatement(
+                    [new IntData(10), new IntData(15)],
+                    [new DateData(new Date(40)), new DateData(new Date(222222))],
+                    [BooleanData.TRUE, BooleanData.FALSE],
+                    id
+                );
+                tableVals.statement[11] = [
+                    '10',
+                    '40',
+                    '1'
+                ];
+                tableVals.statement[16] = [
+                    '15',
+                    '222222',
+                    '0'
+                ];
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+        ]),
+        new UnitTestSet('testUpdateAttendance', [
+            new UnitTest('emptyUpdate', (id: string) => {
+                const tableVals = getEmptyTableState();
+
+                try {
+                    updateAttendance([], [], [], [], id);
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.IllegalArgumentError) {
+                        throw e;
+                    }
+                }
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('emptyUndefinedUpdate', (id: string) => {
+                const tableVals = getEmptyTableState();
+
+                try {
+                    updateAttendance([], undefined, undefined, undefined, id);
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.IllegalArgumentError) {
+                        throw e;
+                    }
+                }
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateUnevenData', (id: string) => {
+                const tableVals = getEmptyTableState();
+
+                try {
+                    updateAttendance(
+                        [new IntData(10), new IntData(15)],
+                        [new DateData(new Date(12321))],
+                        [new IntListData([new IntData(1), new IntData(5)])],
+                        [new QuarterData(Quarter.SPRING, new IntData(100))],
+                        id
+                    );
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.IllegalArgumentError) {
+                        throw e;
+                    }
+                }
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateNotFoundEmpty', (id: string) => {
+                const tableVals = getEmptyTableState();
+
+                try {
+                    updateAttendance(
+                        [new IntData(0)],
+                        [new DateData(new Date(12321))],
+                        [new IntListData([new IntData(1), new IntData(5)])],
+                        [new QuarterData(Quarter.SPRING, new IntData(100))],
+                        id
+                    );
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.NoMatchFoundError) {
+                        throw e;
+                    }
+                }
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateNotFoundNonEmpty', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                try {
+                    updateAttendance(
+                        [new IntData(100)],
+                        [new DateData(new Date(12321))],
+                        [new IntListData([new IntData(1), new IntData(5)])],
+                        [new QuarterData(Quarter.SPRING, new IntData(100))],
+                        id
+                    );
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.NoMatchFoundError) {
+                        throw e;
+                    }
+                }
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateOnePartialFields', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                updateAttendance(
+                    [new IntData(10)],
+                    [new DateData(new Date(1))],
+                    undefined,
+                    undefined,
+                    id
+                );
+
+                tableVals.attendance[11][1] = '1';
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateOneAllFields', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                updateAttendance(
+                    [new IntData(10)],
+                    [new DateData(new Date(1))],
+                    [new IntListData([])],
+                    [new QuarterData(Quarter.FALL, new IntData(111))],
+                    id
+                );
+
+                tableVals.attendance[11] = [
+                    '10',
+                    '1',
+                    '',
+                    '447'
+                ];
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateTwoPartialFields', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                updateAttendance(
+                    [new IntData(10), new IntData(15)],
+                    [new DateData(new Date(1)), new DateData(new Date(800800))],
+                    undefined,
+                    undefined,
+                    id
+                );
+
+                tableVals.attendance[11][1] = '1';
+                tableVals.attendance[16][1] = '800800';
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateTwoAllFields', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                updateAttendance(
+                    [new IntData(10), new IntData(15)],
+                    [new DateData(new Date(1)), new DateData(new Date(800800))],
+                    [new IntListData([]), new IntListData([new IntData(0), new IntData(7), new IntData(25)])],
+                    [new QuarterData(Quarter.FALL, new IntData(111)), new QuarterData(Quarter.WINTER, new IntData(1))],
+                    id
+                );
+
+                tableVals.attendance[11] = [
+                    '10',
+                    '1',
+                    '',
+                    '447'
+                ];
+                tableVals.attendance[16] = [
+                    '15',
+                    '800800',
+                    '0,7,25',
+                    '4'
+                ];
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+        ]),
+        new UnitTestSet('testUpdateClubInfo', [
+            new UnitTest('undefinedUpdateNonEmpty', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                updateClubInfo(undefined, undefined, undefined, undefined, id);
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updatePartialNonEmpty', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                updateClubInfo(
+                    new IntData(10),
+                    undefined,
+                    new IntData(4),
+                    undefined,
+                    id
+                );
+
+                tableVals.clubInfo[1][0] = '10';
+                tableVals.clubInfo[1][2] = '4';
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('updateAllNonEmpty', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                updateClubInfo(
+                    new IntData(10),
+                    new IntData(100),
+                    new IntData(4),
+                    new QuarterData(Quarter.SPRING, new IntData(1)),
+                    id
+                );
+
+                tableVals.clubInfo[1][0] = '10';
+                tableVals.clubInfo[1][1] = '100';
+                tableVals.clubInfo[1][2] = '4';
+                tableVals.clubInfo[1][3] = '5';
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+        ]),
+    ]);
+}
+export function testRemovePartOne() {
+    UnitTester.runTests([
+        new UnitTestSet('testRemoveMember', [
+            new UnitTest('emptyRemove', (id: string) => {
+                const tableVals = getEmptyTableState();
+
+                try {
+                    removeMember([], id);
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.IllegalArgumentError) {
+                        throw e;
+                    }
+                }
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('removeNotFoundEmpty', (id: string) => {
+                const tableVals = getEmptyTableState();
+
+                try {
+                    removeMember(
+                        [new IntData(0)],
+                        id
+                    );
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.NoMatchFoundError) {
+                        throw e;
+                    }
+                }
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('removeNotFoundNonEmpty', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                try {
+                    removeMember(
+                        [new IntData(50)],
+                        id
+                    );
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.NoMatchFoundError) {
+                        throw e;
+                    }
+                }
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('removeOne', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                removeMember(
+                    [new IntData(10)],
+                    id
+                );
+                tableVals.member.splice(11, 1);
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('removeTwo', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                removeMember(
+                    [new IntData(10), new IntData(15)],
+                    id
+                );
+                tableVals.member.splice(16, 1);
+                tableVals.member.splice(11, 1);
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+        ]),
+        new UnitTestSet('testRemoveIncome', [
+            new UnitTest('emptyRemove', (id: string) => {
+                const tableVals = getEmptyTableState();
+
+                try {
+                    removeIncome([], id);
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.IllegalArgumentError) {
+                        throw e;
+                    }
+                }
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('removeNotFoundEmpty', (id: string) => {
+                const tableVals = getEmptyTableState();
+
+                try {
+                    removeIncome(
+                        [new IntData(0)],
+                        id
+                    );
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.NoMatchFoundError) {
+                        throw e;
+                    }
+                }
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('removeNotFoundNonEmpty', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                try {
+                    removeIncome(
+                        [new IntData(400)],
+                        id
+                    );
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.NoMatchFoundError) {
+                        throw e;
+                    }
+                }
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('removeOne', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                removeIncome(
+                    [new IntData(10)],
+                    id
+                );
+                tableVals.income.splice(11, 1);
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('removeTwo', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                removeIncome(
+                    [new IntData(10), new IntData(15)],
+                    id
+                );
+                tableVals.income.splice(16, 1);
+                tableVals.income.splice(11, 1);
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+        ]),
+        new UnitTestSet('testRemoveExpense', [
+            new UnitTest('emptyRemove', (id: string) => {
+                const tableVals = getEmptyTableState();
+
+                try {
+                    removeExpense([], id);
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.IllegalArgumentError) {
+                        throw e;
+                    }
+                }
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('removeNotFoundEmpty', (id: string) => {
+                const tableVals = getEmptyTableState();
+
+                try {
+                    removeExpense(
+                        [new IntData(0)],
+                        id
+                    );
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.NoMatchFoundError) {
+                        throw e;
+                    }
+                }
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('removeNotFoundNonEmpty', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                try {
+                    removeExpense(
+                        [new IntData(200)],
+                        id
+                    );
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.NoMatchFoundError) {
+                        throw e;
+                    }
+                }
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('removeOne', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                removeExpense(
+                    [new IntData(10)],
+                    id
+                );
+
+                tableVals.expense.splice(11, 1);
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('removeTwo', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                removeExpense(
+                    [new IntData(10), new IntData(15)],
+                    id
+                );
+                tableVals.expense.splice(16, 1);
+                tableVals.expense.splice(11, 1);
+
+                return checkDatabaseValues(tableVals, id);
+            }),
         ])
     ]);
 }
-export function testMenuHandlers() {
+export function testRemovePartTwo() {
     UnitTester.runTests([
-        new UnitTestSet('', [
-            new UnitTest('', (id: string) => {
+        new UnitTestSet('testRemoveRecipient', [
+            new UnitTest('emptyRemove', (id: string) => {
                 const tableVals = getEmptyTableState();
+
+                try {
+                    removeRecipient([], id);
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.IllegalArgumentError) {
+                        throw e;
+                    }
+                }
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('removeNotFoundEmpty', (id: string) => {
+                const tableVals = getEmptyTableState();
+
+                try {
+                    removeRecipient(
+                        [new IntData(0)],
+                        id
+                    );
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.NoMatchFoundError) {
+                        throw e;
+                    }
+                }
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('removeNotFoundNonEmpty', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                try {
+                    removeRecipient(
+                        [new IntData(100)],
+                        id
+                    );
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.NoMatchFoundError) {
+                        throw e;
+                    }
+                }
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('removeOne', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                removeRecipient(
+                    [new IntData(10)],
+                    id
+                );
+
+                tableVals.recipient.splice(11, 1);
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('removeTwo', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                removeRecipient(
+                    [new IntData(10), new IntData(15)],
+                    id
+                );
+
+                tableVals.recipient.splice(16, 1);
+                tableVals.recipient.splice(11, 1);
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+        ]),
+        new UnitTestSet('testRemovePaymentType', [
+            new UnitTest('emptyRemove', (id: string) => {
+                const tableVals = getEmptyTableState();
+
+                try {
+                    removePaymentType([], id);
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.IllegalArgumentError) {
+                        throw e;
+                    }
+                }
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('removeNotFoundEmpty', (id: string) => {
+                const tableVals = getEmptyTableState();
+
+                try {
+                    removePaymentType(
+                        [new IntData(0)],
+                        id
+                    );
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.NoMatchFoundError) {
+                        throw e;
+                    }
+                }
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('removeNotFoundNonEmpty', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                try {
+                    removePaymentType(
+                        [new IntData(10)],
+                        id
+                    );
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.NoMatchFoundError) {
+                        throw e;
+                    }
+                }
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('removeOne', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                removePaymentType(
+                    [new IntData(1)],
+                    id
+                );
+
+                tableVals.paymentType.splice(2, 1)
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('removeTwo', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                removePaymentType(
+                    [new IntData(1), new IntData(6)],
+                    id
+                );
+
+                tableVals.paymentType.splice(4, 1)
+                tableVals.paymentType.splice(2, 1)
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+        ]),
+        new UnitTestSet('testRemoveStatement', [
+            new UnitTest('emptyRemove', (id: string) => {
+                const tableVals = getEmptyTableState();
+
+                try {
+                    removeStatement([], id);
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.IllegalArgumentError) {
+                        throw e;
+                    }
+                }
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('removeNotFoundEmpty', (id: string) => {
+                const tableVals = getEmptyTableState();
+
+                try {
+                    removeStatement(
+                        [new IntData(0)],
+                        id
+                    );
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.NoMatchFoundError) {
+                        throw e;
+                    }
+                }
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('removeNotFoundNonEmpty', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                try {
+                    removeStatement(
+                        [new IntData(250)],
+                        id
+                    );
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.NoMatchFoundError) {
+                        throw e;
+                    }
+                }
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('removeOne', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                removeStatement(
+                    [new IntData(10)],
+                    id
+                );
+
+                tableVals.statement.splice(11, 1);
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('removeTwo', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                removeStatement(
+                    [new IntData(10), new IntData(15)],
+                    id
+                );
+                tableVals.statement.splice(16, 1);
+                tableVals.statement.splice(11, 1);
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+        ]),
+        new UnitTestSet('testRemoveAttendance', [
+            new UnitTest('emptyRemove', (id: string) => {
+                const tableVals = getEmptyTableState();
+
+                try {
+                    removeAttendance([], id);
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.IllegalArgumentError) {
+                        throw e;
+                    }
+                }
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('removeNotFoundEmpty', (id: string) => {
+                const tableVals = getEmptyTableState();
+
+                try {
+                    removeAttendance(
+                        [new IntData(0)],
+                        id
+                    );
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.NoMatchFoundError) {
+                        throw e;
+                    }
+                }
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('removeNotFoundNonEmpty', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                try {
+                    removeAttendance(
+                        [new IntData(100)],
+                        id
+                    );
+                    return false;
+                } catch (e) {
+                    if (e !== ErrorType.NoMatchFoundError) {
+                        throw e;
+                    }
+                }
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('removeOne', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                removeAttendance(
+                    [new IntData(10)],
+                    id
+                );
+
+                tableVals.attendance.splice(11, 1);
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('removeTwo', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                removeAttendance(
+                    [new IntData(10), new IntData(15)],
+                    id
+                );
+
+                tableVals.attendance.splice(16, 1);
+                tableVals.attendance.splice(11, 1);
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+        ]),
+    ]);
+}
+export function testMenuHandlersPartOne() {
+    UnitTester.runTests([
+        new UnitTestSet('testAddMember', [
+            new UnitTest('nonEmpty', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                menuAddMember('joejoe', '1234', id, false);
+
+                tableVals.member.push([
+                    '45',
+                    'joejoe',
+                    '1234',
+                    '0',
+                    '',
+                    '0',
+                    '0',
+                    '0',
+                    '0',
+                    '0',
+                    '0',
+                ]);
+
                 return checkDatabaseValues(tableVals, id);
             })
-        ])
+        ]),
+        new UnitTestSet('testAddIncome', [
+            new UnitTest('nonEmpty', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                menuAddIncome('1234', '45.01', 'description', 'check', id, false);
+
+                tableVals.income.push([
+                    '373',
+                    '1234',
+                    '4501',
+                    'description',
+                    '1',
+                    '-1',
+                ]);
+
+                return checkDatabaseValues(tableVals, id);
+            })
+        ]),
+        new UnitTestSet('testAddExpense', [
+            new UnitTest('nonEmpty', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                menuAddExpense('1234', '45', 'description', 'madewell', 'check', id, false);
+
+                tableVals.expense.push([
+                    '161',
+                    '1234',
+                    '4500',
+                    'description',
+                    '1',
+                    '6',
+                    '-1',
+                ]);
+
+                return checkDatabaseValues(tableVals, id);
+            })
+        ]),
+        new UnitTestSet('testAddRecipient', [
+            new UnitTest('nonEmpty', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                menuAddRecipient('asdf', id, false);
+
+                tableVals.recipient.push([
+                    '58',
+                    'asdf',
+                ]);
+
+                return checkDatabaseValues(tableVals, id);
+            })
+        ]),
+        new UnitTestSet('testAddPayType', [
+            new UnitTest('nonEmpty', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                menuAddPayType('asdf', id, false);
+
+                tableVals.paymentType.push([
+                    '7',
+                    'asdf',
+                ]);
+
+                return checkDatabaseValues(tableVals, id);
+            })
+        ]),
+        new UnitTestSet('testAddStatement', [
+            new UnitTest('noIncomesNoExpenses', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                menuAddStatement('123344', '', '', id, false);
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('noIncomesSomeExpenses', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                menuAddStatement('123344', '', '10\n44', id, false);
+
+                tableVals.statement.push([
+                    '223',
+                    '123344',
+                    '0'
+                ]);
+
+                tableVals.expense[11][6] = '223';
+                tableVals.expense[45][6] = '223';
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('someIncomesNoExpenses', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                menuAddStatement('123344', '9\n39', '', id, false);
+
+                tableVals.statement.push([
+                    '223',
+                    '123344',
+                    '0'
+                ]);
+
+                tableVals.income[10][5] = '223';
+                tableVals.income[40][5] = '223';
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('someIncomesSomeExpenses', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                menuAddStatement('123344', '1\n3\n9', '22', id, false);
+
+                tableVals.statement.push([
+                    '223',
+                    '123344',
+                    '0'
+                ]);
+
+                tableVals.income[2][5] = '223';
+                tableVals.income[4][5] = '223';
+                tableVals.income[10][5] = '223';
+
+                tableVals.expense[23][6] = '223';
+
+                return checkDatabaseValues(tableVals, id);
+            })
+        ]),
+    ]);
+}
+export function testMenuHandlersPartTwo() {
+    UnitTester.runTests([
+        new UnitTestSet('testAddAttendance', [
+            new UnitTest('noMembers', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                menuAddAttendance('123344', '', 'Summer', '2000', id, false);
+
+                return checkDatabaseValues(tableVals, id);
+            }),
+            new UnitTest('someMembers', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                menuAddAttendance('123344', '0,1,1,2,3,5', 'Summer', '2000', id, false);
+
+                tableVals.attendance.push([
+                    '50',
+                    '123344',
+                    '0,1,1,2,3,5',
+                    '8002'
+                ]);
+
+                return checkDatabaseValues(tableVals, id);
+            })
+        ]),
+        new UnitTestSet('testRenameMember', [
+            new UnitTest('nonEmpty', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                renameMember('huey wilkins', 'joejoe', id, false);
+
+                tableVals.member[11][1] = 'joejoe';
+
+                return checkDatabaseValues(tableVals, id);
+            })
+        ]),
+        new UnitTestSet('testRenameRecipient', [
+            new UnitTest('nonEmpty', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                renameRecipient('madewell', 'asdf', id, false);
+
+                tableVals.recipient[7][1] = 'asdf';
+
+                return checkDatabaseValues(tableVals, id);
+            })
+        ]),
+        new UnitTestSet('testRenamePaymentType', [
+            new UnitTest('nonEmpty', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                renamePaymentType('venmo', 'asdf', id, false);
+
+                tableVals.paymentType[3][1] = 'asdf';
+
+                return checkDatabaseValues(tableVals, id);
+            })
+        ]),
+        new UnitTestSet('testMergeMember', [
+            new UnitTest('nonEmpty', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                mergeMember('tarik santos', 'chris freeman', id, false);
+                const tarikId = '4';
+                const chrisId = '8';
+
+                tableVals.member.splice(5, 1);
+
+                for (let i = 0; i < tableVals.attendance.length; ++i) {
+                    const ids = tableVals.attendance[i][2].split(',');
+                    if (ids.indexOf(tarikId) !== -1) {
+                        ids.splice(ids.indexOf(tarikId), 1);
+
+                        if (ids.indexOf(chrisId) === -1) {
+                            ids.push(chrisId);
+                            ids.sort();
+                        }
+
+                        tableVals.attendance[i][2] = ids.join(',');
+                    }
+                }
+
+                return checkDatabaseValues(tableVals, id);
+            })
+        ]),
+        new UnitTestSet('testMergeRecipient', [
+            new UnitTest('nonEmpty', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                mergeRecipient('mercer\nmadewell', 'amazon', id, false);
+                const madewellId = '6';
+                const mercerId = '12';
+                const amazonId = '1';
+
+                tableVals.recipient.splice(13, 1);
+                tableVals.recipient.splice(7, 1);
+
+                for (let i = 0; i < tableVals.expense.length; ++i) {
+                    if (tableVals.expense[i][5] === madewellId) {
+                        tableVals.expense[i][5] = amazonId;
+                    }
+                    if (tableVals.expense[i][5] === mercerId) {
+                        tableVals.expense[i][5] = amazonId;
+                    }
+                }
+
+                return checkDatabaseValues(tableVals, id);
+            })
+        ]),
+        new UnitTestSet('testMergePaymentType', [
+            new UnitTest('nonEmpty', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                mergePaymentType('cash\nvenmo', 'debit', id, false);
+                const cashId = '0';
+                const venmoId = '4';
+                const debitId = '6';
+
+                tableVals.paymentType.splice(3, 1);
+                tableVals.paymentType.splice(1, 1);
+
+                for (let i = 0; i < tableVals.income.length; ++i) {
+                    if (tableVals.income[i][4] === cashId) {
+                        tableVals.income[i][4] = debitId;
+                    }
+                    if (tableVals.income[i][4] === venmoId) {
+                        tableVals.income[i][4] = debitId;
+                    }
+                }
+                for (let i = 0; i < tableVals.expense.length; ++i) {
+                    if (tableVals.expense[i][4] === cashId) {
+                        tableVals.expense[i][4] = debitId;
+                    }
+                    if (tableVals.expense[i][4] === venmoId) {
+                        tableVals.expense[i][4] = debitId;
+                    }
+                }
+
+                return checkDatabaseValues(tableVals, id);
+            })
+        ]),
+        /*
+        UNABLE TO TEST WITHOUT ABILITY TO CHECK IF EMAIL RECEIVED
+
+        new UnitTestSet('testPollNotification', [
+        ]),
+        new UnitTestSet('testNotifyMembers', [
+        ]),
+        */
     ]);
 }

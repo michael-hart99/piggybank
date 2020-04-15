@@ -84,9 +84,10 @@ export function emailIOUNotification(memberNames: StringData[], amount: string, 
  * @param pollName The name of the poll
  * @param deadline The deadline for the poll to be filled out by
  * @param link The link to the poll
+ * @param sheetId The id of the spreadsheet to get data from
  */
-export function emailPollNotification(pollName: string, deadline: Date, link: string) {
-    const members = getMembers();
+export function emailPollNotification(pollName: string, deadline: Date, link: string, sheetId?: string) {
+    const members = getMembers(sheetId);
 
     const emails: string[] = [];
     for (const member of members) {
@@ -170,4 +171,36 @@ export function emailPollNotification(pollName: string, deadline: Date, link: st
     const ampm = deadline.getHours() < 12 ? 'AM' : 'PM';
 
     sendEmails(emails, `${GROUP_NAME} Performance Poll`, `Please respond to the ${pollName} poll before ${weekday}, ${month} ${date} at ${hours}:${mins} ${ampm}.\nLink: ${link}`);
+}
+
+/**
+ * Send emails to club members with a given message.
+ * 
+ * @param memberList A list of club members' names
+ * @param subject The subject line of the email
+ * @param body The body text of the email
+ * @param sheetId The id of the spreadsheet to get data from
+ */
+export function emailMembers(memberList: StringData[], subject: string, body: string, sheetId?: string) {
+    const members = getMembers(sheetId);
+
+    const emails: string[] = [];
+    let startIndex = 0;
+    for (const name of memberList) {
+        let i = startIndex;
+        do {
+            const curName = members[i].name;
+            const curEmail = members[i].email;
+            if (!curName || !curEmail) {
+                throw ErrorType.AssertionError;
+            } else if (curName.getValue() === name.getValue()) {
+                emails.push(curEmail.getValue());
+                startIndex = i;
+                break;
+            }
+            i = (i + 1) % members.length
+        } while (i !== startIndex);
+    }
+
+    emails.map(email => GmailApp.sendEmail(email, subject, body));
 }

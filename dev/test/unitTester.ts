@@ -1200,6 +1200,6 @@ export class UnitTester {
         }
 
         // @ts-ignore 'Drive.Files' is possibly undefined
-        Drive.Files.remove(id);
+        Drive.Files.trash(id);
     }
 }

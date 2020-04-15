@@ -19,7 +19,8 @@ import { AttendanceEntry, BooleanData, DataTable, DateData, ErrorType, ExpenseEn
  * @param sendReceipt The sendReceipt values to update with
  * @param sheetId The id of the spreadsheet to operate on
  * 
- * @throws IllegalArgumentError if not all parameters are the same length
+ * @throws IllegalArgumentError if not all parameters are the same length or
+ *                              if length of parameters is zero
  * @throws NoMatchFoundError if an id is not found in the sheet
  */
 export function updateMember(
@@ -111,7 +112,8 @@ export function updateMember(
  * @param statementId The statementId values to update with
  * @param sheetId The id of the spreadsheet to operate on
  * 
- * @throws IllegalArgumentError if not all parameters are the same length
+ * @throws IllegalArgumentError if not all parameters are the same length or
+ *                              if length of parameters is zero
  * @throws NoMatchFoundError if an id is not found in the sheet
  */
 export function updateIncome(
@@ -183,7 +185,8 @@ export function updateIncome(
  * @param statementId The statementId values to update with
  * @param sheetId The id of the spreadsheet to operate on
  * 
- * @throws IllegalArgumentError if not all parameters are the same length
+ * @throws IllegalArgumentError if not all parameters are the same length or
+ *                              if length of parameters is zero
  * @throws NoMatchFoundError if an id is not found in the sheet
  */
 export function updateExpense(
@@ -255,7 +258,8 @@ export function updateExpense(
  * @param name The name values to update with
  * @param sheetId The id of the spreadsheet to operate on
  * 
- * @throws IllegalArgumentError if not all parameters are the same length
+ * @throws IllegalArgumentError if not all parameters are the same length or
+ *                              if length of parameters is zero
  * @throws NoMatchFoundError if an id is not found in the sheet
  */
 export function updateRecipient(id: IntData[], name: StringData[], sheetId?: string) {
@@ -286,7 +290,8 @@ export function updateRecipient(id: IntData[], name: StringData[], sheetId?: str
  * @param name The name values to update with
  * @param sheetId The id of the spreadsheet to operate on
  * 
- * @throws IllegalArgumentError if not all parameters are the same length
+ * @throws IllegalArgumentError if not all parameters are the same length or
+ *                              if length of parameters is zero
  * @throws NoMatchFoundError if an id is not found in the sheet
  */
 export function updatePaymentType(id: IntData[], name: StringData[], sheetId?: string) {
@@ -318,7 +323,8 @@ export function updatePaymentType(id: IntData[], name: StringData[], sheetId?: s
  * @param confirmed The confirmed values to update with
  * @param sheetId The id of the spreadsheet to operate on
  * 
- * @throws IllegalArgumentError if not all parameters are the same length
+ * @throws IllegalArgumentError if not all parameters are the same length or
+ *                              if length of parameters is zero
  * @throws NoMatchFoundError if an id is not found in the sheet
  */
 export function updateStatement(
@@ -346,7 +352,7 @@ export function updateStatement(
 
     if (!date) date = sheetVals.map(row => DateData.create(row[1].toString()));
     if (!confirmed)
-        confirmed = sheetVals.map(row => BooleanData.create(row[4].toString()));
+        confirmed = sheetVals.map(row => BooleanData.create(row[2].toString()));
 
     const entries: StatementEntry[] = [];
     for (let i = 0; i < numEntries; ++i) {
@@ -373,7 +379,8 @@ export function updateStatement(
  * @param quarterId The quarterId values to update with
  * @param sheetId The id of the spreadsheet to operate on
  * 
- * @throws IllegalArgumentError if not all parameters are the same length
+ * @throws IllegalArgumentError if not all parameters are the same length or
+ *                              if length of parameters is zero
  * @throws NoMatchFoundError if an id is not found in the sheet
  */
 export function updateAttendance(
