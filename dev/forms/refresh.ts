@@ -109,11 +109,14 @@ export function refreshAddIncome() {
  * Refreshes the Add Member IOU form using values from the database.
  */
 export function refreshAddMemberIou() {
-    const memberNames = getMembers().map(entry => {
-        if (!entry.name || !entry.amountOwed) throw ErrorType.AssertionError;
-        const amount = centsToString(entry.amountOwed);
-        return capitalizeString(entry.name.getValue()) + ': ' + amount;
-    }).sort();
+    const memberNames = getMembers()
+        .filter(entry => entry.active && entry.active.getValue())
+        .map(entry => {
+            if (!entry.name || !entry.amountOwed) throw ErrorType.AssertionError;
+            const amount = centsToString(entry.amountOwed);
+            return capitalizeString(entry.name.getValue()) + ': ' + amount;
+        })
+        .sort();
 
     const form = FormApp.openById(AMI_ID);
 
@@ -291,11 +294,14 @@ export function refreshNextQuarter() {
  * Refreshes the Resolve Member IOU form using values from the database.
  */
 export function refreshResolveMemberIou() {
-    const memberNames = getMembers().map(entry => {
-        if (!entry.name || !entry.amountOwed) throw ErrorType.AssertionError;
-        const amount = centsToString(entry.amountOwed);
-        return capitalizeString(entry.name.getValue()) + ': ' + amount;
-    }).sort();
+    const memberNames = getMembers()
+        .filter(entry => entry.active && entry.active.getValue())
+        .map(entry => {
+            if (!entry.name || !entry.amountOwed) throw ErrorType.AssertionError;
+            const amount = centsToString(entry.amountOwed);
+            return capitalizeString(entry.name.getValue()) + ': ' + amount;
+        })
+        .sort();
 
     const payTypes = getPaymentTypes().map(entry => {
         if (!entry.name) throw ErrorType.AssertionError;
@@ -348,33 +354,36 @@ export function refreshResolveMemberIou() {
  * Refreshes the Take Attendance form using values from the database.
  */
 export function refreshTakeAttendance() {
-    const memberNames = getMembers().filter(entry => {
-        if (!entry.active) throw ErrorType.AssertionError;
-        return entry.active.getValue();
-    }).sort((a, b) => {
-        if (
-            !a.dateJoined || !a.name || !a.active ||
-            !b.dateJoined || !b.name || !b.active
-        ) {
-            throw ErrorType.AssertionError;
-        }
+    const memberNames = getMembers()
+        .filter(entry => {
+            if (!entry.active) throw ErrorType.AssertionError;
+            return entry.active.getValue();
+        })
+        .sort((a, b) => {
+            if (
+                !a.dateJoined || !a.name || !a.active ||
+                !b.dateJoined || !b.name || !b.active
+            ) {
+                throw ErrorType.AssertionError;
+            }
 
-        // SORT BY YEAR JOINED
+            // SORT BY YEAR JOINED
 
-        const aYear = a.dateJoined.getValue().getFullYear();
-        const bYear = b.dateJoined.getValue().getFullYear();
-        if (aYear !== bYear) {
-            return aYear - bYear;
-        } else {
-            return a.name.getValue().localeCompare(b.name.getValue());
-        }
+            const aYear = a.dateJoined.getValue().getFullYear();
+            const bYear = b.dateJoined.getValue().getFullYear();
+            if (aYear !== bYear) {
+                return aYear - bYear;
+            } else {
+                return a.name.getValue().localeCompare(b.name.getValue());
+            }
 
-        // SORT ALPHABETICALLY
-        // return a.name.getValue().localeCompare(b.name.getValue());
-    }).map(entry => {
-        if (!entry.name) throw ErrorType.AssertionError;
-        return capitalizeString(entry.name.getValue());
-    });
+            // SORT ALPHABETICALLY
+            // return a.name.getValue().localeCompare(b.name.getValue());
+        })
+        .map(entry => {
+            if (!entry.name) throw ErrorType.AssertionError;
+            return capitalizeString(entry.name.getValue());
+        });
 
     const form = FormApp.openById(TA_ID);
 
@@ -476,7 +485,7 @@ export function refreshUpdateContactSettings() {
         if (entry.active.getValue()) {
             memberNames.push(capitalizeString(entry.name.getValue()));
         }
-    })
+    });
     memberNames.sort();
 
     const carriers = Object.keys(CARRIERS);
@@ -527,10 +536,13 @@ export function refreshUpdateContactSettings() {
  * Refreshes the Update Member Status form using values from the database.
  */
 export function refreshUpdateMemberStatus() {
-    const memberNames = getMembers().map(entry => {
-        if (!entry.name) throw ErrorType.AssertionError;
-        return capitalizeString(entry.name.getValue());
-    }).sort();
+    const memberNames = getMembers()
+        .filter(entry => entry.active && entry.active.getValue())
+        .map(entry => {
+            if (!entry.name) throw ErrorType.AssertionError;
+            return capitalizeString(entry.name.getValue());
+        })
+        .sort();
 
     const form = FormApp.openById(UMS_ID);
 

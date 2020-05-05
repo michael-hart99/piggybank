@@ -148,6 +148,16 @@ export class GeneratedTable extends Generated {
     private constructor(name: string, refreshFn: Function) {
         super(name, refreshFn);
     }
+    static getAll() {
+        return [
+            GeneratedTable.ACCOUNT_INFO,
+            GeneratedTable.MEMBERS,
+            GeneratedTable.INCOMES,
+            GeneratedTable.EXPENSES,
+            GeneratedTable.ALL_TRANSACTIONS,
+            GeneratedTable.STATEMENTS,
+        ];
+    }
 }
 /**
  * Represents a form generated from the database values.
@@ -167,6 +177,21 @@ export class GeneratedForm extends Generated {
 
     private constructor(name: string, refreshFn: Function) {
         super(name, refreshFn);
+    }
+    static getAll() {
+        return [
+            GeneratedForm.ADD_EXPENSE,
+            GeneratedForm.ADD_INCOME,
+            GeneratedForm.ADD_MEMBER_IOU,
+            GeneratedForm.COLLECT_DUES,
+            GeneratedForm.CONFIRM_TRANSFER,
+            GeneratedForm.NEXT_QUARTER,
+            GeneratedForm.RESOLVE_MEMBER_IOU,
+            GeneratedForm.TAKE_ATTENDANCE,
+            GeneratedForm.TRANSFER_FUNDS,
+            GeneratedForm.UPDATE_CONTACT_SETTINGS,
+            GeneratedForm.UPDATE_MEMBER_STATUS,
+        ];
     }
 }
 /**
@@ -275,6 +300,33 @@ export abstract class RefreshLogger {
      */
     static markAsPriority(form: GeneratedForm) {
         this.priorityForm = form;
+    }
+
+    /**
+     * Refresh all forms and tables, without exception.
+     */
+    static refreshAll() {
+        const forms = GeneratedForm.getAll();
+        const tables = GeneratedTable.getAll();
+
+        const lock = LockService.getScriptLock();
+        lock.tryLock(2 * 60 * 1000) // two minutes
+        if (!lock.hasLock()) {
+            // @ts-ignore Unable to find "console.log"
+            console.log('Refresh cancelled, unable to get Lock.');
+            return;
+        }
+
+        try {
+            forms.forEach(form => disableForm(form));
+            tables.forEach(table => table.getRefreshFn()());
+            forms.forEach(form => form.getRefreshFn()());
+        } catch (e) {
+            forms.forEach(form => enableForm(form));
+            throw e;
+        }
+
+        lock.releaseLock();
     }
 
     /**

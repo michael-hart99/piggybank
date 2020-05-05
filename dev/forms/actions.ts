@@ -184,7 +184,7 @@ export function addIncome(
 export function addMemberIOU(membersRes: string[], amountRes: string, description: string, sheetId?: string) {
     const memberNames = membersRes.map(member => new StringData(member.substr(0, member.indexOf(':')).toLowerCase()));
     if (!sheetId) {
-        emailIOUNotification(memberNames.map(member => new StringData(capitalizeString(member.getValue()))), amountRes, description)
+        emailIOUNotification(memberNames.map(member => new StringData(capitalizeString(member.getValue()))), amountRes, description);
     }
 
     const memberIds = getMemberIds(memberNames, sheetId);

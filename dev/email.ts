@@ -21,6 +21,7 @@ function sendEmails(emails: string[], subject: string, body: string) {
  * @param description Details on what the amount was for
  */
 export function emailReceipts(memberNames: StringData[], amount: string, description: string) {
+    memberNames = memberNames.map(name => new StringData(name.toString().toLowerCase()));
     const members = getMembers();
 
     const emails: string[] = [];
@@ -54,18 +55,19 @@ export function emailReceipts(memberNames: StringData[], amount: string, descrip
  * @param description Details on what the amount is for
  */
 export function emailIOUNotification(memberNames: StringData[], amount: string, description: string) {
+    const inputNames = memberNames.map(name => name.toString().toLowerCase());
     const members = getMembers();
 
     const emails: string[] = [];
     let startIndex = 0;
-    for (const name of memberNames) {
+    for (const name of inputNames) {
         let i = startIndex;
         do {
             const curName = members[i].name;
             const curEmail = members[i].email;
             if (!curName || !curEmail) {
                 throw ErrorType.AssertionError;
-            } else if (curName.toString() === name.toString()) {
+            } else if (curName.toString() === name) {
                 if (curEmail.getValue().length !== 0) {
                     emails.push(curEmail.getValue());
                 }
@@ -92,7 +94,7 @@ export function emailPollNotification(pollName: string, deadline: Date, link: st
     const emails: string[] = [];
     for (const member of members) {
         if (!member.email || !member.active || !member.performing || !member.notifyPoll) throw ErrorType.AssertionError;
-        if (member.active.getValue() && member.notifyPoll.getValue()) {
+        if (member.active.getValue() && member.notifyPoll.getValue() && member.email.getValue() !== '') {
             emails.push(member.email.getValue());
         }
     }
@@ -182,18 +184,19 @@ export function emailPollNotification(pollName: string, deadline: Date, link: st
  * @param sheetId The id of the spreadsheet to get data from
  */
 export function emailMembers(memberList: StringData[], subject: string, body: string, sheetId?: string) {
+    const inputNames = memberList.map(name => name.toString().toLowerCase());
     const members = getMembers(sheetId);
 
     const emails: string[] = [];
     let startIndex = 0;
-    for (const name of memberList) {
+    for (const name of inputNames) {
         let i = startIndex;
         do {
             const curName = members[i].name;
             const curEmail = members[i].email;
             if (!curName || !curEmail) {
                 throw ErrorType.AssertionError;
-            } else if (curName.getValue() === name.getValue()) {
+            } else if (curName.getValue() === name && curEmail.getValue() !== '') {
                 emails.push(curEmail.getValue());
                 startIndex = i;
                 break;

@@ -101,35 +101,39 @@ export function refreshAccountInfo() {
 export function refreshMembers() {
     const clubInfo = getClubInfo();
 
+    // ATTENTION
+    // To show inactive members greyed out at the end, remove the filter
     const memAttendance: Dictionary<number, UniqueList<number>> = {};
-    const abcMembers = getMembers().sort((a, b) => {
-        if (
-            !a.dateJoined || !a.name || !a.active ||
-            !b.dateJoined || !b.name || !b.active
-        ) {
-            throw ErrorType.AssertionError;
-        }
-
-        if (a.active.getValue() !== b.active.getValue()) {
-            if (a.active.getValue()) {
-                return -1;
-            } else {
-                return 1;
+    const abcMembers = getMembers()
+        .filter(member => member.active && member.active.getValue())
+        .sort((a, b) => {
+            if (
+                !a.dateJoined || !a.name || !a.active ||
+                !b.dateJoined || !b.name || !b.active
+            ) {
+                throw ErrorType.AssertionError;
             }
-        } else {
-            if (a.active.getValue()) {
-                const aYear = a.dateJoined.getValue().getFullYear();
-                const bYear = b.dateJoined.getValue().getFullYear();
-                if (aYear !== bYear) {
-                    return aYear - bYear;
+
+            if (a.active.getValue() !== b.active.getValue()) {
+                if (a.active.getValue()) {
+                    return -1;
+                } else {
+                    return 1;
+                }
+            } else {
+                if (a.active.getValue()) {
+                    const aYear = a.dateJoined.getValue().getFullYear();
+                    const bYear = b.dateJoined.getValue().getFullYear();
+                    if (aYear !== bYear) {
+                        return aYear - bYear;
+                    } else {
+                        return a.name.getValue().localeCompare(b.name.getValue());
+                    }
                 } else {
                     return a.name.getValue().localeCompare(b.name.getValue());
                 }
-            } else {
-                return a.name.getValue().localeCompare(b.name.getValue());
             }
-        }
-    });
+        });
 
     // Unique numbers to represent each day of the year are made using upper
     // bounds for the number of days in a month(50 > 31) and in a year(1000 > 50 * 12).

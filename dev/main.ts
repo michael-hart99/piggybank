@@ -1,6 +1,5 @@
 import { addExpense, addIncome, addMemberIOU, collectDues, confirmTransfer, nextQuarter, resolveMemberIOU, takeAttendance, transferFunds, updateContactSettings, updateMemberStatus } from './forms/actions';
 import { disableForm } from './forms/disable';
-import { refreshAllForms } from './forms/refresh';
 import { ID as AE_ID } from './ids/ae';
 import { ID as AI_ID } from './ids/ai';
 import { ID as AMI_ID } from './ids/ami';
@@ -20,7 +19,6 @@ import { createBackup } from './tables/backup';
 import { DataTable, EditEvent, ErrorType, GeneratedForm, IntData, Quarter, QuarterData, RefreshLogger } from './types';
 import { menuAddAttendance, menuAddExpense, menuAddIncome, menuAddMember, menuAddPayType, menuAddRecipient, menuAddStatement, mergeMember, mergePaymentType, mergeRecipient, notifyMembers, pollNotification, renameMember, renamePaymentType, renameRecipient } from './views/handlers';
 import { addAttendanceHTML, addExpenseHTML, addIncomeHTML, addMemberHTML, addPayTypeHTML, addRecipientHTML, addStatementHTML, attendanceRecordsHTML, attendanceSummaryHTML, fullFinanceHistoryHTML, memberDetailsHTML, mergeMemberHTML, mergePaymentTypeHTML, mergeRecipientHTML, notifyMembersHTML, pollNotificationHTML, renameMemberHTML, renamePaymentTypeHTML, renameRecipientHTML } from './views/html';
-import { refreshAllViews } from './views/refresh';
 
 export function initializeAll() {
     initializeTables();
@@ -32,8 +30,9 @@ export function initializeAll() {
 }
 
 export function refreshAll() {
-    refreshAllViews();
-    refreshAllForms();
+    RefreshLogger.refreshAll();
+    //refreshAllViews();
+    //refreshAllForms();
 }
 
 export function backupTables() {
@@ -124,14 +123,17 @@ export function setupTriggers() {
         .create();
 }
 
-export function everyDay() { }
+export function everyDay() {
+    refreshAll();
+}
 export function everyWeek() {
-    const today = new Date();
+    createBackup();
 
+    //const today = new Date();
     // Every other week
-    if (today.getDate() % 14 >= 7) {
-        createBackup();
-    }
+    //if (today.getDate() % 14 >= 7) {
+    //    createBackup();
+    //}
 }
 export function everyMonth() { }
 
@@ -145,7 +147,6 @@ export function tablesOnEdit(e: EditEvent) {
 
     switch (sheet.getName()) {
         case 'Member':
-            sheet
             RefreshLogger.markAsUpdated(DataTable.MEMBER);
             break;
         case 'Income':
@@ -171,7 +172,7 @@ export function tablesOnEdit(e: EditEvent) {
             break;
     }
 
-    RefreshLogger.refresh();
+    //RefreshLogger.refresh();
 }
 
 export function viewsOnOpen() {
