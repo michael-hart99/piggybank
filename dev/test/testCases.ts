@@ -4,7 +4,7 @@ import { getAttendances, getClubInfo, getExpenses, getIncomes, getMemberIds, get
 import { removeAttendance, removeExpense, removeIncome, removeMember, removePaymentType, removeRecipient, removeStatement } from '../tables/remove';
 import { updateAttendance, updateClubInfo, updateExpense, updateIncome, updateMember, updatePaymentType, updateRecipient, updateStatement } from '../tables/update';
 import { BooleanData, DateData, ErrorType, IntData, IntListData, Quarter, QuarterData, StringData } from '../types';
-import { menuAddAttendance, menuAddExpense, menuAddIncome, menuAddMember, menuAddPayType, menuAddRecipient, menuAddStatement, mergeMember, mergePaymentType, mergeRecipient, renameMember, renamePaymentType, renameRecipient } from '../views/handlers';
+import { menuAddAttendance, menuAddExpense, menuAddIncome, menuAddMember, menuAddPayType, menuAddRecipient, menuAddStatement, menuDeleteMember, mergeMember, mergePaymentType, mergeRecipient, renameMember, renamePaymentType, renameRecipient } from '../views/handlers';
 import { arraysEqual, checkDatabaseValues, checkTableValues, fillWithData, getEmptyTableState, UnitTest, UnitTester, UnitTestSet } from './unitTester';
 
 export function testAppendPartOne() {
@@ -3484,6 +3484,27 @@ export function testMenuHandlersPartTwo() {
                     }
                     if (tableVals.expense[i][4] === venmoId) {
                         tableVals.expense[i][4] = debitId;
+                    }
+                }
+
+                return checkDatabaseValues(tableVals, id);
+            })
+        ]),
+        new UnitTestSet('testDeleteMember', [
+            new UnitTest('nonEmpty', (id: string) => {
+                const tableVals = fillWithData(id);
+
+                menuDeleteMember('felicia mill', id, false);
+                const feliciaId = '11';
+
+                tableVals.member.splice(12, 1);
+
+                for (let i = 0; i < tableVals.attendance.length; ++i) {
+                    const ids = tableVals.attendance[i][2].split(',');
+                    if (ids.indexOf(feliciaId) !== -1) {
+                        ids.splice(ids.indexOf(feliciaId), 1);
+
+                        tableVals.attendance[i][2] = ids.join(',');
                     }
                 }
 

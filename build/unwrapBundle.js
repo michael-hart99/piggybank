@@ -120,6 +120,9 @@ function mergePaymentTypeDialog() {
 function mergeRecipientDialog() {
     Bundle_main.mergeRecipientDialog();
 }
+function deleteMemberDialog() {
+    Bundle_main.deleteMemberDialog();
+}
 function pollNotificationDialog() {
     Bundle_main.pollNotificationDialog();
 }
@@ -165,6 +168,9 @@ function handleMergePaymentType(aliases, name) {
 }
 function handleMergeRecipient(aliases, name) {
     Bundle_main.handleMergeRecipient(aliases, name);
+}
+function handleDeleteMember(name) {
+    Bundle_main.handleDeleteMember(name);
 }
 function handlePollNotification(title, deadline, link) {
     Bundle_main.handlePollNotification(title, deadline, link);

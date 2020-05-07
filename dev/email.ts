@@ -65,10 +65,11 @@ export function emailIOUNotification(memberNames: StringData[], amount: string, 
         do {
             const curName = members[i].name;
             const curEmail = members[i].email;
-            if (!curName || !curEmail) {
+            const curSendReceipt = members[i].sendReceipt;
+            if (!curName || !curEmail || !curSendReceipt) {
                 throw ErrorType.AssertionError;
             } else if (curName.toString() === name) {
-                if (curEmail.getValue().length !== 0) {
+                if (curSendReceipt.getValue() || curEmail.getValue().length !== 0) {
                     emails.push(curEmail.getValue());
                 }
                 startIndex = i;

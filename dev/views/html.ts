@@ -1582,6 +1582,47 @@ export function mergeRecipientHTML() {
     `;
 }
 /**
+ * Returns the HTML as a string for the Rename Member Google Sheets menu option.
+ */
+export function deleteMemberHTML() {
+  const memberNames = getMembers()
+    .sort((a, b) => {
+      if (!a.name || !b.name) throw ErrorType.AssertionError;
+      return a.name.getValue().localeCompare(b.name.getValue());
+    })
+    .filter(member => {
+      return member.active && !member.active.getValue();
+    })
+    .map(member => {
+      if (!member.name) throw ErrorType.AssertionError;
+      return `<option>${capitalizeString(member.name.getValue())}</option>`;
+    });
+  return `
+    <!DOCTYPE html>
+    <style>
+    </style>
+    
+    <body>
+    <p>
+      Name: 
+      <select id="name">\n ${memberNames}</select>
+    </p>
+    
+    <button onclick="go()">
+      Go!
+    </button>
+    </body>
+
+    <script>
+      function go() {
+        const name = document.getElementById('name').value;
+        google.script.run.handleDeleteMember(name);
+        google.script.host.close();
+      }
+    </script>
+    `;
+}
+/**
  * Returns the HTML as a string for the Poll Notification Google Sheets menu option.
  */
 export function pollNotificationHTML() {

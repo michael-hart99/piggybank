@@ -17,8 +17,8 @@ import { MEMBER_DUES, NUM_ATTNS, OFFICER_DUES, START_QUARTER, START_YEAR } from 
 import { orderBy } from './tableOps';
 import { createBackup } from './tables/backup';
 import { DataTable, EditEvent, ErrorType, GeneratedForm, IntData, Quarter, QuarterData, RefreshLogger } from './types';
-import { menuAddAttendance, menuAddExpense, menuAddIncome, menuAddMember, menuAddPayType, menuAddRecipient, menuAddStatement, mergeMember, mergePaymentType, mergeRecipient, notifyMembers, pollNotification, renameMember, renamePaymentType, renameRecipient } from './views/handlers';
-import { addAttendanceHTML, addExpenseHTML, addIncomeHTML, addMemberHTML, addPayTypeHTML, addRecipientHTML, addStatementHTML, attendanceRecordsHTML, attendanceSummaryHTML, fullFinanceHistoryHTML, memberDetailsHTML, mergeMemberHTML, mergePaymentTypeHTML, mergeRecipientHTML, notifyMembersHTML, pollNotificationHTML, renameMemberHTML, renamePaymentTypeHTML, renameRecipientHTML } from './views/html';
+import { menuAddAttendance, menuAddExpense, menuAddIncome, menuAddMember, menuAddPayType, menuAddRecipient, menuAddStatement, menuDeleteMember, mergeMember, mergePaymentType, mergeRecipient, notifyMembers, pollNotification, renameMember, renamePaymentType, renameRecipient } from './views/handlers';
+import { addAttendanceHTML, addExpenseHTML, addIncomeHTML, addMemberHTML, addPayTypeHTML, addRecipientHTML, addStatementHTML, attendanceRecordsHTML, attendanceSummaryHTML, deleteMemberHTML, fullFinanceHistoryHTML, memberDetailsHTML, mergeMemberHTML, mergePaymentTypeHTML, mergeRecipientHTML, notifyMembersHTML, pollNotificationHTML, renameMemberHTML, renamePaymentTypeHTML, renameRecipientHTML } from './views/html';
 
 export function initializeAll() {
     initializeTables();
@@ -139,6 +139,7 @@ export function everyMonth() { }
 
 export function tablesOnOpen() { }
 export function tablesOnEdit(e: EditEvent) {
+    // REFRESH DISABLED
     const sheet = e.range.getSheet();
 
     if (sheet.getName() !== 'ClubInfo') {
@@ -236,6 +237,7 @@ export function addMemberIouOnFormSubmit() {
     RefreshLogger.refresh();
 }
 export function collectDuesOnFormSubmit() {
+    // REFRESH DISABLED
     const resItems = getMostRecentResponse(FormApp.openById(CD_ID));
 
     // Checkbox
@@ -246,7 +248,7 @@ export function collectDuesOnFormSubmit() {
     disableForm(GeneratedForm.COLLECT_DUES);
     RefreshLogger.markAsPriority(GeneratedForm.COLLECT_DUES);
     collectDues(memListRes, paymentTypeRes);
-    RefreshLogger.refresh();
+    //RefreshLogger.refresh();
 }
 export function confirmTransferOnFormSubmit() {
     const resItems = getMostRecentResponse(FormApp.openById(CT_ID));
@@ -283,6 +285,7 @@ export function resolveMemberIouOnFormSubmit() {
     RefreshLogger.refresh();
 }
 export function takeAttendanceOnFormSubmit() {
+    // REFRESH DISABLED
     const resItems = getMostRecentResponse(FormApp.openById(TA_ID));
 
     // Checkbox
@@ -302,7 +305,7 @@ export function takeAttendanceOnFormSubmit() {
     disableForm(GeneratedForm.TAKE_ATTENDANCE);
     RefreshLogger.markAsPriority(GeneratedForm.TAKE_ATTENDANCE);
     takeAttendance(memListRes, newMemberRes);
-    RefreshLogger.refresh();
+    //RefreshLogger.refresh();
 }
 export function transferFundsOnFormSubmit() {
     const resItems = getMostRecentResponse(FormApp.openById(TF_ID));
@@ -330,6 +333,7 @@ export function transferFundsOnFormSubmit() {
     RefreshLogger.refresh();
 }
 export function updateContactSettingsOnFormSubmit() {
+    // REFRESH DISABLED
     const resItems = getMostRecentResponse(FormApp.openById(UCS_ID));
 
     // Multi-choice
@@ -421,7 +425,7 @@ export function updateContactSettingsOnFormSubmit() {
     disableForm(GeneratedForm.UPDATE_CONTACT_SETTINGS);
     RefreshLogger.markAsPriority(GeneratedForm.UPDATE_CONTACT_SETTINGS);
     updateContactSettings(name, email, phone, carrier, notifyPoll, sendReceipt);
-    RefreshLogger.refresh();
+    //RefreshLogger.refresh();
 }
 export function updateMemberStatusOnFormSubmit() {
     const resItems = getMostRecentResponse(FormApp.openById(UMS_ID));
@@ -655,6 +659,7 @@ function createViewsMenu() {
             .addItem('Merge Members', 'mergeMemberDialog')
             .addItem('Merge Payment Methods', 'mergePaymentTypeDialog')
             .addItem('Merge Recipients', 'mergeRecipientDialog'))
+        .addItem('Delete Member', 'deleteMemberDialog')
         .addSeparator()
         .addSubMenu(SpreadsheetApp.getUi()
             .createMenu('Email')
@@ -732,6 +737,9 @@ export function mergePaymentTypeDialog() {
 export function mergeRecipientDialog() {
     createDialog('Merge Recipient', mergeRecipientHTML(), 230, 300);
 }
+export function deleteMemberDialog() {
+    createDialog('Delete Member', deleteMemberHTML(), 130, 300);
+}
 export function pollNotificationDialog() {
     // send performers a (performance) notification
     createDialog('Poll Notification', pollNotificationHTML(), 180, 300);
@@ -779,6 +787,9 @@ export function handleMergePaymentType(aliases: string, name: string) {
 }
 export function handleMergeRecipient(aliases: string, name: string) {
     mergeRecipient(aliases, name);
+}
+export function handleDeleteMember(name: string) {
+    menuDeleteMember(name);
 }
 export function handlePollNotification(title: string, deadline: string, link: string) {
     pollNotification(title, deadline, link);

@@ -664,6 +664,66 @@ export function mergeRecipient(aliases: string, name: string, sheetId?: string, 
 }
 
 /**
+ * Handles the request to delete a member from the Google Sheets menu.
+ * 
+ * @param name The name for this member
+ * @param sheetId The id of the spreadsheet to operate on
+ * @param toastMsg Defaults to true. Toast a message to the UI(will throw error if UI not open)
+ * 
+ * @toasts Failed if name does not exist
+ */
+export function menuDeleteMember(name: string, sheetId?: string, toastMsg?: boolean) {
+    if (toastMsg === undefined) {
+        toastMsg = true;
+    }
+
+    const attns = getAttendances(sheetId);
+
+    const nameData = new StringData(name.toLowerCase());
+    try {
+        const id = getMemberIds([nameData], sheetId)[0].getValue();
+
+        const newAttnIds: IntData[] = [];
+        const newAttnMems: IntListData[] = [];
+
+        attns.forEach(entry => {
+            if (!entry.member_ids || !entry.id) throw ErrorType.AssertionError;
+            const membersPresent = entry.member_ids.getValue().map(x => x.getValue());
+            let curMatch = membersPresent.indexOf(id);
+            let flag = false;
+            while (curMatch !== -1) {
+                flag = true;
+                membersPresent.splice(curMatch, 1);
+                curMatch = membersPresent.indexOf(id);
+            }
+            if (flag) {
+                newAttnIds.push(entry.id);
+                newAttnMems.push(new IntListData(membersPresent.map(n => new IntData(n))));
+            }
+        });
+
+        updateAttendance(newAttnIds, undefined, newAttnMems, undefined, sheetId);
+        removeMember([new IntData(id)], sheetId);
+
+        if (toastMsg) {
+            SpreadsheetApp.openById(VIEWS_ID).toast(`Deleted ${name}`, 'Success', 5);
+        }
+    } catch (e) {
+        if (e === ErrorType.NoMatchFoundError) {
+            if (toastMsg) {
+                SpreadsheetApp.openById(VIEWS_ID).toast('Name not found', 'Deletion Failed', 5);
+            }
+        } else {
+            if (toastMsg) {
+                SpreadsheetApp.openById(VIEWS_ID).toast('Check error log for details', 'Adding Failed', 5);
+            }
+            throw e;
+        }
+    }
+    RefreshLogger.refresh();
+}
+
+/**
  * Sends a notification to all performing members who are noted as wanting to
  * be notified.
  * 
